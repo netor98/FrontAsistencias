@@ -2,6 +2,13 @@
   "compileOnSave": false,
   "compilerOptions": {
     "outDir": "./dist/out-tsc",
+    "baseUrl": "./",
+    "paths": {
+      "@domain/*": ["src/app/domain/*"],
+      "@application/*": ["src/app/application/*"],
+      "@infrastructure/*": ["src/app/infrastructure/*"],
+      "@components/*": ["src/app/pesentation/components/*"],
+    },
     "strict": true,
     "noImplicitOverride": true,
     "noPropertyAccessFromIndexSignature": true,
@@ -21,11 +28,6 @@
       "ES2022",
       "dom"
     ],
-    "paths": {
-      "@spartan-ng/ui-card-helm": [
-        "./components/ui-card-helm/src/index.ts"
-      ]
-    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
