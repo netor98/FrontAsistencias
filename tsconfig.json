@@ -4,11 +4,21 @@
     "outDir": "./dist/out-tsc",
     "baseUrl": "./",
     "paths": {
-      "@domain/*": ["src/app/domain/*"],
-      "@application/*": ["src/app/application/*"],
-      "@infrastructure/*": ["src/app/infrastructure/*"],
-      "@components/*": ["src/app/presentation/components/*"],
-      "@presentation/*": ["src/app/presentation/*"],
+      "@domain/*": [
+        "src/app/domain/*"
+      ],
+      "@application/*": [
+        "src/app/application/*"
+      ],
+      "@infrastructure/*": [
+        "src/app/infrastructure/*"
+      ],
+      "@components/*": [
+        "src/app/presentation/components/*"
+      ],
+      "@presentation/*": [
+        "src/app/presentation/*"
+      ],
     },
     "strict": true,
     "noImplicitOverride": true,
