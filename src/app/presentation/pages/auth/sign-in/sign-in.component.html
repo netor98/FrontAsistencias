@@ -1,1 +1,55 @@
-<p>sign-in works!</p>
+<div>
+    <img src="/EduTrackIcon.png" alt="EduTrackLogo" class="h-16 w-auto mb-3" />
+    <h2 class="text-4xl font-bold mb-6">Iniciar sesión</h2>
+
+    <form class="space-y-4">
+        <div>
+            <label class="block text-sm font-medium text-gray-600" for="emailOrUsername">Correo electrónico o nombre de
+                usuario</label>
+            <input id="emailOrUsername" type="text" placeholder="correo@ejemplo.com o username"
+                class="w-full p-2 mt-1 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-1 focus:border-blue-700 focus:ring-blue-700" />
+        </div>
+        
+        <div>
+            <password-input label="Contraseña" inputId="password" placeholder="••••••" />
+        </div>
+
+        <div class="flex items-center justify-between">
+
+            <div class="flex items-center">
+                <input id="remember" type="checkbox" class="w-4 h-4 mr-2 accent-blue-800" />
+                <label class="text-sm" for="remember">Recuérdame</label>
+            </div>
+
+            <!-- <a routerLink="/recover-password" class="text-sm text-blue-800 font-bold no-underline link-underline">¿Olvidaste tú
+                contraseña?</a> -->
+
+        </div>
+
+        <button
+            class="w-full p-2 mt-2 font-semibold text-white bg-blue-800 rounded-xl hover:bg-blue-700 transition-colors duration-300">
+            Iniciar sesión
+        </button>
+    </form>
+
+
+    <p class="text-sm mt-7 mb-7 text-center">
+        ¿No tienes una cuenta?
+        <a routerLink="/auth/sign-up" class="ml-1 text-blue-800 font-bold no-underline link-underline">
+            Registrarme
+        </a>
+    </p>
+
+
+
+    <div class="relative flex items-center justify-center my-4">
+        <span class="absolute px-4 bg-white text-sm">o</span>
+        <hr class="w-full border" />
+    </div>
+
+    <button
+        class="w-full mt-7 p-2 font-semibold text-gray-700 bg-gray-50 border-2 border-gray-200 rounded-xl hover:bg-gray-100 flex items-center justify-center transition-colors duration-300">
+        <img src="https://www.svgrepo.com/show/355037/google.svg" class="w-5 h-5 mr-2" alt="Google logo" />
+        Iniciar sesión con Google
+    </button>
+</div>
