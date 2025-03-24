@@ -5,6 +5,8 @@ import { SignInComponent } from '@presentation/pages/auth/sign-in/sign-in.compon
 import { SignUpComponent } from '@presentation/pages/auth/sign-up/sign-up.component';
 import { DashboardComponent } from './presentation/pages/dashboard/dashboard.component';
 import { AsistenciasComponent } from './presentation/pages/asistencias/asistencias.component';
+import { DashboardMessageComponent } from '@components/dashboard-message/dashboard-message.component';
+import { HorariosComponent } from '@presentation/pages/horarios/horarios.component';
 
 export const routes: Routes = [
 
@@ -27,11 +29,19 @@ export const routes: Routes = [
   },
 
   {
-    path: 'dashboard', component: DashboardComponent
+    path: 'dashboard', component: DashboardComponent,
+    children: [
+      {
+        path: '', component: DashboardMessageComponent
+      },
+      {
+        path: 'asistencias', component: AsistenciasComponent
+      },
+      {
+        path: 'horarios', component: HorariosComponent
+      }
+    ]
   },
 
-  {
-    path: 'asistencias', component: AsistenciasComponent
-  }
 
 ];

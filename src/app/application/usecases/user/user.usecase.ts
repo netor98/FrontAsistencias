@@ -12,12 +12,12 @@ export class UserUseCase {
 
   // Injectamos el token del repositorio para poder instanciar el repositorio como tal.
 
-  constructor(@Inject(USER_REPOSITORY_TOKEN) private userRepository: UserRepository){}
+  constructor(@Inject(USER_REPOSITORY_TOKEN) private userRepository: UserRepository) { }
 
   // Ejecutamos la función, esto lo que hace es que ejecuta la lógica declarada en la implementación del repositorio.
   // Ya que ese archivo implementa el UserRepository.
 
-  execute(): Observable<User[]>{
+  execute(): Observable<User[]> {
     return this.userRepository.getUsers();
   }
 

@@ -18,7 +18,7 @@
       ],
       "@presentation/*": [
         "src/app/presentation/*"
-      ],
+      ]
     },
     "strict": true,
     "noImplicitOverride": true,
