@@ -1,0 +1,163 @@
+<div class="p-6 bg-gray-50 min-h-screen">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-6 justify-center">Horarios de la Facultad de Ingeniería Mochis<h2>
+  
+    <!-- Tabla de horarios -->
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+      <!-- Cabecera de la tabla -->
+      <div class="px-4 py-5 sm:px-6 bg-gradient-to-r from-indigo-600 to-indigo-500">
+        <h3 class="text-lg leading-6 font-medium text-white">
+          
+        <!-- Filtros -->
+        <div class="grid grid-cols-3 gap-4 mb-4 text-white" >
+          <!-- Carrera -->
+          <select [(ngModel)]="carrera" class="border p-2 rounded text-black">Carreras
+            <option value="">Todas las Carreras</option>
+            @for (c of carreras; track c) {
+              <option [value]="c">{{ c }}</option>
+            }
+          </select>
+
+          <!-- Grupo -->
+          <select [(ngModel)]="grupo" class="border p-2 rounded text-black">
+            <option value="">Todos los Grupos</option>
+            @for (g of grupos; track g) {
+              <option [value]="g">{{ g }}</option>
+            }
+          </select>
+
+          <!-- Maestro -->
+          <select [(ngModel)]="maestro" class="border p-2 rounded">
+            <option value="">Todos los Maestros</option>
+            @for (m of maestros; track m) {
+              <option [value]="m">{{ m }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Botón para borrar filtros -->
+        <div class="text-center mb-6">
+          <button (click)="borrarFiltros()"
+            class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition duration-300">
+            Borrar Filtros
+          </button>
+        </div>
+        </h3>
+
+      </div>
+      <!-- Contenido de la tabla -->
+      <div class="p-4 overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+          <!-- Encabezado -->
+          <thead class="bg-gray-100">
+            <tr>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Hora
+              </th>
+              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Lunes
+              </th>
+              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Martes
+              </th>
+              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Miércoles
+              </th>
+              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Jueves
+              </th>
+              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Viernes
+              </th>
+            </tr>
+          </thead>
+          <!-- Cuerpo -->
+          <tbody class="bg-white divide-y divide-gray-200">
+            <!-- Renglón de ejemplo: 8:00 - 9:00 -->
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                8:00 - 9:00
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-center">
+                <!-- Tarjeta para mostrar asignatura -->
+                <div
+                  class="bg-indigo-50 rounded-lg p-3 shadow hover:shadow-lg transition-shadow duration-200 inline-block cursor-pointer"
+                  title="Edición: Matemáticas - Grupo 3A, Aula 101">
+                  <div class="text-sm font-semibold text-indigo-800">Matemáticas</div>
+                  <div class="text-xs text-indigo-600 mt-1">Grupo 3A</div>
+                  <div class="text-xs text-indigo-500 mt-1 flex items-center justify-center">
+                    <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Aula 101
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-center">
+                <!-- Sin horario -->
+                <span class="text-xs text-gray-400">-</span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-center">
+                <div
+                  class="bg-purple-50 rounded-lg p-3 shadow hover:shadow-lg transition-shadow duration-200 inline-block cursor-pointer"
+                  title="Edición: Física - Grupo 2B, Aula 203">
+                  <div class="text-sm font-semibold text-purple-800">Física</div>
+                  <div class="text-xs text-purple-600 mt-1">Grupo 2B</div>
+                  <div class="text-xs text-purple-500 mt-1 flex items-center justify-center">
+                    <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Aula 203
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-center">
+                <!-- Sin horario -->
+                <span class="text-xs text-gray-400">-</span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-center">
+                <!-- Tarjeta vacía o de otro bloque -->
+                <span class="text-xs text-gray-400">-</span>
+              </td>
+            </tr>
+            <!-- Agrega más renglones para los otros horarios (9:00-10:00, 10:00-11:00, etc.) -->
+            <tr>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                9:00 - 10:00
+              </td>
+              <td class="px-6 py-4 text-center">
+                <span class="text-xs text-gray-400">-</span>
+              </td>
+              <td class="px-6 py-4 text-center">
+                <div
+                  class="bg-emerald-50 rounded-lg p-3 shadow hover:shadow-lg transition-shadow duration-200 inline-block cursor-pointer"
+                  title="Edición: Química - Grupo 3B, Aula 102">
+                  <div class="text-sm font-semibold text-emerald-800">Química</div>
+                  <div class="text-xs text-emerald-600 mt-1">Grupo 3B</div>
+                  <div class="text-xs text-emerald-500 mt-1 flex items-center justify-center">
+                    <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    Aula 102
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 text-center">
+                <span class="text-xs text-gray-400">-</span>
+              </td>
+              <td class="px-6 py-4 text-center">
+                <span class="text-xs text-gray-400">-</span>
+              </td>
+              <td class="px-6 py-4 text-center">
+                <span class="text-xs text-gray-400">-</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>  

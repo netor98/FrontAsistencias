@@ -7,6 +7,7 @@ import { DashboardComponent } from './presentation/pages/dashboard/dashboard.com
 import { AsistenciasComponent } from './presentation/pages/asistencias/asistencias.component';
 import { DashboardMessageComponent } from '@components/dashboard-message/dashboard-message.component';
 import { HorariosComponent } from '@presentation/pages/horarios/horarios.component';
+import { HorariosgeneralComponent } from '@presentation/pages/horariosgeneral/horariosgeneral.component';
 
 export const routes: Routes = [
 
@@ -42,6 +43,10 @@ export const routes: Routes = [
       }
     ]
   },
+  {
+    path: 'horariosgeneral', component: HorariosgeneralComponent
+  },
+  
 
 
 ];

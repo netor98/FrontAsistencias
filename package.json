@@ -29,7 +29,7 @@
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^19.2.4",
-    "@angular/cli": "^19.2.4",
+    "@angular/cli": "^18.2.12",
     "@angular/compiler-cli": "^19.2.3",
     "@spartan-ng/cli": "^0.0.1-alpha.427",
     "@types/jasmine": "~5.1.0",
