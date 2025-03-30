@@ -38,11 +38,7 @@
     "lib": [
       "ES2022",
       "dom"
-<<<<<<< HEAD
     ],
-=======
-    ]
->>>>>>> 05bc269 (Dashboard design)
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

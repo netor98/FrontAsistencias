@@ -12,12 +12,6 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   styleUrl: './dashboard.component.css'
 })
 
-@Component({
-  selector: 'app-dashboard',
-  imports: [FormsModule, CommonModule],
-  templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.css'
-})
 export class DashboardComponent {
   sidebarCollapsed = false;
   isMobile = false;
