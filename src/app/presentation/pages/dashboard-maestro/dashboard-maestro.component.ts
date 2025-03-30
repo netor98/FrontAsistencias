@@ -6,13 +6,12 @@ import { DashboardService } from '../../../infrastructure/dashboard/dashboard.se
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 @Component({
-  selector: 'app-dashboard',
+  selector: 'app-dashboard-maestro',
   imports: [FormsModule, CommonModule, RouterOutlet, RouterLink, RouterLinkActive],
-  templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.css'
+  templateUrl: './dashboard-maestro.component.html',
+  styleUrl: './dashboard-maestro.component.css'
 })
-
-export class DashboardComponent {
+export class DashboardMaestroComponent {
   sidebarCollapsed = false;
   isMobile = false;
   isMobileSidebarHidden = true;
@@ -28,8 +27,6 @@ export class DashboardComponent {
     this.dashboardService.currentTitle$.subscribe(title => {
       console.log(title)
     })
-    // Initialize mobile detection
-    this.checkScreenSize();
   }
 
   @HostListener('window:resize', ['$event'])
@@ -40,21 +37,19 @@ export class DashboardComponent {
   checkScreenSize() {
     const wasMobile = this.isMobile;
     this.isMobile = window.innerWidth < 768; // md breakpoint in Tailwind
-    // If transitioning from mobile to desktop
+
     if (wasMobile && !this.isMobile) {
       this.isMobileSidebarHidden = true; // Reset mobile sidebar state
     }
   }
 
   toggleSidebar(): void {
-    // Only toggle collapse state on desktop
     if (!this.isMobile) {
       this.sidebarCollapsed = !this.sidebarCollapsed;
     }
   }
 
   toggleMobileSidebar(): void {
-    // Only toggle visibility on mobile
     if (this.isMobile) {
       this.isMobileSidebarHidden = !this.isMobileSidebarHidden;
     }

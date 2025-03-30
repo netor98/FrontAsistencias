@@ -1,0 +1,141 @@
+<div class="h-screen flex overflow-hidden bg-gray-50">
+    <!-- Sidebar - hidden by default on mobile, toggleable -->
+    <div class="fixed inset-y-0 left-0 z-30 transition-all duration-300 transform bg-gradient-to-b from-blue-800 to-blue-900 md:translate-x-0"
+        [ngClass]="{
+        'w-64': !sidebarCollapsed,
+        'w-20': sidebarCollapsed,
+        '-translate-x-full': isMobileSidebarHidden && isMobile,
+        'translate-x-0': !isMobileSidebarHidden && isMobile
+      }">
+        <div class="flex flex-col h-full">
+            <!-- Sidebar header -->
+            <div class="flex items-center justify-between px-4 py-4">
+                <div class="flex items-center" [ngClass]="{'justify-center w-full': sidebarCollapsed}">
+                    <!-- EduTrack Logo -->
+                    <div class="flex items-center">
+                        <img src="EduTrackIcon.png" alt="EduTrack Logo" class="h-10 w-auto mr-2">
+                        <span *ngIf="!sidebarCollapsed" class="text-white text-xl font-bold">EduTrack</span>
+                        <span *ngIf="sidebarCollapsed" class="text-white text-xl font-bold">ET</span>
+                    </div>
+                </div>
+
+                <!-- Mobile close button - only visible on mobile when sidebar is open -->
+                <button *ngIf="isMobile" (click)="toggleMobileSidebar()"
+                    class="p-1 rounded-md text-blue-200 hover:text-white hover:bg-blue-700 focus:outline-none">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="mt-5 flex-1 px-2 space-y-1 overflow-y-auto">
+
+                <!-- Dashboard link -->
+                <a routerLink="/dashboard-jefe" routerLinkActive="bg-blue-600"
+                    [routerLinkActiveOptions]="{ exact: true }"
+                    class="group flex items-center px-2 py-3 text-sm font-medium rounded-xl text-blue-100 hover:bg-blue-700 hover:text-white transition duration-150 ease-in-out">
+                    <svg class="h-6 w-6 text-blue-300" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                    </svg>
+                    <span *ngIf="!sidebarCollapsed" class="ml-3">Inicio</span>
+                </a>
+
+                <!-- Horarios link -->
+                <a routerLink="" routerLinkActive="bg-blue-600" [routerLinkActiveOptions]="{ exact: true }"
+                    class="group flex items-center px-2 py-3 text-sm font-medium rounded-xl text-blue-100 hover:bg-blue-700 hover:text-white transition duration-150 ease-in-out">
+                    <svg class="h-6 w-6 text-blue-300" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span *ngIf="!sidebarCollapsed" class="ml-3">Horarios</span>
+                </a>
+
+                <!-- Asistencias link -->
+                <a routerLink="" routerLinkActive="bg-blue-600" [routerLinkActiveOptions]="{ exact: true }"
+                    class="group flex items-center px-2 py-3 text-sm font-medium rounded-xl text-blue-100 hover:bg-blue-700 hover:text-white transition duration-150 ease-in-out">
+                    <svg class="h-6 w-6 text-blue-300" xmlns="http://www.w3.org/2000/svg" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    <span *ngIf="!sidebarCollapsed" class="ml-3">Registrar Asistencias</span>
+                </a>
+
+            </nav>
+
+            <!-- User profile section -->
+            <div class="flex-shrink-0 flex border-t border-blue-700 p-4"
+                [ngClass]="{'justify-center': sidebarCollapsed}">
+                <div class="flex items-center w-full">
+                    <div>
+                        <div class="rounded-full h-9 w-9 flex items-center justify-center bg-blue-600 text-white">
+                            <span class="text-sm font-medium leading-none">JL</span>
+                        </div>
+                    </div>
+                    <div *ngIf="!sidebarCollapsed" class="ml-3">
+                        <p class="text-sm font-medium text-white">Daniel López</p>
+                        <p class="text-xs font-medium text-blue-200">Jefe de grupo</p>
+                    </div>
+                    <button *ngIf="!sidebarCollapsed"
+                        class="ml-auto bg-blue-700 flex-shrink-0 p-1 rounded-full text-blue-200 hover:text-white">
+                        <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overlay for mobile sidebar -->
+    <div *ngIf="!isMobileSidebarHidden && isMobile"
+        class="fixed inset-0 z-20 bg-black bg-opacity-50 transition-opacity md:hidden" (click)="toggleMobileSidebar()">
+    </div>
+
+    <!-- Main content -->
+    <div class="flex flex-col flex-1 overflow-hidden">
+        <div class="relative z-10 flex-shrink-0 flex h-16 bg-white shadow">
+            <!-- Mobile menu button - only visible on mobile -->
+            <button
+                class="px-4 text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 md:hidden"
+                (click)="toggleMobileSidebar()">
+                <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+            </button>
+
+            <!-- Expand button (only visible when sidebar is collapsed on desktop) -->
+            <button *ngIf="sidebarCollapsed" (click)="toggleSidebar()"
+                class="hidden md:flex px-4 items-center text-gray-500 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
+                <svg class="w-6 h-6 text-blue-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24"
+                    height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="m7 10 1.99994 1.9999-1.99994 2M12 5v14M5 4h14c.5523 0 1 .44772 1 1v14c0 .5523-.4477 1-1 1H5c-.55228 0-1-.4477-1-1V5c0-.55228.44772-1 1-1Z" />
+                </svg>
+            </button>
+
+            <div class="flex-1 items-center flex">
+                <h1 class="text-xl font-semibold text-gray-800 fixed">Dashboard</h1>
+            </div>
+
+        </div>
+
+        <main class="flex-1 relative overflow-y-auto focus:outline-none transition-all duration-300"
+            [ngClass]="{'md:pl-64': !sidebarCollapsed, 'md:pl-20': sidebarCollapsed}">
+            <div class="py-6 px-4 sm:px-6 lg:px-8">
+
+                <router-outlet />
+
+            </div>
+        </main>
+    </div>
+</div>

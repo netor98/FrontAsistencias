@@ -9,14 +9,14 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './horariosgeneral.component.css'
 })
 export class HorariosgeneralComponent {
-carrera: any;
-carreras: any;
-grupo: any;
-grupos: any;
-maestro: any;
-maestros: any;
-borrarFiltros() {
-throw new Error('Method not implemented.');
-}
+  carrera: any;
+  carreras: any;
+  grupo: any;
+  grupos: any;
+  maestro: any;
+  maestros: any;
+  borrarFiltros() {
+    throw new Error('Method not implemented.');
+  }
 
 }
