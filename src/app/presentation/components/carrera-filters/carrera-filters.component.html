@@ -1,0 +1,26 @@
+<div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 space-y-4 md:space-y-0">
+  <div class="flex-1 relative">
+    <button type="button" (click)="toggleDropdown()"
+      class="w-full px-4 py-2 border border-gray-300 rounded-md text-left bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+      <span *ngIf="selectedPlans().length; else placeholder">
+        {{ formatSelectedPlans() }}
+      </span>
+      <ng-template #placeholder>Seleccione Planes...</ng-template>
+      <svg class="absolute right-3 top-3 h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+    <div *ngIf="isDropdownOpen" class="absolute mt-1 w-full rounded-md bg-white shadow-lg z-10">
+      <ul class="max-h-60 overflow-auto py-1">
+        <li *ngFor="let plan of plans" class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+          <label class="flex items-center">
+            <input type="checkbox" [value]="plan.id" (change)="onCheckboxChange($event)" [checked]="isSelected(plan.id)"
+              class="mr-2" />
+            <span>{{ plan.name }}</span>
+          </label>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
