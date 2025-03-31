@@ -1,10 +1,14 @@
-import { Component, OnInit } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Component, Inject, OnInit } from '@angular/core';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Carrera } from '@domain/models/carreras.model';
 import { CarreraService } from '../../../../infrastructure/admin/carreras.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import CarrerasFiltersComponent from '../../../components/carrera-filters/carrera-filters.component';
+import { CarreeraCreateUseCase } from '../../../../application/usecases/carreras/create.usecase';
+import { HotToastService } from '@ngxpert/hot-toast';
+import { CarreeraDeleteUseCase } from '../../../../application/usecases/carreras/delete.usecase';
+import { PlanService } from '../../../../infrastructure/admin/planes.service';
 
 @Component({
   selector: 'app-carreras',
@@ -17,7 +21,8 @@ export class CarrerasComponent implements OnInit {
   carreras: Carrera[] = [];
   filteredCarreras: Carrera[] = [];
 
-  // Control para búsqueda y select para planes
+  currentFilters: { search: string; plans: string[] } = { search: '', plans: [] };
+
   searchControl = new FormControl('');
   planControl = new FormControl('');
 
@@ -26,54 +31,65 @@ export class CarrerasComponent implements OnInit {
   pageSize: number = 7;
   totalPages: number = 1;
 
-  // Suponemos un listado de planes fijos; normalmente estos datos vendrían de un servicio
-  plans = [
-    { id: 0, name: 'Todos' },
-    { id: 2019, name: 'Plan 2019' },
-    { id: 2020, name: 'Plan 2020' },
-    { id: 2021, name: 'Plan 2021' }
-  ];
+  showFormModal = false;
+  showDeleteModal = false;
+  editMode = false;
+  carreraToDelete!: number;
+  carreraForm!: FormGroup;
 
-  private carreraService = new CarreraService();
 
-  constructor(private router: Router) { }
+  constructor(private router: Router,
+    private fb: FormBuilder,
+    private carreraService: CarreraService,
+    private createUseCase: CarreeraCreateUseCase,
+    private toast: HotToastService,
+    private deleteUseCase: CarreeraDeleteUseCase,
+    private planesService: PlanService
+  ) { }
 
   ngOnInit(): void {
     this.loadCarreras();
-
-    this.searchControl.valueChanges.subscribe(value => {
-      this.filterAndPaginate();
-    });
-
-    this.planControl.valueChanges.subscribe(value => {
-      this.filterAndPaginate();
+    this.initForm();
+    this.planesService.getAll().subscribe(data => {
+      console.log(data);
     });
   }
 
   loadCarreras(): void {
-    this.carreraService.getCarreras().then(data => {
+    this.carreraService.getAll().subscribe(data => {
       this.carreras = data;
-      this.filterAndPaginate();
+      console.log(data);
+      this.applyFilters({ search: '', plans: [] });
+    }, error => {
+      console.error('Error al cargar las carreras:', error);
     });
   }
 
-  filterAndPaginate(): void {
-    const term: string = this.searchControl.value?.toLowerCase() || '';
-    const selectedPlanId = this.planControl.value?.toString();
+  onFilterChanged(filters: { search: string, plans: string[] }): void {
+    this.currentFilters = filters;
+    this.currentPage = 1; // reinicia la paginación al aplicar un filtro
+    this.applyFilters(filters);
+  }
 
-    // Filtrado por búsqueda y plan
-    let filtered = this.carreras.filter(carrera => {
-      const matchesTerm =
+  applyFilters(filters: { search: string, plans: string[] }): void {
+    let filtered = this.carreras;
+    console.log(filters)
+    // Filtrado por término de búsqueda
+    if (filters.search && filters.search.trim() !== '') {
+      const term = filters.search.trim().toLowerCase();
+      filtered = filtered.filter(carrera =>
         carrera.clave.toLowerCase().includes(term) ||
-        carrera.nombre.toLowerCase().includes(term);
-      const matchesPlan =
-        selectedPlanId === '' ||
-        selectedPlanId === '0' || carrera.planId.toString() === selectedPlanId;
+        carrera.nombre.toLowerCase().includes(term)
+      );
+    }
 
-      return matchesTerm && matchesPlan;
-    });
+    // Filtrado por planes seleccionados (solo si hay alguno seleccionado)
+    if (filters.plans.length > 0) {
+      filtered = filtered.filter(carrera =>
+        filters.plans.includes(carrera.planClave)
+      );
+    }
 
-    // Cálculo de la paginación
     this.totalPages = Math.ceil(filtered.length / this.pageSize);
     if (this.currentPage > this.totalPages) {
       this.currentPage = this.totalPages || 1;
@@ -83,34 +99,129 @@ export class CarrerasComponent implements OnInit {
     this.filteredCarreras = filtered.slice(startIndex, endIndex);
   }
 
-  onCreate(): void {
-    this.router.navigate(['/admin/carreras/form']);
-  }
-
   onEdit(carrera: Carrera): void {
     this.router.navigate(['/admin/carreras/form'], { queryParams: { id: carrera.id } });
   }
 
   onDelete(id: number): void {
-    if (confirm('¿Está seguro de eliminar esta carrera?')) {
-      this.carreraService.deleteCarrera(id).then(() => {
-        this.loadCarreras();
-      });
-    }
+    this.editMode = false;
+    this.carreraToDelete = id;
+    this.carreraForm.reset();
+    this.showDeleteModal = true;
   }
 
-  // Métodos para paginación
+
+  onCreate(): void {
+    this.editMode = false;
+    this.carreraForm.reset();
+    this.showFormModal = true;
+  }
+
+  openFormModal(carrera?: Carrera): void {
+    if (carrera) {
+      this.editMode = true;
+      this.carreraForm.patchValue(carrera);
+    } else {
+      this.editMode = false;
+      this.carreraForm.reset();
+    }
+    this.showFormModal = true;
+  }
+
+  closeFormModal(): void {
+    this.showFormModal = false;
+  }
+
+  onSubmitForm(): void {
+    if (this.carreraForm.invalid) return;
+    let carrera = this.carreraForm.value;
+    carrera.plan = { id: carrera.planId };
+    if (this.editMode) {
+      // this.carreraService.updateCarrera(carrera).then(() => {
+      //   this.loadCarreras();
+      //   this.closeFormModal();
+      // });
+    } else {
+      this.createUseCase.execute(carrera).subscribe(() => {
+        this.loadCarreras();
+      });
+
+      this.toast.success('Carrera creada correctamente', {
+        position: 'top-right',
+        style: {
+          border: '1px solid #4CAF50', // Color verde para el borde
+          backgroundColor: '#333', // Fondo oscuro
+          color: '#FFF', // Texto blanco
+          padding: '16px',
+          borderRadius: '8px', // Bordes redondeados
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', // Sombra para dar profundidad
+        }
+      });
+
+
+      // this.carreraService.createCarrera(carrera).then(() => {
+      //   this.loadCarreras();
+      //   this.closeFormModal();
+      // });
+    }
+    this.closeFormModal();
+  }
+
+  openDeleteModal(carrera: Carrera): void {
+    this.carreraToDelete = carrera.id;
+    this.showDeleteModal = true;
+  }
+
+  closeDeleteModal(): void {
+    this.showDeleteModal = false;
+  }
+
+  confirmDelete(): void {
+    console.log(this.carreraToDelete)
+    this.deleteUseCase.execute(this.carreraToDelete).subscribe(() => {
+      this.loadCarreras();
+    });
+
+    this.toast.success('Carrera eliminada correctamente', {
+      position: 'top-right',
+      style: {
+        border: '1px solid #4CAF50', // Color verde para el borde
+        backgroundColor: '#333', // Fondo oscuro
+        color: '#FFF', // Texto blanco
+        padding: '16px',
+        borderRadius: '8px', // Bordes redondeados
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', // Sombra para dar profundidad
+      }
+    });
+
+    this.closeDeleteModal();
+    this.carreraForm.reset();
+  }
+
+
+
   prevPage(): void {
     if (this.currentPage > 1) {
       this.currentPage--;
-      this.filterAndPaginate();
+      this.applyFilters(this.currentFilters);
+
     }
   }
 
   nextPage(): void {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
-      this.filterAndPaginate();
+      this.applyFilters(this.currentFilters);
     }
+  }
+
+  private initForm(): void {
+    this.carreraForm = this.fb.group({
+      id: [''], // Oculto o de solo lectura si es necesario
+      clave: ['', Validators.required],
+      nombre: ['', Validators.required],
+      activa: [true],
+      planId: [null, Validators.required]
+    });
   }
 }

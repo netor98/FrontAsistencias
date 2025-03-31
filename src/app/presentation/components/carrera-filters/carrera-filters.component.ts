@@ -1,11 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { PlanService } from '../../../infrastructure/admin/planes.service';
+import { Plan } from '../../../domain/models/planes.model';
 
-interface Plan {
-  id: number;
-  name: string;
-}
 
 @Component({
   standalone: true,
@@ -16,26 +14,32 @@ interface Plan {
 })
 export default class CarrerasFiltersComponent {
   searchTerm: string = '';
+  public plans: Plan[] = [];
 
-  plans: Plan[] = [
-    { id: 2019, name: 'Plan 2019' },
-    { id: 2020, name: 'Plan 2020' },
-    { id: 2021, name: 'Plan 2021' }
-  ];
 
-  // Array que contiene los IDs seleccionados
-  selectedPlanIds: number[] = [];
+  constructor(private planesService: PlanService) {
+    this.loadPlans();
+  }
 
-  // Control para abrir/cerrar el dropdown
+  selectedPlanIds: string[] = [];
+
   isDropdownOpen = false;
+
+  @Output() filterChanged = new EventEmitter<{ search: string, plans: string[] }>();
 
   toggleDropdown(): void {
     this.isDropdownOpen = !this.isDropdownOpen;
   }
 
+  loadPlans(): void {
+    this.planesService.getAll().subscribe(data => {
+      this.plans = data;
+    });
+  }
+
   onCheckboxChange(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const value = Number(input.value);
+    const value = String(input.value);
     if (input.checked) {
       if (!this.selectedPlanIds.includes(value)) {
         this.selectedPlanIds.push(value);
@@ -43,21 +47,29 @@ export default class CarrerasFiltersComponent {
     } else {
       this.selectedPlanIds = this.selectedPlanIds.filter(id => id !== value);
     }
+    this.onFilterChange();
   }
 
-  isSelected(planId: number): boolean {
+  isSelected(planId: string): boolean {
     return this.selectedPlanIds.includes(planId);
   }
 
-  selectedPlans(): number[] {
+  selectedPlans(): string[] {
     return this.selectedPlanIds;
   }
 
   // Para mostrar un resumen de los planes seleccionados
   formatSelectedPlans(): string {
     return this.plans
-      .filter(plan => this.selectedPlanIds.includes(plan.id))
-      .map(plan => plan.name)
+      .filter(plan => this.selectedPlanIds.includes((plan.clave)))
+      .map(plan => plan.clave)
       .join(', ');
+  }
+
+  onFilterChange(): void {
+    this.filterChanged.emit({
+      search: this.searchTerm,
+      plans: this.selectedPlanIds
+    });
   }
 }

@@ -7,6 +7,7 @@ export class Carrera {
     public clave: string,
     public activa: boolean,
     public planId: number,
+    public planClave: string,
   ) { }
 
 }

@@ -18,6 +18,8 @@ import { MaestroHomeComponent } from '@presentation/pages/dashboard-maestro/comp
 
 import { AsistenciasComponent } from './presentation/pages/asistencias/asistencias.component';
 import { DashboardComponent } from './presentation/pages/dashboard/dashboard.component';
+import { AdminDashboardComponent } from '@presentation/pages/admin/dashboard/dashboard.component';
+import { CarrerasComponent } from '@presentation/pages/admin/carreras/carreras.component';
 
 export const routes: Routes = [
 
@@ -43,20 +45,20 @@ export const routes: Routes = [
     path: 'horarios-general', component: HorariosgeneralComponent
   },
 
-  {
-    path: 'dashboard', component: DashboardComponent,
-    children: [
-      {
-        path: '', component: DashboardMessageComponent
-      },
-      {
-        path: 'asistencias', component: AsistenciasComponent
-      },
-      {
-        path: 'horarios', component: HorariosComponent
-      }
-    ]
-  },
+  // {
+  //   path: 'dashboard', component: DashboardComponent,
+  //   children: [
+  //     {
+  //       path: '', component: DashboardMessageComponent
+  //     },
+  //     {
+  //       path: 'asistencias', component: AsistenciasComponent
+  //     },
+  //     {
+  //       path: 'horarios', component: HorariosComponent
+  //     }
+  //   ]
+  // },
 
   {
     path: 'dashboard-jefe', component: DashboardJefeComponent,
@@ -88,6 +90,15 @@ export const routes: Routes = [
 
         }
       ]
+  },
+
+  {
+    path: 'admin', component: AdminDashboardComponent,
+    children: [
+      {
+        path: 'carreras', component: CarrerasComponent
+      }
+    ]
   }
 
 

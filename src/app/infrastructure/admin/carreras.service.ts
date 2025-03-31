@@ -1,57 +1,48 @@
 import { Injectable } from "@angular/core";
-import { Carrera } from "@domain/models/carreras.model";
+import { CarreraRepository } from "../../domain/repositories/carreras/carreras.repository";
+import { HttpClient } from "@angular/common/http";
+import { environment } from "../../../environments/environment.development";
+import { Observable } from "rxjs";
+import { Carrera } from "../../domain/models/carreras.model";
 
 @Injectable({ providedIn: 'root' })
-export class CarreraService {
-  private carreras: Carrera[] = CARRERAS_FAKE;
+export class CarreraService implements CarreraRepository {
+  private API_URL = environment.API_URL;
+  private carreras: Carrera[] = []
+
+  constructor(private http: HttpClient) {
+  }
+  update(carrera: Carrera): Observable<Carrera> {
+    throw new Error("Method not implemented.");
+  }
+
+  getAll(): Observable<Carrera[]> {
+    return this.http.get<Carrera[]>(`${this.API_URL}/carrera/getAll`);
+  }
 
   getCarreras(): Promise<Carrera[]> {
     return Promise.resolve(this.carreras);
   }
-  searchCarreras(term: string): Promise<Carrera[]> {
-    const lower = term.toLowerCase();
-    const result = this.carreras.filter(c =>
-      c.clave.toLowerCase().includes(lower) ||
-      c.nombre.toLowerCase().includes(lower)
-    );
-    return Promise.resolve(result);
-  }
-  createCarrera(carrera: Carrera): Promise<void> {
-    carrera.id = Math.max(...this.carreras.map(c => c.id)) + 1;
-    this.carreras.push(carrera);
-    return Promise.resolve();
+
+
+  searchCarreras(term: string): Observable<Carrera[]> {
+    const url = `${this.API_URL}?search=${term}`; // Assuming your API supports search via query params
+    return this.http.get<Carrera[]>(url);
   }
 
-  deleteCarrera(id: number): Promise<void> {
-    this.carreras = this.carreras.filter(c => c.id !== id);
-    return Promise.resolve();
+  create(carrera: Carrera): Observable<Carrera> {
+    return this.http.post<Carrera>(`${this.API_URL}/carrera/create`, carrera);
   }
+
+  updateCarrera(carrera: Carrera): Observable<Carrera> {
+    const url = `${this.API_URL}/${carrera.id}`; // Assuming the API uses the ID in the URL
+    return this.http.put<Carrera>(url, carrera);
+  }
+
+  delete(id: number): Observable<void> {
+    const url = `${this.API_URL}/carrera/delete/${id}`;
+    return this.http.delete<void>(url);
+  }
+
 }
 
-
-
-const CARRERAS_FAKE: Carrera[] = [
-  { id: 1, clave: 'ENG01', nombre: 'Ingeniería Industrial', activa: true, planId: 2021 },
-  { id: 2, clave: 'CSC02', nombre: 'Ciencias de la Computación', activa: true, planId: 2020 },
-  { id: 3, clave: 'ADM03', nombre: 'Administración de Empresas', activa: false, planId: 2019 },
-  { id: 4, clave: 'MEC04', nombre: 'Ingeniería Mecánica', activa: true, planId: 2021 },
-  { id: 5, clave: 'ELE05', nombre: 'Ingeniería Eléctrica', activa: true, planId: 2020 },
-  { id: 6, clave: 'CIV06', nombre: 'Ingeniería Civil', activa: true, planId: 2021 },
-  { id: 7, clave: 'QUI07', nombre: 'Ingeniería Química', activa: false, planId: 2019 },
-  { id: 8, clave: 'BIO08', nombre: 'Biotecnología', activa: true, planId: 2020 },
-  { id: 9, clave: 'MAT09', nombre: 'Estadística y Matemáticas Aplicadas', activa: true, planId: 2021 },
-  { id: 10, clave: 'MED10', nombre: 'Medicina', activa: true, planId: 2021 },
-  { id: 11, clave: 'DENT11', nombre: 'Odontología', activa: false, planId: 2019 },
-  { id: 12, clave: 'PSI12', nombre: 'Psicología', activa: true, planId: 2020 },
-  { id: 13, clave: 'ARQ13', nombre: 'Arquitectura', activa: true, planId: 2021 },
-  { id: 14, clave: 'COM14', nombre: 'Comunicación Social', activa: true, planId: 2020 },
-  { id: 15, clave: 'BIO15', nombre: 'Biología', activa: false, planId: 2019 },
-  { id: 16, clave: 'FIS16', nombre: 'Física', activa: true, planId: 2020 },
-  { id: 17, clave: 'QUI17', nombre: 'Química', activa: true, planId: 2021 },
-  { id: 18, clave: 'SOC18', nombre: 'Sociología', activa: true, planId: 2019 },
-  { id: 19, clave: 'ECN19', nombre: 'Economía', activa: true, planId: 2020 },
-  { id: 20, clave: 'JUR20', nombre: 'Derecho', activa: true, planId: 2021 },
-  { id: 21, clave: 'EDU21', nombre: 'Educación', activa: false, planId: 2019 },
-  { id: 22, clave: 'ART22', nombre: 'Bellas Artes', activa: true, planId: 2020 },
-  { id: 23, clave: 'ING23', nombre: 'Ingeniería en Sistemas', activa: true, planId: 2021 },
-];
