@@ -7,6 +7,7 @@ interface ClassItem {
   time: string
   subject: string
   teacher: string
+  classroom: string // Added classroom field
 }
 
 interface WeekInfo {
@@ -22,18 +23,36 @@ interface GroupInfo {
   classes: ClassItem[]
 }
 
+interface FilterOptions {
+  classroom: string
+  teacher: string
+  career: string
+}
+
 @Component({
   selector: "app-checador-home",
+  standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: "./checador-home.component.html",
 })
 export class ChecadorHomeComponent implements OnInit {
   schoolCycle = "2024-2025"
   period = "1"
-  selectedCareer = "ing-sistemas"
-  selectedGroup = "A"
-  selectedGroupId = "ing-sistemas-A"
 
+  // Current date information
+  today = new Date()
+  currentDayName: string
+  currentDayIndex: number
+  formattedDate: string
+
+  // Filters
+  filters: FilterOptions = {
+    classroom: "",
+    teacher: "",
+    career: "",
+  }
+
+  // Options for dropdowns
   schoolCycles: string[] = ["2023-2024", "2024-2025", "2025-2026"]
   periods: string[] = ["1", "2", "3"]
   careers: { id: string; name: string }[] = [
@@ -42,7 +61,10 @@ export class ChecadorHomeComponent implements OnInit {
     { id: "ing-mecatronica", name: "Ingeniería Mecatrónica" },
     { id: "lic-administracion", name: "Licenciatura en Administración" },
   ]
-  groups: string[] = ["A", "B", "C", "D"]
+
+  // Derived filter options (will be populated from data)
+  classroomOptions: string[] = []
+  teacherOptions: string[] = []
 
   // Sample data for multiple groups
   groupsData: GroupInfo[] = [
@@ -51,11 +73,23 @@ export class ChecadorHomeComponent implements OnInit {
       name: "A",
       career: "ing-sistemas",
       classes: [
-        { id: 1, time: "7:00 - 8:30", subject: "Programación Orientada a Objetos", teacher: "Prof. García" },
-        { id: 2, time: "8:30 - 10:00", subject: "Bases de Datos", teacher: "Prof. Rodríguez" },
-        { id: 3, time: "10:30 - 12:00", subject: "Redes de Computadoras", teacher: "Prof. López" },
-        { id: 4, time: "12:00 - 13:30", subject: "Sistemas Operativos", teacher: "Prof. Martínez" },
-        { id: 5, time: "13:30 - 15:00", subject: "Ingeniería de Software", teacher: "Prof. Sánchez" },
+        {
+          id: 1,
+          time: "7:00 - 8:30",
+          subject: "Programación Orientada a Objetos",
+          teacher: "Prof. García",
+          classroom: "A-101",
+        },
+        { id: 2, time: "8:30 - 10:00", subject: "Bases de Datos", teacher: "Prof. Rodríguez", classroom: "A-102" },
+        { id: 3, time: "10:30 - 12:00", subject: "Redes de Computadoras", teacher: "Prof. López", classroom: "A-103" },
+        { id: 4, time: "12:00 - 13:30", subject: "Sistemas Operativos", teacher: "Prof. Martínez", classroom: "A-104" },
+        {
+          id: 5,
+          time: "13:30 - 15:00",
+          subject: "Ingeniería de Software",
+          teacher: "Prof. Sánchez",
+          classroom: "A-105",
+        },
       ],
     },
     {
@@ -63,11 +97,17 @@ export class ChecadorHomeComponent implements OnInit {
       name: "B",
       career: "ing-sistemas",
       classes: [
-        { id: 1, time: "7:00 - 8:30", subject: "Programación Web", teacher: "Prof. Torres" },
-        { id: 2, time: "8:30 - 10:00", subject: "Inteligencia Artificial", teacher: "Prof. Gómez" },
-        { id: 3, time: "10:30 - 12:00", subject: "Seguridad Informática", teacher: "Prof. Díaz" },
-        { id: 4, time: "12:00 - 13:30", subject: "Desarrollo Móvil", teacher: "Prof. Pérez" },
-        { id: 5, time: "13:30 - 15:00", subject: "Arquitectura de Computadoras", teacher: "Prof. Ramírez" },
+        { id: 1, time: "7:00 - 8:30", subject: "Programación Web", teacher: "Prof. Torres", classroom: "B-201" },
+        { id: 2, time: "8:30 - 10:00", subject: "Inteligencia Artificial", teacher: "Prof. Gómez", classroom: "B-202" },
+        { id: 3, time: "10:30 - 12:00", subject: "Seguridad Informática", teacher: "Prof. Díaz", classroom: "B-203" },
+        { id: 4, time: "12:00 - 13:30", subject: "Desarrollo Móvil", teacher: "Prof. Pérez", classroom: "B-204" },
+        {
+          id: 5,
+          time: "13:30 - 15:00",
+          subject: "Arquitectura de Computadoras",
+          teacher: "Prof. Ramírez",
+          classroom: "B-205",
+        },
       ],
     },
     {
@@ -75,11 +115,59 @@ export class ChecadorHomeComponent implements OnInit {
       name: "A",
       career: "ing-industrial",
       classes: [
-        { id: 1, time: "7:00 - 8:30", subject: "Procesos de Manufactura", teacher: "Prof. Hernández" },
-        { id: 2, time: "8:30 - 10:00", subject: "Gestión de Calidad", teacher: "Prof. Flores" },
-        { id: 3, time: "10:30 - 12:00", subject: "Logística Industrial", teacher: "Prof. Vargas" },
-        { id: 4, time: "12:00 - 13:30", subject: "Seguridad Industrial", teacher: "Prof. Castro" },
-        { id: 5, time: "13:30 - 15:00", subject: "Investigación de Operaciones", teacher: "Prof. Morales" },
+        {
+          id: 1,
+          time: "7:00 - 8:30",
+          subject: "Procesos de Manufactura",
+          teacher: "Prof. Hernández",
+          classroom: "C-301",
+        },
+        { id: 2, time: "8:30 - 10:00", subject: "Gestión de Calidad", teacher: "Prof. Flores", classroom: "C-302" },
+        { id: 3, time: "10:30 - 12:00", subject: "Logística Industrial", teacher: "Prof. Vargas", classroom: "C-303" },
+        { id: 4, time: "12:00 - 13:30", subject: "Seguridad Industrial", teacher: "Prof. Castro", classroom: "C-304" },
+        {
+          id: 5,
+          time: "13:30 - 15:00",
+          subject: "Investigación de Operaciones",
+          teacher: "Prof. Morales",
+          classroom: "C-305",
+        },
+      ],
+    },
+    {
+      id: "ing-industrial-B",
+      name: "B",
+      career: "ing-industrial",
+      classes: [
+        { id: 1, time: "7:00 - 8:30", subject: "Diseño Industrial", teacher: "Prof. Mendoza", classroom: "D-401" },
+        { id: 2, time: "8:30 - 10:00", subject: "Ergonomía", teacher: "Prof. Jiménez", classroom: "D-402" },
+        { id: 3, time: "10:30 - 12:00", subject: "Gestión de Proyectos", teacher: "Prof. Ortega", classroom: "D-403" },
+        { id: 4, time: "12:00 - 13:30", subject: "Control Estadístico", teacher: "Prof. Núñez", classroom: "D-404" },
+        { id: 5, time: "13:30 - 15:00", subject: "Manufactura Esbelta", teacher: "Prof. Vega", classroom: "D-405" },
+      ],
+    },
+    {
+      id: "ing-mecatronica-A",
+      name: "A",
+      career: "ing-mecatronica",
+      classes: [
+        { id: 1, time: "7:00 - 8:30", subject: "Robótica", teacher: "Prof. Reyes", classroom: "E-501" },
+        { id: 2, time: "8:30 - 10:00", subject: "Sistemas Embebidos", teacher: "Prof. Luna", classroom: "E-502" },
+        { id: 3, time: "10:30 - 12:00", subject: "Automatización", teacher: "Prof. Soto", classroom: "E-503" },
+        { id: 4, time: "12:00 - 13:30", subject: "Electrónica Digital", teacher: "Prof. Campos", classroom: "E-504" },
+        { id: 5, time: "13:30 - 15:00", subject: "Diseño Mecánico", teacher: "Prof. Ríos", classroom: "E-505" },
+      ],
+    },
+    {
+      id: "lic-administracion-A",
+      name: "A",
+      career: "lic-administracion",
+      classes: [
+        { id: 1, time: "7:00 - 8:30", subject: "Contabilidad", teacher: "Prof. Guzmán", classroom: "F-601" },
+        { id: 2, time: "8:30 - 10:00", subject: "Economía", teacher: "Prof. Ponce", classroom: "F-602" },
+        { id: 3, time: "10:30 - 12:00", subject: "Mercadotecnia", teacher: "Prof. Aguilar", classroom: "F-603" },
+        { id: 4, time: "12:00 - 13:30", subject: "Recursos Humanos", teacher: "Prof. Zavala", classroom: "F-604" },
+        { id: 5, time: "13:30 - 15:00", subject: "Finanzas", teacher: "Prof. Montes", classroom: "F-605" },
       ],
     },
   ]
@@ -94,6 +182,21 @@ export class ChecadorHomeComponent implements OnInit {
   weeks: WeekInfo[] = []
 
   constructor() {
+    // Get current day information
+    this.currentDayIndex = this.today.getDay() - 1 // 0 = Monday, 4 = Friday
+    if (this.currentDayIndex < 0 || this.currentDayIndex > 4) {
+      // If weekend, default to Monday
+      this.currentDayIndex = 0
+    }
+    this.currentDayName = this.weekdays[this.currentDayIndex]
+
+    // Format today's date
+    this.formattedDate = this.today.toLocaleDateString("es-ES", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    })
+
     this.currentWeek = this.getCurrentWeekInfo()
     this.generateWeeksForSemester()
 
@@ -101,20 +204,40 @@ export class ChecadorHomeComponent implements OnInit {
     this.groupsData.forEach((group) => {
       this.attendanceStatus[group.id] = {}
     })
+
+    // Extract unique classrooms and teachers for filter dropdowns
+    this.extractFilterOptions()
   }
 
   ngOnInit(): void {
     // Initialize attendance status for all classes and days in all groups
     this.groupsData.forEach((group) => {
       group.classes.forEach((classItem) => {
-        this.weekdays.forEach((day) => {
-          if (!this.attendanceStatus[group.id]) {
-            this.attendanceStatus[group.id] = {}
-          }
-          this.attendanceStatus[group.id][`${classItem.id}-${day}`] = "pendiente"
-        })
+        // Only initialize for the current day
+        const key = `${classItem.id}-${this.currentDayName}`
+        if (!this.attendanceStatus[group.id]) {
+          this.attendanceStatus[group.id] = {}
+        }
+        this.attendanceStatus[group.id][key] = "pendiente"
       })
     })
+  }
+
+  extractFilterOptions(): void {
+    // Extract unique classrooms
+    const classrooms = new Set<string>()
+    // Extract unique teachers
+    const teachers = new Set<string>()
+
+    this.groupsData.forEach((group) => {
+      group.classes.forEach((classItem) => {
+        classrooms.add(classItem.classroom)
+        teachers.add(classItem.teacher)
+      })
+    })
+
+    this.classroomOptions = Array.from(classrooms).sort()
+    this.teacherOptions = Array.from(teachers).sort()
   }
 
   getCurrentWeekInfo(): WeekInfo {
@@ -182,43 +305,80 @@ export class ChecadorHomeComponent implements OnInit {
     return week1 && week2 ? week1.weekNumber === week2.weekNumber : week1 === week2
   }
 
-  updateAttendance(groupId: string, classId: number, day: string, status: string): void {
+  updateAttendance(groupId: string, classId: number, status: string): void {
     if (!this.attendanceStatus[groupId]) {
       this.attendanceStatus[groupId] = {}
     }
-    this.attendanceStatus[groupId][`${classId}-${day}`] = status
+    // Only update for the current day
+    const key = `${classId}-${this.currentDayName}`
+    this.attendanceStatus[groupId][key] = status
   }
 
-  getAttendanceStatus(groupId: string, classId: number, day: string): string {
+  getAttendanceStatus(groupId: string, classId: number): string {
     if (!this.attendanceStatus[groupId]) {
       return "pendiente"
     }
-    return this.attendanceStatus[groupId][`${classId}-${day}`] || "pendiente"
+    // Only get status for the current day
+    const key = `${classId}-${this.currentDayName}`
+    return this.attendanceStatus[groupId][key] || "pendiente"
   }
 
-  onCareerChange(): void {
-    // Update available groups based on selected career
-    const availableGroups = this.groupsData
-      .filter((group) => group.career === this.selectedCareer)
-      .map((group) => group.name)
-
-    // Set the first available group as selected
-    if (availableGroups.length > 0) {
-      this.selectedGroup = availableGroups[0]
-      this.updateSelectedGroupId()
+  resetFilters(): void {
+    this.filters = {
+      classroom: "",
+      teacher: "",
+      career: "",
     }
   }
 
-  onGroupChange(): void {
-    this.updateSelectedGroupId()
+  // Filter groups based on selected criteria
+  filterGroups(): GroupInfo[] {
+    return this.groupsData.filter((group) => {
+      // Filter by career
+      if (this.filters.career && group.career !== this.filters.career) {
+        return false
+      }
+
+      // Filter by classroom or teacher (check if any class matches)
+      if (this.filters.classroom || this.filters.teacher) {
+        return group.classes.some((classItem) => {
+          // Filter by classroom
+          if (this.filters.classroom && classItem.classroom !== this.filters.classroom) {
+            return false
+          }
+
+          // Filter by teacher
+          if (this.filters.teacher && classItem.teacher !== this.filters.teacher) {
+            return false
+          }
+
+          return true
+        })
+      }
+
+      return true
+    })
   }
 
-  updateSelectedGroupId(): void {
-    this.selectedGroupId = `${this.selectedCareer}-${this.selectedGroup}`
-  }
+  // Filter classes within a group based on selected criteria
+  filterClasses(classes: ClassItem[]): ClassItem[] {
+    if (!this.filters.classroom && !this.filters.teacher) {
+      return classes
+    }
 
-  getSelectedGroupData(): GroupInfo | undefined {
-    return this.groupsData.find((group) => group.id === this.selectedGroupId)
+    return classes.filter((classItem) => {
+      // Filter by classroom
+      if (this.filters.classroom && classItem.classroom !== this.filters.classroom) {
+        return false
+      }
+
+      // Filter by teacher
+      if (this.filters.teacher && classItem.teacher !== this.filters.teacher) {
+        return false
+      }
+
+      return true
+    })
   }
 
   getCareerName(careerId: string): string {
@@ -227,8 +387,7 @@ export class ChecadorHomeComponent implements OnInit {
   }
 
   saveAttendance(): void {
-    console.log("Saving attendance for group:", this.selectedGroupId)
-    console.log("Attendance data:", this.attendanceStatus[this.selectedGroupId])
+    console.log("Saving attendance for all groups:", this.attendanceStatus)
     // Here you would typically send the data to a backend service
     alert("Asistencias guardadas correctamente")
   }
