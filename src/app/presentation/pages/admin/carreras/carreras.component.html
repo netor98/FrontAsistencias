@@ -153,9 +153,14 @@
           <label class="ml-2 block text-gray-700">Activa</label>
         </div>
         <div>
-          <label class="block text-gray-700">Plan ID</label>
-          <input type="number" formControlName="planId" placeholder="Ingrese el plan"
-            class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+          <label class="block text-gray-700">Seleccionar Plan</label>
+          <select formControlName="planId"
+            class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            <option value="" disabled>Seleccione un plan...</option>
+            <option *ngFor="let plan of planes" [value]="plan.id">
+              {{ plan.clave }}
+            </option>
+          </select>
         </div>
       </div>
       <div class="mt-6 flex justify-end">

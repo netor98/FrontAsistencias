@@ -12,8 +12,8 @@ export class CarreraService implements CarreraRepository {
 
   constructor(private http: HttpClient) {
   }
-  update(carrera: Carrera): Observable<Carrera> {
-    throw new Error("Method not implemented.");
+  update(id: number, carrera: Carrera): Observable<Carrera> {
+    return this.http.patch<Carrera>(`${this.API_URL}/carrera/update/${id}`, carrera);
   }
 
   getAll(): Observable<Carrera[]> {
@@ -24,7 +24,6 @@ export class CarreraService implements CarreraRepository {
     return Promise.resolve(this.carreras);
   }
 
-
   searchCarreras(term: string): Observable<Carrera[]> {
     const url = `${this.API_URL}?search=${term}`; // Assuming your API supports search via query params
     return this.http.get<Carrera[]>(url);
@@ -32,11 +31,6 @@ export class CarreraService implements CarreraRepository {
 
   create(carrera: Carrera): Observable<Carrera> {
     return this.http.post<Carrera>(`${this.API_URL}/carrera/create`, carrera);
-  }
-
-  updateCarrera(carrera: Carrera): Observable<Carrera> {
-    const url = `${this.API_URL}/${carrera.id}`; // Assuming the API uses the ID in the URL
-    return this.http.put<Carrera>(url, carrera);
   }
 
   delete(id: number): Observable<void> {

@@ -5,5 +5,5 @@ export interface CarreraRepository {
   getAll(): Observable<Carrera[]>;
   create(carrera: Carrera): Observable<Carrera>;
   delete(id: number): Observable<void>;
-  update(carrera: Carrera): Observable<Carrera>;
+  update(id: number, carrera: Carrera): Observable<Carrera>;
 }

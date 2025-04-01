@@ -9,6 +9,8 @@ import { CarreeraCreateUseCase } from '../../../../application/usecases/carreras
 import { HotToastService } from '@ngxpert/hot-toast';
 import { CarreeraDeleteUseCase } from '../../../../application/usecases/carreras/delete.usecase';
 import { PlanService } from '../../../../infrastructure/admin/planes.service';
+import { Plan } from '@domain/models/planes.model';
+import { CarreeraUpdateUseCase } from '@application/usecases/carreras/update.usecase';
 
 @Component({
   selector: 'app-carreras',
@@ -19,6 +21,7 @@ import { PlanService } from '../../../../infrastructure/admin/planes.service';
 })
 export class CarrerasComponent implements OnInit {
   carreras: Carrera[] = [];
+  planes: Plan[] = [];
   filteredCarreras: Carrera[] = [];
 
   currentFilters: { search: string; plans: string[] } = { search: '', plans: [] };
@@ -44,21 +47,26 @@ export class CarrerasComponent implements OnInit {
     private createUseCase: CarreeraCreateUseCase,
     private toast: HotToastService,
     private deleteUseCase: CarreeraDeleteUseCase,
+    private updateUseCase: CarreeraUpdateUseCase,
     private planesService: PlanService
   ) { }
 
   ngOnInit(): void {
     this.loadCarreras();
     this.initForm();
+    this.loadPlanes();
+  }
+
+  loadPlanes(): void {
     this.planesService.getAll().subscribe(data => {
-      console.log(data);
+      this.planes = data;
     });
   }
 
   loadCarreras(): void {
     this.carreraService.getAll().subscribe(data => {
       this.carreras = data;
-      console.log(data);
+      console.log(this.carreras)
       this.applyFilters({ search: '', plans: [] });
     }, error => {
       console.error('Error al cargar las carreras:', error);
@@ -99,17 +107,12 @@ export class CarrerasComponent implements OnInit {
     this.filteredCarreras = filtered.slice(startIndex, endIndex);
   }
 
-  onEdit(carrera: Carrera): void {
-    this.router.navigate(['/admin/carreras/form'], { queryParams: { id: carrera.id } });
-  }
-
   onDelete(id: number): void {
     this.editMode = false;
     this.carreraToDelete = id;
     this.carreraForm.reset();
     this.showDeleteModal = true;
   }
-
 
   onCreate(): void {
     this.editMode = false;
@@ -118,7 +121,14 @@ export class CarrerasComponent implements OnInit {
   }
 
   openFormModal(carrera?: Carrera): void {
+    console.log(carrera)
     if (carrera) {
+      const planSeleccionado = this.planes.find(
+        (plan) => plan.clave === carrera.planClave
+      );
+
+      carrera.planId = planSeleccionado!.id;
+
       this.editMode = true;
       this.carreraForm.patchValue(carrera);
     } else {
@@ -137,10 +147,20 @@ export class CarrerasComponent implements OnInit {
     let carrera = this.carreraForm.value;
     carrera.plan = { id: carrera.planId };
     if (this.editMode) {
-      // this.carreraService.updateCarrera(carrera).then(() => {
-      //   this.loadCarreras();
-      //   this.closeFormModal();
-      // });
+      this.updateUseCase.execute(carrera.id, carrera).subscribe(() => {
+        this.loadCarreras();
+      });
+      this.toast.success('Carrera editada correctamente', {
+        position: 'top-right',
+        style: {
+          border: '1px solid #4CAF50', // Color verde para el borde
+          backgroundColor: '#333', // Fondo oscuro
+          color: '#FFF', // Texto blanco
+          padding: '16px',
+          borderRadius: '8px', // Bordes redondeados
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', // Sombra para dar profundidad
+        }
+      });
     } else {
       this.createUseCase.execute(carrera).subscribe(() => {
         this.loadCarreras();
@@ -157,12 +177,6 @@ export class CarrerasComponent implements OnInit {
           boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', // Sombra para dar profundidad
         }
       });
-
-
-      // this.carreraService.createCarrera(carrera).then(() => {
-      //   this.loadCarreras();
-      //   this.closeFormModal();
-      // });
     }
     this.closeFormModal();
   }
@@ -197,7 +211,6 @@ export class CarrerasComponent implements OnInit {
     this.closeDeleteModal();
     this.carreraForm.reset();
   }
-
 
 
   prevPage(): void {
