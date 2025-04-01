@@ -12,6 +12,7 @@ import { JefeHomeComponent } from '@presentation/pages/dashboard-jefe/components
 
 import { DashboardChecadorComponent } from '@presentation/pages/dashboard-checador/dashboard-checador.component';
 import { ChecadorHomeComponent } from '@presentation/pages/dashboard-checador/components/checador-home/checador-home.component';
+import { ChecadorHorariosComponent } from '@presentation/pages/dashboard-checador/components/checador-horarios/checador-horarios.component'
 
 import { DashboardMaestroComponent } from '@presentation/pages/dashboard-maestro/dashboard-maestro.component';
 import { MaestroHomeComponent } from '@presentation/pages/dashboard-maestro/components/maestro-home/maestro-home.component';
@@ -42,7 +43,7 @@ export const routes: Routes = [
   },
 
   {
-    path: 'horarios-general', component: HorariosgeneralComponent
+    path: 'horariosgeneral', component: HorariosgeneralComponent
   },
 
   // {
@@ -77,7 +78,10 @@ export const routes: Routes = [
       [
         {
           path: '', component: ChecadorHomeComponent
-        }
+        },
+       {
+          path: 'dashboard-checador-horarios', component: ChecadorHorariosComponent
+       }
       ]
   },
 

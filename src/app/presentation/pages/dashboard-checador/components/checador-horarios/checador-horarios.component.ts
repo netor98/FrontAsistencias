@@ -22,18 +22,31 @@ interface GroupInfo {
   classes: ClassItem[]
 }
 
+interface FilterOptions {
+  subject: string
+  teacher: string
+  career: string
+  group: string
+}
+
 @Component({
-  selector: "app-checador-home",
+  selector: "app-checador-horarios",
   imports: [CommonModule, FormsModule],
-  templateUrl: "./checador-home.component.html",
+  templateUrl: "./checador-horarios.component.html",
 })
-export class ChecadorHomeComponent implements OnInit {
+export class ChecadorHorariosComponent implements OnInit {
   schoolCycle = "2024-2025"
   period = "1"
-  selectedCareer = "ing-sistemas"
-  selectedGroup = "A"
-  selectedGroupId = "ing-sistemas-A"
 
+  // Filters
+  filters: FilterOptions = {
+    subject: "",
+    teacher: "",
+    career: "",
+    group: "",
+  }
+
+  // Options for dropdowns
   schoolCycles: string[] = ["2023-2024", "2024-2025", "2025-2026"]
   periods: string[] = ["1", "2", "3"]
   careers: { id: string; name: string }[] = [
@@ -43,6 +56,10 @@ export class ChecadorHomeComponent implements OnInit {
     { id: "lic-administracion", name: "Licenciatura en Administración" },
   ]
   groups: string[] = ["A", "B", "C", "D"]
+
+  // Derived filter options (will be populated from data)
+  subjectOptions: string[] = []
+  teacherOptions: string[] = []
 
   // Sample data for multiple groups
   groupsData: GroupInfo[] = [
@@ -82,6 +99,42 @@ export class ChecadorHomeComponent implements OnInit {
         { id: 5, time: "13:30 - 15:00", subject: "Investigación de Operaciones", teacher: "Prof. Morales" },
       ],
     },
+    {
+      id: "ing-industrial-B",
+      name: "B",
+      career: "ing-industrial",
+      classes: [
+        { id: 1, time: "7:00 - 8:30", subject: "Diseño Industrial", teacher: "Prof. Mendoza" },
+        { id: 2, time: "8:30 - 10:00", subject: "Ergonomía", teacher: "Prof. Jiménez" },
+        { id: 3, time: "10:30 - 12:00", subject: "Gestión de Proyectos", teacher: "Prof. Ortega" },
+        { id: 4, time: "12:00 - 13:30", subject: "Control Estadístico", teacher: "Prof. Núñez" },
+        { id: 5, time: "13:30 - 15:00", subject: "Manufactura Esbelta", teacher: "Prof. Vega" },
+      ],
+    },
+    {
+      id: "ing-mecatronica-A",
+      name: "A",
+      career: "ing-mecatronica",
+      classes: [
+        { id: 1, time: "7:00 - 8:30", subject: "Robótica", teacher: "Prof. Reyes" },
+        { id: 2, time: "8:30 - 10:00", subject: "Sistemas Embebidos", teacher: "Prof. Luna" },
+        { id: 3, time: "10:30 - 12:00", subject: "Automatización", teacher: "Prof. Soto" },
+        { id: 4, time: "12:00 - 13:30", subject: "Electrónica Digital", teacher: "Prof. Campos" },
+        { id: 5, time: "13:30 - 15:00", subject: "Diseño Mecánico", teacher: "Prof. Ríos" },
+      ],
+    },
+    {
+      id: "lic-administracion-A",
+      name: "A",
+      career: "lic-administracion",
+      classes: [
+        { id: 1, time: "7:00 - 8:30", subject: "Contabilidad", teacher: "Prof. Guzmán" },
+        { id: 2, time: "8:30 - 10:00", subject: "Economía", teacher: "Prof. Ponce" },
+        { id: 3, time: "10:30 - 12:00", subject: "Mercadotecnia", teacher: "Prof. Aguilar" },
+        { id: 4, time: "12:00 - 13:30", subject: "Recursos Humanos", teacher: "Prof. Zavala" },
+        { id: 5, time: "13:30 - 15:00", subject: "Finanzas", teacher: "Prof. Montes" },
+      ],
+    },
   ]
 
   weekdays: string[] = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
@@ -101,6 +154,9 @@ export class ChecadorHomeComponent implements OnInit {
     this.groupsData.forEach((group) => {
       this.attendanceStatus[group.id] = {}
     })
+
+    // Extract unique subjects and teachers for filter dropdowns
+    this.extractFilterOptions()
   }
 
   ngOnInit(): void {
@@ -115,6 +171,23 @@ export class ChecadorHomeComponent implements OnInit {
         })
       })
     })
+  }
+
+  extractFilterOptions(): void {
+    // Extract unique subjects
+    const subjects = new Set<string>()
+    // Extract unique teachers
+    const teachers = new Set<string>()
+
+    this.groupsData.forEach((group) => {
+      group.classes.forEach((classItem) => {
+        subjects.add(classItem.subject)
+        teachers.add(classItem.teacher)
+      })
+    })
+
+    this.subjectOptions = Array.from(subjects).sort()
+    this.teacherOptions = Array.from(teachers).sort()
   }
 
   getCurrentWeekInfo(): WeekInfo {
@@ -196,29 +269,68 @@ export class ChecadorHomeComponent implements OnInit {
     return this.attendanceStatus[groupId][`${classId}-${day}`] || "pendiente"
   }
 
-  onCareerChange(): void {
-    // Update available groups based on selected career
-    const availableGroups = this.groupsData
-      .filter((group) => group.career === this.selectedCareer)
-      .map((group) => group.name)
-
-    // Set the first available group as selected
-    if (availableGroups.length > 0) {
-      this.selectedGroup = availableGroups[0]
-      this.updateSelectedGroupId()
+  resetFilters(): void {
+    this.filters = {
+      subject: "",
+      teacher: "",
+      career: "",
+      group: "",
     }
   }
 
-  onGroupChange(): void {
-    this.updateSelectedGroupId()
+  // Filter groups based on selected criteria
+  filterGroups(): GroupInfo[] {
+    return this.groupsData.filter((group) => {
+      // Filter by career
+      if (this.filters.career && group.career !== this.filters.career) {
+        return false
+      }
+
+      // Filter by group
+      if (this.filters.group && group.name !== this.filters.group) {
+        return false
+      }
+
+      // Filter by subject or teacher (check if any class matches)
+      if (this.filters.subject || this.filters.teacher) {
+        return group.classes.some((classItem) => {
+          // Filter by subject
+          if (this.filters.subject && classItem.subject !== this.filters.subject) {
+            return false
+          }
+
+          // Filter by teacher
+          if (this.filters.teacher && classItem.teacher !== this.filters.teacher) {
+            return false
+          }
+
+          return true
+        })
+      }
+
+      return true
+    })
   }
 
-  updateSelectedGroupId(): void {
-    this.selectedGroupId = `${this.selectedCareer}-${this.selectedGroup}`
-  }
+  // Filter classes within a group based on selected criteria
+  filterClasses(classes: ClassItem[]): ClassItem[] {
+    if (!this.filters.subject && !this.filters.teacher) {
+      return classes
+    }
 
-  getSelectedGroupData(): GroupInfo | undefined {
-    return this.groupsData.find((group) => group.id === this.selectedGroupId)
+    return classes.filter((classItem) => {
+      // Filter by subject
+      if (this.filters.subject && classItem.subject !== this.filters.subject) {
+        return false
+      }
+
+      // Filter by teacher
+      if (this.filters.teacher && classItem.teacher !== this.filters.teacher) {
+        return false
+      }
+
+      return true
+    })
   }
 
   getCareerName(careerId: string): string {
@@ -227,8 +339,7 @@ export class ChecadorHomeComponent implements OnInit {
   }
 
   saveAttendance(): void {
-    console.log("Saving attendance for group:", this.selectedGroupId)
-    console.log("Attendance data:", this.attendanceStatus[this.selectedGroupId])
+    console.log("Saving attendance for all groups:", this.attendanceStatus)
     // Here you would typically send the data to a backend service
     alert("Asistencias guardadas correctamente")
   }

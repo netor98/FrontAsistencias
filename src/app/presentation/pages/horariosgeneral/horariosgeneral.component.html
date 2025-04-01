@@ -1,5 +1,12 @@
 <div class="p-6 bg-gray-50 min-h-screen">
     <h2 class="text-2xl font-semibold text-gray-800 mb-6 justify-center">Horarios de la Facultad de Ingeniería Mochis<h2>
+    <!-- Botón para regresar -->
+    <div class="mb-4">
+      <button onclick="window.history.back()"
+          class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800 transition duration-300">
+          ← Regresar
+      </button>
+    </div>
   
     <!-- Tabla de horarios -->
     <div class="bg-white shadow overflow-hidden sm:rounded-lg">
@@ -26,7 +33,7 @@
           </select>
 
           <!-- Maestro -->
-          <select [(ngModel)]="maestro" class="border p-2 rounded">
+          <select [(ngModel)]="maestro" class="border p-2 rounded text-black">
             <option value="">Todos los Maestros</option>
             @for (m of maestros; track m) {
               <option [value]="m">{{ m }}</option>
