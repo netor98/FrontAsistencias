@@ -1,268 +1,150 @@
-<div class="container mx-auto px-4 py-6">
-    <!-- Bienvenida y resumen -->
-    <div class="bg-white rounded-xl shadow-lg mb-8 overflow-hidden">
-        <div class="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-4">
-            <h2 class="text-white text-xl font-semibold">Bienvenido al Panel de Jefe de Grupo</h2>
+<div class="w-full max-w-7xl mx-auto bg-white rounded-lg shadow-md">
+  <!-- Header -->
+  <div class="p-4 bg-blue-50 border-b border-gray-200 rounded-t-lg">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <h2 class="text-xl font-semibold text-gray-800">Sistema de Registro de Asistencias</h2>
+      <div class="flex flex-col sm:flex-row gap-4">
+        <div class="flex items-center gap-2">
+          <label for="school-cycle" class="font-medium text-gray-700">Ciclo Escolar:</label>
+          <select id="school-cycle" [(ngModel)]="schoolCycle" 
+                  class="p-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <option *ngFor="let cycle of schoolCycles" [value]="cycle">{{ cycle }}</option>
+          </select>
         </div>
-        <div class="p-6">
-            <p class="text-gray-600 mb-4">
-                Tu responsabilidad es registrar y verificar la asistencia de los profesores a las clases de tu grupo.
-                Este registro es fundamental para mantener el control académico y asegurar la calidad educativa.
-            </p>
-            <div class="flex items-center bg-blue-50 rounded-lg p-4 border-l-4 border-blue-500">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600 mr-2" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p class="text-blue-700 text-sm">
-                    Como jefe de grupo, debes registrar si el profesor asistió a la clase en el horario establecido.
-                </p>
-            </div>
+        <div class="flex items-center gap-2">
+          <label for="period" class="font-medium text-gray-700">Periodo:</label>
+          <select id="period" [(ngModel)]="period"
+                  class="p-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <option *ngFor="let p of periods" [value]="p">{{ p }}</option>
+          </select>
         </div>
+      </div>
     </div>
-
-    <!-- Resumen de estadísticas -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <!-- Tarjeta 1: Asistencias registradas hoy -->
-        <div
-            class="bg-white rounded-xl shadow-md overflow-hidden transform transition-all duration-300 hover:shadow-lg hover:scale-105">
-            <div class="p-6">
-                <div class="flex items-center">
-                    <div class="bg-blue-100 rounded-full p-3 mr-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">Asistencias registradas hoy</p>
-                        <p class="text-2xl font-bold text-gray-800">5 / 7</p>
-                    </div>
-                </div>
-                <div class="mt-6">
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-blue-600 h-2 rounded-full" style="width: 70%"></div>
-                    </div>
-                    <div class="flex justify-between mt-2">
-                        <p class="text-xs text-gray-500">Total de clases: 7</p>
-                        <p class="text-xs font-medium text-blue-600">70% completado</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tarjeta 2: Próxima clase -->
-        <div
-            class="bg-white rounded-xl shadow-md overflow-hidden transform transition-all duration-300 hover:shadow-lg hover:scale-105">
-            <div class="p-6">
-                <div class="flex items-center">
-                    <div class="bg-green-100 rounded-full p-3 mr-4">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-600">Próxima clase</p>
-                        <p class="text-xl font-bold text-gray-800">Programación Web</p>
-                        <p class="text-sm text-gray-500">14:00 - Aula 304</p>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <button
-                        class="w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg transition-colors">
-                        Registrar asistencia
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tarjeta 3: Días con asistencia completa -->
-        <div
-            class="bg-white rounded-xl shadow-md overflow-hidden transform transition-all duration-300 hover:shadow-lg hover:scale-105">
-            <div class="p-6">
-                <div class="flex items-center">
-                    <div class="bg-blue-100 p-3 rounded-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-600" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                    </div>
-                    <h3 class="ml-3 text-lg font-medium text-gray-800">Horario completo del grupo</h3>
-                </div>
-                <p class="mt-2 text-sm text-gray-600">
-                    Accede al horario semanal completo de tu grupo, con todos los profesores y materias.
-                </p>
-                <button
-                    class="mt-4 w-full bg-blue-50 hover:bg-blue-100 text-blue-600 py-2 px-4 border border-blue-200 rounded-lg transition-colors">
-                    Ver horario semanal
-                </button>
-            </div>
-        </div>
+    
+    <!-- Week selector -->
+    <div class="mt-4 pt-4 border-t border-gray-200 flex flex-wrap items-center gap-4">
+      <label class="font-medium text-gray-700">Semana actual:</label>
+      <select [(ngModel)]="currentWeek" [compareWith]="compareWeeks"
+              class="p-2 border border-gray-300 rounded-md bg-white min-w-[250px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <option *ngFor="let week of weeks" [ngValue]="week" 
+                [ngClass]="{'font-bold bg-blue-50': isCurrentWeek(week)}">
+          {{ formatWeekDisplay(week) }}
+        </option>
+      </select>
+      <div class="flex items-center gap-2 font-medium text-gray-700">
+        <span>{{ formatWeekDisplay(currentWeek) }}</span>
+        <span *ngIf="isCurrentWeek(currentWeek)" 
+              class="bg-blue-500 text-white px-2 py-1 rounded-full text-xs">Actual</span>
+      </div>
     </div>
-
-    <!-- Horario de clases del día -->
-    <div class="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
-        <div class="bg-gradient-to-r from-blue-600 to-blue-800 px-6 py-4 flex justify-between items-center">
-            <h3 class="text-white text-lg font-semibold">Horario de Hoy - Grupo 4°A Informática</h3>
-            <div class="bg-white text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
-                Lunes, 30 de marzo
-            </div>
+    
+    <!-- Filters -->
+    <div class="mt-4 pt-4 border-t border-gray-200">
+      <h3 class="font-medium text-gray-700 mb-3">Filtros:</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Subject filter -->
+        <div class="flex flex-col gap-1">
+          <label for="subject-filter" class="text-sm text-gray-600">Materia:</label>
+          <select id="subject-filter" [(ngModel)]="filters.subject"
+                  class="p-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <option value="">Todas las materias</option>
+            <option *ngFor="let subject of subjectOptions" [value]="subject">{{ subject }}</option>
+          </select>
         </div>
-        <div class="p-6">
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead>
-                        <tr>
-                            <th
-                                class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Hora</th>
-                            <th
-                                class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Materia</th>
-                            <th
-                                class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Profesor</th>
-                            <th
-                                class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Aula</th>
-                            <th
-                                class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Estado</th>
-                            
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        <!-- Clase 1 -->
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">07:00 - 08:00</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">Matemáticas Aplicadas</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div
-                                        class="flex-shrink-0 h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                        <span class="text-blue-800 font-medium">AR</span>
-                                    </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900">Dra. Ana Ramírez</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">305-A</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span
-                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                    Asistió
-                                </span>
-                            </td>
-                            
-                        </tr>
-
-                        <!-- Clase 2 -->
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">08:00 - 10:00</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">Bases de Datos Avanzadas</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div
-                                        class="flex-shrink-0 h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                        <span class="text-blue-800 font-medium">JG</span>
-                                    </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900">Mtro. Jorge García</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">Laboratorio 2</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span
-                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                    Asistió
-                                </span>
-                            </td>
-                            
-                        </tr>
-
-                        <!-- Clase 3 -->
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">10:00 - 11:00</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900">Redes de Computadoras</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div
-                                        class="flex-shrink-0 h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                        <span class="text-blue-800 font-medium">MC</span>
-                                    </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900">Dr. Miguel Castro</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">305-A</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span
-                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                    No asistió
-                                </span>
-                            </td>
-                            
-                        </tr>
-
-                        <!-- Clase 4 - Próxima -->
-                        <tr class="bg-blue-50">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-semibold text-blue-900">14:00 - 16:00</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-blue-900">Programación Web</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div
-                                        class="flex-shrink-0 h-8 w-8 bg-blue-200 rounded-full flex items-center justify-center">
-                                        <span class="text-blue-800 font-medium">LS</span>
-                                    </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-medium text-blue-900">Dra. Laura Sánchez</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-blue-900">Laboratorio 3</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span
-                                    class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                    Próxima
-                                </span>
-                            </td>
-                            
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        
+        <!-- Teacher filter -->
+        <div class="flex flex-col gap-1">
+          <label for="teacher-filter" class="text-sm text-gray-600">Maestro:</label>
+          <select id="teacher-filter" [(ngModel)]="filters.teacher"
+                  class="p-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <option value="">Todos los maestros</option>
+            <option *ngFor="let teacher of teacherOptions" [value]="teacher">{{ teacher }}</option>
+          </select>
         </div>
+        
+      </div>
+      
+      <div class="mt-3 flex justify-end">
+        <button type="button" (click)="resetFilters()"
+                class="px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          Limpiar filtros
+        </button>
+      </div>
     </div>
+  </div>
+  
+  <!-- Tables for each group -->
+  <div *ngFor="let group of filterGroups()" class="mb-8 border-b border-gray-200 last:border-b-0">
+    <!-- Group header -->
+    <div class="p-4 bg-gray-50 border-b border-gray-200">
+      <div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-6">
+        <div>
+          <span class="font-medium text-gray-700">Carrera:</span>
+          <span class="ml-2 text-gray-800">{{ getCareerName(group.career) }}</span>
+        </div>
+        <div>
+          <span class="font-medium text-gray-700">Grupo:</span>
+          <span class="ml-2 text-gray-800">{{ group.name }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Group table -->
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="bg-gray-100">
+            <th class="p-3 text-left font-medium text-gray-700 border-b border-gray-200">Hora</th>
+            <th class="p-3 text-left font-medium text-gray-700 border-b border-gray-200">Materia</th>
+            <th class="p-3 text-left font-medium text-gray-700 border-b border-gray-200">Maestro</th>
+            <th *ngFor="let day of weekdays" 
+                class="p-3 text-center font-medium text-gray-700 border-b border-gray-200">
+              {{ day }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let classItem of filterClasses(group.classes)" class="hover:bg-gray-50">
+            <td class="p-3 font-medium text-gray-700 border-b border-gray-200">{{ classItem.time }}</td>
+            <td class="p-3 text-gray-700 border-b border-gray-200">{{ classItem.subject }}</td>
+            <td class="p-3 text-gray-700 border-b border-gray-200">{{ classItem.teacher }}</td>
+            <td *ngFor="let day of weekdays" class="p-3 text-center border-b border-gray-200">
+              <select [(ngModel)]="attendanceStatus[group.id][classItem.id + '-' + day]" 
+                      (change)="updateAttendance(group.id, classItem.id, day, attendanceStatus[group.id][classItem.id + '-' + day])"
+                      class="w-32 p-2 mx-auto border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      [ngClass]="{
+                        'bg-green-50 border-green-300': attendanceStatus[group.id] && attendanceStatus[group.id][classItem.id + '-' + day] === 'asistio',
+                        'bg-red-50 border-red-300': attendanceStatus[group.id] && attendanceStatus[group.id][classItem.id + '-' + day] === 'no-asistio'
+                      }">
+                <option value="pendiente">Pendiente</option>
+                <option value="asistio">Asistió</option>
+                <option value="no-asistio">No Asistió</option>
+              </select>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <!-- No results message -->
+  <div *ngIf="filterGroups().length === 0" class="p-8 text-center text-gray-500">
+    <p>No se encontraron resultados con los filtros seleccionados.</p>
+    <button type="button" (click)="resetFilters()" class="mt-2 text-blue-500 hover:underline">
+      Limpiar filtros
+    </button>
+  </div>
+  
+  <!-- Footer -->
+  <div class="p-4 flex justify-end gap-2">
+    <button type="button" 
+            class="px-4 py-2 border border-gray-300 rounded-md font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      Cancelar
+    </button>
+    <button type="button" (click)="saveAttendance()"
+            class="px-4 py-2 border border-transparent rounded-md font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      Guardar Asistencias
+    </button>
+  </div>
 </div>
+
