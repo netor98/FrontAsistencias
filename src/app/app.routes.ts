@@ -23,6 +23,7 @@ import { AsistenciasComponent } from './presentation/pages/asistencias/asistenci
 import { DashboardComponent } from './presentation/pages/dashboard/dashboard.component';
 import { AdminDashboardComponent } from '@presentation/pages/admin/dashboard/dashboard.component';
 import { CarrerasComponent } from '@presentation/pages/admin/carreras/carreras.component';
+import { MateriasComponent } from '@presentation/pages/admin/materias/materias.component';
 
 export const routes: Routes = [
 
@@ -110,6 +111,10 @@ export const routes: Routes = [
     children: [
       {
         path: 'carreras', component: CarrerasComponent
+      },
+
+      {
+        path: 'materias', component: MateriasComponent
       }
     ]
   }

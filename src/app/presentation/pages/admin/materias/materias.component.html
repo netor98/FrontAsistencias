@@ -1,1 +1,113 @@
-<p>materias works!</p>
+<div class="p-6 bg-gray-50 min-h-screen">
+  <div class="max-w-7xl mx-auto">
+    <!-- Encabezado -->
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-semibold text-gray-800">Materias</h2>
+      <button (click)="onCreate()" class="px-4 py-2 bg-indigo-700 text-white rounded hover:bg-indigo-800 transition">
+        Nueva Materia
+      </button>
+    </div>
+
+    <!-- Filtros -->
+    <!-- <materias-filters (filterChanged)="onFilterChanged($event)"></materias-filters> -->
+
+    <!-- Tabla de Materias -->
+    <div class="bg-white shadow-md overflow-x-auto rounded-lg">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clave</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Carrera</th>
+            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let materia of filteredMaterias">
+            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ materia.id }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ materia.clave }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ materia.nombre }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ materia.carrera.nombre}}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
+              <button (click)="openFormModal(materia)"
+                class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-full bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-2 transition duration-150">
+                Editar
+              </button>
+              <button (click)="onDelete(materia.id)"
+                class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-full bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150">
+                Eliminar
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="filteredMaterias.length === 0">
+            <td colspan="5" class="text-center py-4 text-gray-500">No hay registros</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="flex justify-center items-center mt-6">
+      <nav class="flex items-center space-x-2">
+        <button (click)="prevPage()" [disabled]="currentPage === 1"
+          class="px-4 py-2 flex items-center justify-center text-sm font-medium text-gray-800 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700">
+          Anterior
+        </button>
+        <div class="px-4 py-2 bg-gray-200 border border-gray-300 text-gray-700 rounded">
+          Página {{ currentPage }} de {{ totalPages }}
+        </div>
+        <button (click)="nextPage()" [disabled]="currentPage === totalPages"
+          class="px-4 py-2 flex items-center justify-center text-sm font-medium text-gray-800 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700">
+          Siguiente
+        </button>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Crear/Editar Materias -->
+<div *ngIf="showFormModal"
+  class="fixed inset-0 flex items-center justify-center z-50 transition-transform duration-300 transform bg-black bg-opacity-50">
+  <div class="bg-white rounded-xl shadow-xl max-w-xl w-full p-6 relative">
+    <button (click)="closeFormModal()"
+      class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none">
+      <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+    <h3 class="text-xl font-semibold text-gray-800 mb-4">
+      {{ editMode ? 'Editar Materia' : 'Nueva Materia' }}
+    </h3>
+    <form [formGroup]="materiaForm" (ngSubmit)="onSubmitForm()">
+      <div class="space-y-4">
+        <div>
+          <label class="block text-gray-700">Clave</label>
+          <input type="text" formControlName="clave" placeholder="Ingrese la clave"
+            class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-gray-700">Nombre</label>
+          <input type="text" formControlName="nombre" placeholder="Ingrese el nombre"
+            class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+        </div>
+        <div>
+          <label class="block text-gray-700">Seleccionar Carrera</label>
+          <select formControlName="carreraId"
+            class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            <option value="" disabled>Seleccione una carrera...</option>
+            <option *ngFor="let carrera of carreras" [value]="carrera.id">
+              {{ carrera.nombre }}
+            </option>
+          </select>
+        </div>
+      </div>
+      <div class="mt-6 flex justify-end">
+        <button type="submit"
+          class="px-4 py-2 bg-indigo-700 text-white rounded-xl hover:bg-indigo-800 transition duration-150">
+          Guardar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
