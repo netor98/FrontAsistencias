@@ -46,7 +46,7 @@
                 </a>
 
                 <!-- Horarios link -->
-                <a routerLink="" routerLinkActive="bg-blue-600" [routerLinkActiveOptions]="{ exact: true }"
+                <a routerLink="/dashboard-maestro/maestro-horarios" routerLinkActive="bg-blue-600" [routerLinkActiveOptions]="{ exact: true }"
                     class="group flex items-center px-2 py-3 text-sm font-medium rounded-xl text-blue-100 hover:bg-blue-700 hover:text-white transition duration-150 ease-in-out">
                     <svg class="h-6 w-6 text-blue-300" xmlns="http://www.w3.org/2000/svg" fill="none"
                         viewBox="0 0 24 24" stroke="currentColor">
@@ -54,17 +54,6 @@
                             d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     <span *ngIf="!sidebarCollapsed" class="ml-3">Horarios</span>
-                </a>
-
-                <!-- Asistencias link -->
-                <a routerLink="" routerLinkActive="bg-blue-600" [routerLinkActiveOptions]="{ exact: true }"
-                    class="group flex items-center px-2 py-3 text-sm font-medium rounded-xl text-blue-100 hover:bg-blue-700 hover:text-white transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6 text-blue-300" xmlns="http://www.w3.org/2000/svg" fill="none"
-                        viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                    <span *ngIf="!sidebarCollapsed" class="ml-3">Registrar Asistencias</span>
                 </a>
 
             </nav>

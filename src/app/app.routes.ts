@@ -9,6 +9,7 @@ import { HorariosgeneralComponent } from '@presentation/pages/horariosgeneral/ho
 
 import { DashboardJefeComponent } from '@presentation/pages/dashboard-jefe/dashboard-jefe.component';
 import { JefeHomeComponent } from '@presentation/pages/dashboard-jefe/components/jefe-home/jefe-home.component';
+import { JefeHorariosComponent } from '@presentation/pages/dashboard-jefe/components/jefe-horarios/jefe-horarios.component';
 
 import { DashboardChecadorComponent } from '@presentation/pages/dashboard-checador/dashboard-checador.component';
 import { ChecadorHomeComponent } from '@presentation/pages/dashboard-checador/components/checador-home/checador-home.component';
@@ -16,6 +17,7 @@ import { ChecadorHorariosComponent } from '@presentation/pages/dashboard-checado
 
 import { DashboardMaestroComponent } from '@presentation/pages/dashboard-maestro/dashboard-maestro.component';
 import { MaestroHomeComponent } from '@presentation/pages/dashboard-maestro/components/maestro-home/maestro-home.component';
+import { MaestroHorariosComponent } from '@presentation/pages/dashboard-maestro/components/maestro-horarios/maestro-horarios.component';
 
 import { AsistenciasComponent } from './presentation/pages/asistencias/asistencias.component';
 import { DashboardComponent } from './presentation/pages/dashboard/dashboard.component';
@@ -67,7 +69,10 @@ export const routes: Routes = [
       [
         {
           path: '', component: JefeHomeComponent
-        }
+        },
+        {
+          path: 'jefe-horarios', component: JefeHorariosComponent
+        },
 
       ]
   },
@@ -80,7 +85,7 @@ export const routes: Routes = [
           path: '', component: ChecadorHomeComponent
         },
        {
-          path: 'dashboard-checador-horarios', component: ChecadorHorariosComponent
+          path: 'checador-horarios', component: ChecadorHorariosComponent
        }
       ]
   },
@@ -92,7 +97,11 @@ export const routes: Routes = [
         {
           path: '', component: MaestroHomeComponent
 
+        },
+        {
+          path: 'maestro-horarios', component: MaestroHorariosComponent
         }
+        
       ]
   },
 

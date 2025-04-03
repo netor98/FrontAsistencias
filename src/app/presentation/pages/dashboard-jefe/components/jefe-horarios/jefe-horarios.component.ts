@@ -27,20 +27,15 @@ interface FilterOptions {
   classroom: string
   teacher: string
   career: string
-  time: string
-  subject: string
 }
 
-// Define attendance status type
-type AttendanceStatus = "asistio" | "no-asistio" | "pendiente"
-
 @Component({
-  selector: "app-jefe-home",
+  selector: "app-checador-horarios",
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: "./jefe-home.component.html",
+  templateUrl: "./jefe-horarios.component.html",
 })
-export class JefeHomeComponent implements OnInit {
+export class JefeHorariosComponent implements OnInit {
   schoolCycle = "2024-2025"
   period = "1"
 
@@ -55,8 +50,6 @@ export class JefeHomeComponent implements OnInit {
     classroom: "",
     teacher: "",
     career: "",
-    time: "",
-    subject: "",
   }
 
   // Options for dropdowns
@@ -72,8 +65,6 @@ export class JefeHomeComponent implements OnInit {
   // Derived filter options (will be populated from data)
   classroomOptions: string[] = []
   teacherOptions: string[] = []
-  timeOptions: string[] = []
-  subjectOptions: string[] = []
 
   // Sample data for multiple groups
   groupsData: GroupInfo[] = [
@@ -84,12 +75,12 @@ export class JefeHomeComponent implements OnInit {
       classes: [
         {
           id: 1,
-          time: "07:00 - 08:30",
+          time: "7:00 - 8:30",
           subject: "Programación Orientada a Objetos",
           teacher: "Prof. García",
           classroom: "A-101",
         },
-        { id: 2, time: "08:30 - 10:00", subject: "Bases de Datos", teacher: "Prof. Rodríguez", classroom: "A-102" },
+        { id: 2, time: "8:30 - 10:00", subject: "Bases de Datos", teacher: "Prof. Rodríguez", classroom: "A-102" },
         { id: 3, time: "10:30 - 12:00", subject: "Redes de Computadoras", teacher: "Prof. López", classroom: "A-103" },
         { id: 4, time: "12:00 - 13:30", subject: "Sistemas Operativos", teacher: "Prof. Martínez", classroom: "A-104" },
         {
@@ -101,12 +92,13 @@ export class JefeHomeComponent implements OnInit {
         },
       ],
     },
+    
   ]
 
   weekdays: string[] = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
 
   // For tracking attendance
-  attendanceStatus: { [key: string]: { [key: string]: AttendanceStatus } } = {}
+  attendanceStatus: { [key: string]: { [key: string]: string } } = {}
 
   // For week tracking
   currentWeek: WeekInfo
@@ -138,23 +130,18 @@ export class JefeHomeComponent implements OnInit {
 
     // Extract unique classrooms and teachers for filter dropdowns
     this.extractFilterOptions()
-
-    // Populate subjectOptions from groupsData
-    this.extractSubjectOptions()
   }
 
   ngOnInit(): void {
     // Initialize attendance status for all classes and days in all groups
     this.groupsData.forEach((group) => {
       group.classes.forEach((classItem) => {
-        // Initialize for all days
-        this.weekdays.forEach((day) => {
-          if (!this.attendanceStatus[group.id]) {
-            this.attendanceStatus[group.id] = {}
-          }
-          const key = `${classItem.id}-${day}`
-          this.attendanceStatus[group.id][key] = "pendiente"
-        })
+        // Only initialize for the current day
+        const key = `${classItem.id}-${this.currentDayName}`
+        if (!this.attendanceStatus[group.id]) {
+          this.attendanceStatus[group.id] = {}
+        }
+        this.attendanceStatus[group.id][key] = "pendiente"
       })
     })
   }
@@ -164,36 +151,16 @@ export class JefeHomeComponent implements OnInit {
     const classrooms = new Set<string>()
     // Extract unique teachers
     const teachers = new Set<string>()
-    // Extract unique times
-    const times = new Set<string>()
 
     this.groupsData.forEach((group) => {
       group.classes.forEach((classItem) => {
         classrooms.add(classItem.classroom)
         teachers.add(classItem.teacher)
-        times.add(classItem.time)
       })
     })
 
     this.classroomOptions = Array.from(classrooms).sort()
     this.teacherOptions = Array.from(teachers).sort()
-
-    // Sort times chronologically based on the start time
-    this.timeOptions = Array.from(times).sort((a, b) => {
-      const timeA = a.split(" - ")[0]
-      const timeB = b.split(" - ")[0]
-      return timeA.localeCompare(timeB)
-    })
-  }
-
-  extractSubjectOptions(): void {
-    const subjects = new Set<string>()
-    this.groupsData.forEach((group) => {
-      group.classes.forEach((classItem) => {
-        subjects.add(classItem.subject)
-      })
-    })
-    this.subjectOptions = Array.from(subjects).sort()
   }
 
   getCurrentWeekInfo(): WeekInfo {
@@ -261,52 +228,22 @@ export class JefeHomeComponent implements OnInit {
     return week1 && week2 ? week1.weekNumber === week2.weekNumber : week1 === week2
   }
 
-  // New method to set attendance status
-  setAttendanceStatus(groupId: string, classId: number, day: string, status: AttendanceStatus): void {
+  updateAttendance(groupId: string, classId: number, status: string): void {
     if (!this.attendanceStatus[groupId]) {
       this.attendanceStatus[groupId] = {}
     }
-    const key = `${classId}-${day}`
+    // Only update for the current day
+    const key = `${classId}-${this.currentDayName}`
     this.attendanceStatus[groupId][key] = status
   }
 
-  // New method to check if a specific status is set
-  isAttendanceStatus(groupId: string, classId: number, day: string, status: AttendanceStatus): boolean {
-    if (!this.attendanceStatus[groupId]) {
-      return status === "pendiente"
-    }
-    const key = `${classId}-${day}`
-    return this.attendanceStatus[groupId][key] === status
-  }
-
-  // Keep the original method for backward compatibility
-  getAttendanceStatus(groupId: string, classId: number, day: string): AttendanceStatus {
+  getAttendanceStatus(groupId: string, classId: number): string {
     if (!this.attendanceStatus[groupId]) {
       return "pendiente"
     }
-    const key = `${classId}-${day}`
+    // Only get status for the current day
+    const key = `${classId}-${this.currentDayName}`
     return this.attendanceStatus[groupId][key] || "pendiente"
-  }
-
-  // Method to update attendance for a specific day
-  updateAttendance(groupId: string, classId: number, day: string, status: AttendanceStatus): void {
-    if (!this.attendanceStatus[groupId]) {
-      this.attendanceStatus[groupId] = {}
-    }
-
-    const key = `${classId}-${day}`
-
-    // Si el estado actual ya es el mismo que el nuevo, lo cambiamos a pendiente (toggle)
-    if (this.attendanceStatus[groupId][key] === status) {
-      this.attendanceStatus[groupId][key] = "pendiente"
-    } else {
-      // Si no, establecemos el nuevo estado
-      this.attendanceStatus[groupId][key] = status
-    }
-
-    console.log(
-      `Attendance updated: Group ${groupId}, Class ${classId}, Day ${day}, Status ${this.attendanceStatus[groupId][key]}`,
-    )
   }
 
   resetFilters(): void {
@@ -314,8 +251,6 @@ export class JefeHomeComponent implements OnInit {
       classroom: "",
       teacher: "",
       career: "",
-      time: "",
-      subject: "",
     }
   }
 
@@ -327,8 +262,8 @@ export class JefeHomeComponent implements OnInit {
         return false
       }
 
-      // Filter by classroom, teacher, subject, or time (check if any class matches)
-      if (this.filters.classroom || this.filters.teacher || this.filters.time || this.filters.subject) {
+      // Filter by classroom or teacher (check if any class matches)
+      if (this.filters.classroom || this.filters.teacher) {
         return group.classes.some((classItem) => {
           // Filter by classroom
           if (this.filters.classroom && classItem.classroom !== this.filters.classroom) {
@@ -337,16 +272,6 @@ export class JefeHomeComponent implements OnInit {
 
           // Filter by teacher
           if (this.filters.teacher && classItem.teacher !== this.filters.teacher) {
-            return false
-          }
-
-          // Filter by time
-          if (this.filters.time && classItem.time !== this.filters.time) {
-            return false
-          }
-
-          // Filter by subject
-          if (this.filters.subject && classItem.subject !== this.filters.subject) {
             return false
           }
 
@@ -360,7 +285,7 @@ export class JefeHomeComponent implements OnInit {
 
   // Filter classes within a group based on selected criteria
   filterClasses(classes: ClassItem[]): ClassItem[] {
-    if (!this.filters.classroom && !this.filters.teacher && !this.filters.time && !this.filters.subject) {
+    if (!this.filters.classroom && !this.filters.teacher) {
       return classes
     }
 
@@ -375,16 +300,6 @@ export class JefeHomeComponent implements OnInit {
         return false
       }
 
-      // Filter by time
-      if (this.filters.time && classItem.time !== this.filters.time) {
-        return false
-      }
-
-      // Filter by subject
-      if (this.filters.subject && classItem.subject !== this.filters.subject) {
-        return false
-      }
-
       return true
     })
   }
@@ -395,8 +310,6 @@ export class JefeHomeComponent implements OnInit {
   }
 
   saveAttendance(): void {
-    console.log("Saving attendance for all groups:", this.attendanceStatus)
-    // Here  void {
     console.log("Saving attendance for all groups:", this.attendanceStatus)
     // Here you would typically send the data to a backend service
     alert("Asistencias guardadas correctamente")

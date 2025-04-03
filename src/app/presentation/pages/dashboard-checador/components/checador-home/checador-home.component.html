@@ -35,12 +35,12 @@
         Solo se puede registrar asistencia para el día actual.
       </p>
     </div>
-
+    
     
     <!-- Filters -->
     <div class="mt-4 pt-4 border-t border-gray-200">
       <h3 class="font-medium text-gray-700 mb-3">Filtros:</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <!-- Classroom filter -->
         <div class="flex flex-col gap-1">
           <label for="classroom-filter" class="text-sm text-gray-600">Aula:</label>
@@ -68,6 +68,16 @@
                   class="p-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
             <option value="">Todas las carreras</option>
             <option *ngFor="let career of careers" [value]="career.id">{{ career.name }}</option>
+          </select>
+        </div>
+        
+        <!-- Time filter (new) -->
+        <div class="flex flex-col gap-1">
+          <label for="time-filter" class="text-sm text-gray-600">Horario:</label>
+          <select id="time-filter" [(ngModel)]="filters.time"
+                  class="p-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <option value="">Todos los horarios</option>
+            <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
           </select>
         </div>
       </div>
@@ -118,17 +128,28 @@
             <td class="p-3 text-gray-700 border-b border-gray-200">{{ classItem.teacher }}</td>
             <td class="p-3 text-gray-700 border-b border-gray-200">{{ classItem.classroom }}</td>
             <td class="p-3 text-center border-b border-gray-200">
-              <select [(ngModel)]="attendanceStatus[group.id][classItem.id + '-' + currentDayName]" 
-                      (change)="updateAttendance(group.id, classItem.id, attendanceStatus[group.id][classItem.id + '-' + currentDayName])"
-                      class="w-32 p-2 mx-auto border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      [ngClass]="{
-                        'bg-green-50 border-green-300': attendanceStatus[group.id] && attendanceStatus[group.id][classItem.id + '-' + currentDayName] === 'asistio',
-                        'bg-red-50 border-red-300': attendanceStatus[group.id] && attendanceStatus[group.id][classItem.id + '-' + currentDayName] === 'no-asistio'
-                      }">
-                <option value="pendiente">Pendiente</option>
-                <option value="asistio">Asistió</option>
-                <option value="no-asistio">No Asistió</option>
-              </select>
+              <!-- Replace select with two checkboxes -->
+              <div class="flex justify-center items-center gap-3">
+                <!-- Attended checkbox -->
+                <div class="flex items-center">
+                  <input type="checkbox" 
+                         [checked]="isAttendanceStatus(group.id, classItem.id, 'asistio')"
+                         (change)="setAttendanceStatus(group.id, classItem.id, 'asistio')"
+                         [disabled]="isAttendanceStatus(group.id, classItem.id, 'no-asistio')"
+                         class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                  <span class="ml-1 text-xs text-green-700">Asistió</span>
+                </div>
+                
+                <!-- Did not attend checkbox -->
+                <div class="flex items-center">
+                  <input type="checkbox" 
+                         [checked]="isAttendanceStatus(group.id, classItem.id, 'no-asistio')"
+                         (change)="setAttendanceStatus(group.id, classItem.id, 'no-asistio')"
+                         [disabled]="isAttendanceStatus(group.id, classItem.id, 'asistio')"
+                         class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                  <span class="ml-1 text-xs text-red-700">No asistió</span>
+                </div>
+              </div>
             </td>
           </tr>
         </tbody>
