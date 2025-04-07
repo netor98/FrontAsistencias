@@ -19,11 +19,12 @@ import { DashboardMaestroComponent } from '@presentation/pages/dashboard-maestro
 import { MaestroHomeComponent } from '@presentation/pages/dashboard-maestro/components/maestro-home/maestro-home.component';
 import { MaestroHorariosComponent } from '@presentation/pages/dashboard-maestro/components/maestro-horarios/maestro-horarios.component';
 
-import { AsistenciasComponent } from './presentation/pages/asistencias/asistencias.component';
+import { AsistenciasComponent } from '@presentation/pages/admin/asistencias/asistencias.component';
 import { DashboardComponent } from './presentation/pages/dashboard/dashboard.component';
 import { AdminDashboardComponent } from '@presentation/pages/admin/dashboard/dashboard.component';
 import { CarrerasComponent } from '@presentation/pages/admin/carreras/carreras.component';
 import { MateriasComponent } from '@presentation/pages/admin/materias/materias.component';
+import { UsersComponent } from '@presentation/pages/admin/users/users.component';
 
 export const routes: Routes = [
 
@@ -107,19 +108,29 @@ export const routes: Routes = [
   },
 
   {
-    path: 'admin', component: AdminDashboardComponent,
+    path: 'admin',
+    component: AdminDashboardComponent,
     children: [
+      {
+        path: '', redirectTo: 'dashboard', pathMatch: 'full'
+      },
+      {
+        path: 'dashboard', component: DashboardComponent
+      },
       {
         path: 'carreras', component: CarrerasComponent
       },
-
       {
         path: 'materias', component: MateriasComponent
+      },
+      {
+        path: 'usuarios', component: UsersComponent
+      },
+      {
+        path: 'asistencias', component: AsistenciasComponent
       }
     ]
   }
-
-
 
   //   // Control de inicio de sesión y registro de usuarios
   //   {

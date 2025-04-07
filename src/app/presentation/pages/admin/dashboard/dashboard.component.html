@@ -48,7 +48,7 @@
           <span *ngIf="!sidebarCollapsed" class="ml-3">Carreras</span>
         </a>
 
-        <!-- Asistencias link -->
+        <!-- Materias link -->
         <a routerLink="/admin/materias" routerLinkActive="bg-indigo-500" [routerLinkActiveOptions]="{ exact: true }"
           class="group flex items-center px-2 py-3 text-sm font-medium rounded-md text-indigo-100 hover:bg-indigo-800 hover:text-white transition duration-150 ease-in-out">
           <svg class="h-6 w-6 text-indigo-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -56,7 +56,18 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
-          <span *ngIf="!sidebarCollapsed" class="ml-3">Asistencias</span>
+          <span *ngIf="!sidebarCollapsed" class="ml-3">Materias</span>
+        </a>
+
+        <!-- Users link -->
+        <a routerLink="/admin/usuarios" routerLinkActive="bg-indigo-500" [routerLinkActiveOptions]="{ exact: true }"
+          class="group flex items-center px-2 py-3 text-sm font-medium rounded-md text-indigo-100 hover:bg-indigo-800 hover:text-white transition duration-150 ease-in-out">
+          <svg class="h-6 w-6 text-indigo-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          <span *ngIf="!sidebarCollapsed" class="ml-3">Usuarios</span>
         </a>
 
         <!-- Perfil link -->
@@ -69,6 +80,21 @@
           </svg>
           <span *ngIf="!sidebarCollapsed" class="ml-3">Perfil</span>
         </a>
+
+        <!-- Add Asistencias link to navigation -->
+        <li>
+          <a
+            routerLink="/admin/asistencias"
+            routerLinkActive="bg-gray-900 text-white"
+            class="text-gray-300 hover:bg-gray-700 hover:text-white group flex items-center px-2 py-2 text-base font-medium rounded-md"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="mr-4 flex-shrink-0 h-6 w-6 text-gray-400">
+              <path d="M12.75 12.75a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM7.5 15.75a.75.75 0 100-1.5.75.75 0 000 1.5zM8.25 17.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM9.75 15.75a.75.75 0 100-1.5.75.75 0 000 1.5zM10.5 17.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM12 15.75a.75.75 0 100-1.5.75.75 0 000 1.5zM12.75 17.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM14.25 15.75a.75.75 0 100-1.5.75.75 0 000 1.5zM15 17.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM16.5 15.75a.75.75 0 100-1.5.75.75 0 000 1.5zM15 12.75a.75.75 0 11-1.5 0 .75.75 0 011.5 0zM16.5 13.5a.75.75 0 100-1.5.75.75 0 000 1.5z" />
+              <path fill-rule="evenodd" d="M6.75 2.25A.75.75 0 017.5 3v1.5h9V3A.75.75 0 0118 3v1.5h.75a3 3 0 013 3v11.25a3 3 0 01-3 3H5.25a3 3 0 01-3-3V7.5a3 3 0 013-3H6V3a.75.75 0 01.75-.75zm13.5 9a1.5 1.5 0 00-1.5-1.5H5.25a1.5 1.5 0 00-1.5 1.5v7.5a1.5 1.5 0 001.5 1.5h13.5a1.5 1.5 0 001.5-1.5v-7.5z" clip-rule="evenodd" />
+            </svg>
+            <span [class.opacity-0]="sidebarCollapsed">Asistencias</span>
+          </a>
+        </li>
       </nav>
 
       <!-- User profile section -->

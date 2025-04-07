@@ -9,16 +9,42 @@
     </div>
 
     <!-- Filtros -->
-    <!-- <materias-filters (filterChanged)="onFilterChanged($event)"></materias-filters> -->
+    <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
+      <div class="flex flex-wrap gap-4 items-end">
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+          <input type="text" [(ngModel)]="searchTerm" (input)="applyFilters()" placeholder="Buscar por nombre o clave"
+            class="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500">
+        </div>
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Carrera</label>
+          <select [(ngModel)]="selectedCarreraFilter" (change)="applyFilters()"
+            class="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500">
+            <option [ngValue]="null">Todas las carreras</option>
+            <option *ngFor="let carrera of carreras" [ngValue]="carrera.id">{{ carrera.nombre }}</option>
+          </select>
+        </div>
+        <button (click)="selectedCarreraFilter = null; searchTerm = ''; applyFilters()"
+          class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition">
+          Limpiar filtros
+        </button>
+      </div>
+    </div>
+
+    <!-- Indicador de carga -->
+    <div *ngIf="isLoading" class="flex justify-center py-4">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-700"></div>
+    </div>
 
     <!-- Tabla de Materias -->
-    <div class="bg-white shadow-md overflow-x-auto rounded-lg">
+    <div *ngIf="!isLoading" class="bg-white shadow-md overflow-x-auto rounded-lg">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-100">
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clave</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Créditos</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Carrera</th>
             <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
           </tr>
@@ -28,29 +54,31 @@
             <td class="px-6 py-4 whitespace-nowrap text-sm">{{ materia.id }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm">{{ materia.clave }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm">{{ materia.nombre }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ materia.carrera.nombre}}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ materia.creditos }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ getCarreraNombre(materia.carrera.id) }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
               <button (click)="openFormModal(materia)"
                 class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-full bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-2 transition duration-150">
                 Editar
               </button>
-              <button (click)="onDelete(materia.id)"
+              <button (click)="confirmDelete(materia.id)"
                 class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-full bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150">
                 Eliminar
               </button>
             </td>
           </tr>
           <tr *ngIf="filteredMaterias.length === 0">
-            <td colspan="5" class="text-center py-4 text-gray-500">No hay registros</td>
+            <td colspan="6" class="text-center py-4 text-gray-500">No hay registros</td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <!-- Paginación -->
-    <div class="flex justify-center items-center mt-6">
+    <div *ngIf="!isLoading && filteredMaterias.length > 0" class="flex justify-center items-center mt-6">
       <nav class="flex items-center space-x-2">
         <button (click)="prevPage()" [disabled]="currentPage === 1"
+          [ngClass]="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''"
           class="px-4 py-2 flex items-center justify-center text-sm font-medium text-gray-800 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700">
           Anterior
         </button>
@@ -58,6 +86,7 @@
           Página {{ currentPage }} de {{ totalPages }}
         </div>
         <button (click)="nextPage()" [disabled]="currentPage === totalPages"
+          [ngClass]="currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''"
           class="px-4 py-2 flex items-center justify-center text-sm font-medium text-gray-800 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700">
           Siguiente
         </button>
@@ -85,29 +114,89 @@
           <label class="block text-gray-700">Clave</label>
           <input type="text" formControlName="clave" placeholder="Ingrese la clave"
             class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+          <div *ngIf="materiaForm.get('clave')?.touched && materiaForm.get('clave')?.errors?.['required']"
+            class="text-red-500 text-sm mt-1">
+            La clave es obligatoria
+          </div>
+          <div *ngIf="materiaForm.get('clave')?.touched && materiaForm.get('clave')?.errors?.['maxlength']"
+            class="text-red-500 text-sm mt-1">
+            La clave debe tener máximo 20 caracteres
+          </div>
         </div>
         <div>
           <label class="block text-gray-700">Nombre</label>
           <input type="text" formControlName="nombre" placeholder="Ingrese el nombre"
             class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+          <div *ngIf="materiaForm.get('nombre')?.touched && materiaForm.get('nombre')?.errors?.['required']"
+            class="text-red-500 text-sm mt-1">
+            El nombre es obligatorio
+          </div>
+          <div *ngIf="materiaForm.get('nombre')?.touched && materiaForm.get('nombre')?.errors?.['maxlength']"
+            class="text-red-500 text-sm mt-1">
+            El nombre debe tener máximo 100 caracteres
+          </div>
+        </div>
+        <div>
+          <label class="block text-gray-700">Créditos</label>
+          <input type="number" formControlName="creditos" min="1" max="10"
+            class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+          <div *ngIf="materiaForm.get('creditos')?.touched && materiaForm.get('creditos')?.errors?.['required']"
+            class="text-red-500 text-sm mt-1">
+            Los créditos son obligatorios
+          </div>
+          <div *ngIf="materiaForm.get('creditos')?.touched && (materiaForm.get('creditos')?.errors?.['min'] || materiaForm.get('creditos')?.errors?.['max'])"
+            class="text-red-500 text-sm mt-1">
+            Los créditos deben estar entre 1 y 10
+          </div>
         </div>
         <div>
           <label class="block text-gray-700">Seleccionar Carrera</label>
           <select formControlName="carreraId"
             class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-            <option value="" disabled>Seleccione una carrera...</option>
-            <option *ngFor="let carrera of carreras" [value]="carrera.id">
+            <option [ngValue]="null">Seleccione una carrera...</option>
+            <option *ngFor="let carrera of carreras" [ngValue]="carrera.id">
               {{ carrera.nombre }}
             </option>
           </select>
+          <div *ngIf="materiaForm.get('carreraId')?.touched && materiaForm.get('carreraId')?.errors?.['required']"
+            class="text-red-500 text-sm mt-1">
+            Debe seleccionar una carrera
+          </div>
         </div>
       </div>
       <div class="mt-6 flex justify-end">
-        <button type="submit"
-          class="px-4 py-2 bg-indigo-700 text-white rounded-xl hover:bg-indigo-800 transition duration-150">
+        <button type="button" (click)="closeFormModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-xl hover:bg-gray-400 transition duration-150 mr-2">
+          Cancelar
+        </button>
+        <button type="submit" [disabled]="isLoading"
+          class="px-4 py-2 bg-indigo-700 text-white rounded-xl hover:bg-indigo-800 transition duration-150 flex items-center">
+          <span *ngIf="isLoading" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
           Guardar
         </button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Modal de Confirmación de Eliminación -->
+<div *ngIf="showDeleteModal"
+  class="fixed inset-0 flex items-center justify-center z-50 transition-transform duration-300 transform bg-black bg-opacity-50">
+  <div class="bg-white rounded-xl shadow-xl max-w-md w-full p-6 relative">
+    <h3 class="text-xl font-semibold text-gray-800 mb-4">
+      Confirmar Eliminación
+    </h3>
+    <p class="text-gray-600 mb-6">
+      ¿Está seguro que desea eliminar esta materia? Esta acción no se puede deshacer.
+    </p>
+    <div class="flex justify-end gap-3">
+      <button (click)="cancelDelete()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-xl hover:bg-gray-400 transition duration-150">
+        Cancelar
+      </button>
+      <button (click)="onDelete(materiaIdToDelete!)" [disabled]="isLoading"
+        class="px-4 py-2 bg-red-600 text-white rounded-xl hover:bg-red-700 transition duration-150 flex items-center">
+        <span *ngIf="isLoading" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
+        Eliminar
+      </button>
+    </div>
   </div>
 </div>
