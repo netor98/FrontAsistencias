@@ -46,7 +46,8 @@
                 </a>
 
                 <!-- Horarios link -->
-                <a routerLink="/dashboard-maestro/maestro-horarios" routerLinkActive="bg-blue-600" [routerLinkActiveOptions]="{ exact: true }"
+                <a routerLink="/dashboard-maestro/maestro-horarios" routerLinkActive="bg-blue-600"
+                    [routerLinkActiveOptions]="{ exact: true }"
                     class="group flex items-center px-2 py-3 text-sm font-medium rounded-xl text-blue-100 hover:bg-blue-700 hover:text-white transition duration-150 ease-in-out">
                     <svg class="h-6 w-6 text-blue-300" xmlns="http://www.w3.org/2000/svg" fill="none"
                         viewBox="0 0 24 24" stroke="currentColor">
@@ -64,14 +65,14 @@
                 <div class="flex items-center w-full">
                     <div>
                         <div class="rounded-full h-9 w-9 flex items-center justify-center bg-blue-600 text-white">
-                            <span class="text-sm font-medium leading-none">JL</span>
+                            <span class="text-sm font-medium leading-none">{{ userInitials }}</span>
                         </div>
                     </div>
-                    <div *ngIf="!sidebarCollapsed" class="ml-3">
-                        <p class="text-sm font-medium text-white">José Castro</p>
-                        <p class="text-xs font-medium text-blue-200">Maestro</p>
+                    <div *ngIf="!sidebarCollapsed && currentUser" class="ml-3">
+                        <p class="text-sm font-medium text-white">{{ currentUser.name || '' }}</p>
+                        <p class="text-xs font-medium text-blue-200">{{ currentUser.role || 'Maestro' }}</p>
                     </div>
-                    <button *ngIf="!sidebarCollapsed"
+                    <button *ngIf="!sidebarCollapsed" (click)="logout()"
                         class="ml-auto bg-blue-700 flex-shrink-0 p-1 rounded-full text-blue-200 hover:text-white">
                         <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor">
