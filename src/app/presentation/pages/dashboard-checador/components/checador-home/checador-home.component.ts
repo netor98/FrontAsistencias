@@ -48,6 +48,7 @@ export class ChecadorHomeComponent implements OnInit {
   currentDayName: string
   currentDayIndex: number
   formattedDate: string
+  isWeekend = false;
 
   // Filters
   filters: FilterOptions = {
@@ -194,20 +195,42 @@ export class ChecadorHomeComponent implements OnInit {
   weeks: WeekInfo[] = []
 
   constructor() {
+    // // Get current day information
+    // this.currentDayIndex = this.today.getDay() - 1 // 0 = Monday, 4 = Friday
+    // if (this.currentDayIndex < 0 || this.currentDayIndex > 4) {
+    //   // If weekend, default to Monday
+    //   this.currentDayIndex = 0
+    // }
+    // this.currentDayName = this.weekdays[this.currentDayIndex]
+
+    // // Format today's date
+    // this.formattedDate = this.today.toLocaleDateString("es-ES", {
+    //   year: "numeric",
+    //   month: "long",
+    //   day: "numeric",
+    // })
+
     // Get current day information
-    this.currentDayIndex = this.today.getDay() - 1 // 0 = Monday, 4 = Friday
-    if (this.currentDayIndex < 0 || this.currentDayIndex > 4) {
-      // If weekend, default to Monday
-      this.currentDayIndex = 0
+    const dayOfWeek = this.today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+
+    if (dayOfWeek === 0 || dayOfWeek === 6) {
+      // If weekend (Sunday or Saturday)
+      this.currentDayIndex = 0; // Default to Monday for UI
+      this.isWeekend = true; // Add a new flag to indicate it's weekend
+    } else {
+      // Weekday: Convert JS day (1-5) to our index (0-4)
+      this.currentDayIndex = dayOfWeek - 1;
+      this.isWeekend = false;
     }
-    this.currentDayName = this.weekdays[this.currentDayIndex]
+
+    this.currentDayName = this.weekdays[this.currentDayIndex];
 
     // Format today's date
     this.formattedDate = this.today.toLocaleDateString("es-ES", {
       year: "numeric",
       month: "long",
       day: "numeric",
-    })
+    });
 
     this.currentWeek = this.getCurrentWeekInfo()
     this.generateWeeksForSemester()

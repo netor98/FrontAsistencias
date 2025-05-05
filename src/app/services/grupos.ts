@@ -55,27 +55,27 @@ export const gruposService = {
     if (error) throw new Error(error.message);
   },
 
-  async getClassrooms(): Promise<string[]> {
-    const { data, error } = await supabase
-      .from('grupo')
-      .select('classroom');
+  // async getClassrooms(): Promise<string[]> {
+  //   const { data, error } = await supabase
+  //     .from('grupo')
+  //     .select('classroom');
 
-    if (error) throw new Error(error.message);
+  //   if (error) throw new Error(error.message);
 
-    // Obtener valores únicos
-    const classrooms = data.map(item => item.classroom);
-    return [...new Set(classrooms)];
-  },
+  //   // Obtener valores únicos
+  //   const classrooms = data.map(item => item.classroom);
+  //   return [...new Set(classrooms)];
+  // },
 
-  async getBuildings(): Promise<string[]> {
-    const { data, error } = await supabase
-      .from('grupo')
-      .select('building');
+  // async getBuildings(): Promise<string[]> {
+  //   const { data, error } = await supabase
+  //     .from('grupo')
+  //     .select('building');
 
-    if (error) throw new Error(error.message);
+  //   if (error) throw new Error(error.message);
 
-    // Obtener valores únicos
-    const buildings = data.map(item => item.building);
-    return [...new Set(buildings)];
-  }
+  //   // Obtener valores únicos
+  //   const buildings = data.map(item => item.building);
+  //   return [...new Set(buildings)];
+  // }
 };
