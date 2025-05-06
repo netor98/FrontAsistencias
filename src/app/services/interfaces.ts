@@ -73,7 +73,7 @@ export interface HorarioMaestro {
   };
   aulas?: {
     id: number;
-    name: string;
+    aula: string;
   };
   carreras?: {
     id: number;

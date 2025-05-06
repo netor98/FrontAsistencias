@@ -2,7 +2,9 @@ import { Component, type OnInit } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { FormsModule } from "@angular/forms"
 import { horariosService } from "src/app/services/horario-maestro"
-import { HorarioMaestro } from "src/app/services/interfaces"
+import { HorarioMaestro, Carrera } from "src/app/services/interfaces"
+import { carrerasService } from "src/app/services/carreras";
+
 
 interface ClassItem {
   id: number
@@ -10,6 +12,7 @@ interface ClassItem {
   subject: string
   teacher: string
   classroom: string // Added classroom field
+  day?: string
 }
 
 interface WeekInfo {
@@ -66,12 +69,15 @@ export class ChecadorHomeComponent implements OnInit {
   // Options for dropdowns
   schoolCycles: string[] = ["2023-2024", "2024-2025", "2025-2026"]
   periods: string[] = ["1", "2", "3"]
-  careers: { id: string; name: string }[] = [
-    { id: "ing-sistemas", name: "Ingeniería en Sistemas Computacionales" },
-    { id: "ing-industrial", name: "Ingeniería Industrial" },
-    { id: "ing-mecatronica", name: "Ingeniería Mecatrónica" },
-    { id: "lic-administracion", name: "Licenciatura en Administración" },
-  ]
+  // careers: { id: string; name: string }[] = [
+  //   { id: "ing-sistemas", name: "Ingeniería en Sistemas Computacionales" },
+  //   { id: "ing-industrial", name: "Ingeniería Industrial" },
+  //   { id: "ing-mecatronica", name: "Ingeniería Mecatrónica" },
+  //   { id: "lic-administracion", name: "Licenciatura en Administración" },
+  // ]
+
+  careers: { id: string; name: string }[] = [];
+  rawCarreras: Carrera[] = [];
 
   // Derived filter options (will be populated from data)
   classroomOptions: string[] = []
@@ -200,21 +206,6 @@ export class ChecadorHomeComponent implements OnInit {
   weeks: WeekInfo[] = []
 
   constructor() {
-    // // Get current day information
-    // this.currentDayIndex = this.today.getDay() - 1 // 0 = Monday, 4 = Friday
-    // if (this.currentDayIndex < 0 || this.currentDayIndex > 4) {
-    //   // If weekend, default to Monday
-    //   this.currentDayIndex = 0
-    // }
-    // this.currentDayName = this.weekdays[this.currentDayIndex]
-
-    // // Format today's date
-    // this.formattedDate = this.today.toLocaleDateString("es-ES", {
-    //   year: "numeric",
-    //   month: "long",
-    //   day: "numeric",
-    // })
-
     // Get current day information
     const dayOfWeek = this.today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
 
@@ -254,24 +245,157 @@ export class ChecadorHomeComponent implements OnInit {
     this.groupsData.forEach((group) => {
       group.classes.forEach((classItem) => {
         // Only initialize for the current day
-        const key = `${classItem.id}-${this.currentDayName}`
+        const key = `${classItem.id}-${this.currentDayName}`;
         if (!this.attendanceStatus[group.id]) {
-          this.attendanceStatus[group.id] = {}
+          this.attendanceStatus[group.id] = {};
         }
-        this.attendanceStatus[group.id][key] = "pendiente"
-      })
-    })
+        this.attendanceStatus[group.id][key] = "pendiente";
+      });
+    });
 
     // Obtener los horarios desde el servicio
     try {
+      // Obtener las carreras primero
+      this.rawCarreras = await carrerasService.getAll();
+      console.log('Carreras obtenidas:', this.rawCarreras);
+      
+      // Mapear las carreras al formato requerido por el componente
+      this.mapCarreras();
+
+      // Obtener los horarios
       this.horarios = await horariosService.getAll();
       console.log('Horarios obtenidos:', this.horarios);
 
-      // Opcional: Procesar los horarios para adaptarlos al formato del componente
-      // this.processHorarios();
+      // Procesar los horarios para adaptarlos al formato del componente
+      this.processHorarios();
     } catch (error) {
       console.error('Error al obtener horarios:', error);
     }
+  }
+
+  // Método para mapear las carreras de la API al formato del componente
+  mapCarreras(): void {
+    if (!this.rawCarreras || this.rawCarreras.length === 0) {
+      return;
+    }
+
+    this.careers = this.rawCarreras.map(carrera => {
+      // Determinar el id según el nombre
+      let careerId = 'unknown';
+      const carreraNombre = carrera.nombre.toLowerCase();
+
+      if (carreraNombre.includes('sistemas')) {
+        careerId = 'ing-sistemas';
+      } else if (carreraNombre.includes('industrial')) {
+        careerId = 'ing-industrial';
+      } else if (carreraNombre.includes('mecatrónica') || carreraNombre.includes('mecatronica')) {
+        careerId = 'ing-mecatronica';
+      } else if (carreraNombre.includes('administración') || carreraNombre.includes('administracion')) {
+        careerId = 'lic-administracion';
+      } else {
+        // Para cualquier otra carrera, usar el ID como identificador
+        careerId = `carrera-${carrera.id}`;
+      }
+
+      return {
+        id: careerId,
+        name: carrera.nombre.trim()
+      };
+    });
+
+    console.log('Carreras mapeadas:', this.careers);
+  }
+
+  processHorarios(): void {
+    if (!this.horarios || this.horarios.length === 0) {
+      console.log('No hay horarios para procesar');
+      return;
+    }
+
+    // Crear mapa para agrupar por carrera y grupo
+    const groupMap: Map<string, GroupInfo> = new Map();
+
+    this.horarios.forEach(horario => {
+      // Determinar careerID basado en la carrera del horario
+      let careerId = 'unknown';
+      if (horario.carreras) {
+        // Usar el mapeo de carreras para encontrar el careerId
+        const carreraEncontrada = this.careers.find(
+          c => c.name.toLowerCase() === horario.carreras?.nombre?.toLowerCase().trim()
+        );
+        
+        if (carreraEncontrada) {
+          careerId = carreraEncontrada.id;
+        } else {
+          // Si no se encuentra, usar el método anterior
+          const carreraNombre = horario.carreras.nombre || '';
+          if (carreraNombre.toLowerCase().includes('sistemas')) {
+            careerId = 'ing-sistemas';
+          } else if (carreraNombre.toLowerCase().includes('industrial')) {
+            careerId = 'ing-industrial';
+          } else if (carreraNombre.toLowerCase().includes('mecatrónica') || 
+                   carreraNombre.toLowerCase().includes('mecatronica')) {
+            careerId = 'ing-mecatronica';
+          } else if (carreraNombre.toLowerCase().includes('administración') || 
+                   carreraNombre.toLowerCase().includes('administracion')) {
+            careerId = 'lic-administracion';
+          }
+        }
+      }
+
+      // Crear ID para el grupo
+      const groupName = horario.grupo?.name || 'default';
+      const groupId = `${careerId}-${groupName}`;
+
+      // Obtener o crear el grupo en el mapa
+      if (!groupMap.has(groupId)) {
+        groupMap.set(groupId, {
+          id: groupId,
+          name: groupName,
+          career: careerId,
+          classes: []
+        });
+      }
+
+      // Preparar el horario en formato compatible con el componente
+      const group = groupMap.get(groupId);
+      if (group) {
+        group.classes.push({
+          id: horario.id,
+          time: `${horario.hora_inicio.slice(0, 5)} - ${horario.hora_fin.slice(0, 5)}`,
+          subject: horario.materias?.name || 'Sin materia',
+          teacher: horario.maestro?.name || 'Sin profesor',
+          classroom: horario.aulas?.aula || 'Sin aula',
+          day: horario.dia || ''  // Agregar el día del horario
+        });
+      }
+    });
+
+    // Convertir el mapa de grupos a un array
+    const processedGroups = Array.from(groupMap.values());
+    console.log('Grupos procesados:', processedGroups);
+
+    // Reemplazar los datos de prueba con los datos reales
+    this.groupsData = processedGroups;
+
+    // Actualizar las opciones de filtrado para los nuevos datos
+    this.extractFilterOptions();
+
+    // Inicializar el estado de asistencia para los nuevos grupos
+    this.initializeAttendanceStatus();
+  }
+
+  // Método auxiliar para inicializar el estado de asistencia
+  initializeAttendanceStatus(): void {
+    this.attendanceStatus = {};
+    this.groupsData.forEach((group) => {
+      this.attendanceStatus[group.id] = {};
+      group.classes.forEach((classItem) => {
+        // Solo inicializa para el día actual
+        const key = `${classItem.id}-${this.currentDayName}`;
+        this.attendanceStatus[group.id][key] = "pendiente";
+      });
+    });
   }
 
   extractFilterOptions(): void {
@@ -441,28 +565,34 @@ export class ChecadorHomeComponent implements OnInit {
 
   // Filter classes within a group based on selected criteria
   filterClasses(classes: ClassItem[]): ClassItem[] {
+    // Primero filtrar por el día actual
+    let filteredClasses = classes.filter(classItem =>
+      !classItem.day || classItem.day === this.currentDayName
+    );
+
+    // Luego aplicar los demás filtros
     if (!this.filters.classroom && !this.filters.teacher && !this.filters.time) {
-      return classes
+      return filteredClasses;
     }
 
-    return classes.filter((classItem) => {
+    return filteredClasses.filter((classItem) => {
       // Filter by classroom
       if (this.filters.classroom && classItem.classroom !== this.filters.classroom) {
-        return false
+        return false;
       }
 
       // Filter by teacher
       if (this.filters.teacher && classItem.teacher !== this.filters.teacher) {
-        return false
+        return false;
       }
 
       // Filter by time
       if (this.filters.time && classItem.time !== this.filters.time) {
-        return false
+        return false;
       }
 
-      return true
-    })
+      return true;
+    });
   }
 
   getCareerName(careerId: string): string {
@@ -476,4 +606,3 @@ export class ChecadorHomeComponent implements OnInit {
     alert("Asistencias guardadas correctamente")
   }
 }
-
