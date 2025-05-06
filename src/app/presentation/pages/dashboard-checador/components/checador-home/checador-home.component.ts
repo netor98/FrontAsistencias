@@ -1,6 +1,8 @@
 import { Component, type OnInit } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { FormsModule } from "@angular/forms"
+import { horariosService } from "src/app/services/horario-maestro"
+import { HorarioMaestro } from "src/app/services/interfaces"
 
 interface ClassItem {
   id: number
@@ -30,6 +32,7 @@ interface FilterOptions {
   time: string
 }
 
+
 // Define attendance status type
 type AttendanceStatus = "asistio" | "no-asistio" | "pendiente"
 
@@ -42,6 +45,8 @@ type AttendanceStatus = "asistio" | "no-asistio" | "pendiente"
 export class ChecadorHomeComponent implements OnInit {
   schoolCycle = "2024-2025"
   period = "1"
+
+  horarios: HorarioMaestro[] = [];
 
   // Current date information
   today = new Date()
@@ -244,7 +249,7 @@ export class ChecadorHomeComponent implements OnInit {
     this.extractFilterOptions()
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     // Initialize attendance status for all classes and days in all groups
     this.groupsData.forEach((group) => {
       group.classes.forEach((classItem) => {
@@ -256,6 +261,17 @@ export class ChecadorHomeComponent implements OnInit {
         this.attendanceStatus[group.id][key] = "pendiente"
       })
     })
+
+    // Obtener los horarios desde el servicio
+    try {
+      this.horarios = await horariosService.getAll();
+      console.log('Horarios obtenidos:', this.horarios);
+
+      // Opcional: Procesar los horarios para adaptarlos al formato del componente
+      // this.processHorarios();
+    } catch (error) {
+      console.error('Error al obtener horarios:', error);
+    }
   }
 
   extractFilterOptions(): void {

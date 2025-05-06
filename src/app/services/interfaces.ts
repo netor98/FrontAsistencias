@@ -10,18 +10,18 @@ export interface Usuario {
 
 export interface Facultades {
   id: number;
-  name: string;
+  nombre: string;
 }
 
 export interface Edificios {
   id: number;
-  name: string;
+  nombre: string;
   facultad_id: number;
 }
 
 export interface Aulas {
   id: number;
-  name: string;
+  aula: string;
   edificio_id: number;
 }
 
@@ -58,6 +58,27 @@ export interface HorarioMaestro {
   dia: string;
   hora_inicio: string;
   hora_fin: string;
+  maestro?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  materias?: {
+    id: number;
+    name: string;
+  };
+  grupo?: {
+    id: number;
+    name: string;
+  };
+  aulas?: {
+    id: number;
+    name: string;
+  };
+  carreras?: {
+    id: number;
+    nombre: string;
+  };
 }
 
 export interface Asistencia {
