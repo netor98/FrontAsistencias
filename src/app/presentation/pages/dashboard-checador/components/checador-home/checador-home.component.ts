@@ -36,7 +36,6 @@ interface FilterOptions {
   time: string
 }
 
-
 // Define attendance status type
 type AttendanceStatus = "asistio" | "no-asistio" | "pendiente"
 
@@ -46,6 +45,7 @@ type AttendanceStatus = "asistio" | "no-asistio" | "pendiente"
   imports: [CommonModule, FormsModule],
   templateUrl: "./checador-home.component.html",
 })
+
 export class ChecadorHomeComponent implements OnInit {
   schoolCycle = "2024-2025"
   period = "1"
@@ -54,7 +54,6 @@ export class ChecadorHomeComponent implements OnInit {
   showingError = false;
 
   horarios: HorarioMaestro[] = [];
-  // asistencias: Asistencia[] = [];
 
   // Current date information
   today = new Date()
@@ -441,41 +440,6 @@ export class ChecadorHomeComponent implements OnInit {
     return null;
   }
 
-  // New method to set attendance status
-  // setAttendanceStatus(groupId: string, classId: number, status: AttendanceStatus): void {
-  //   if (!this.attendanceStatus[groupId]) {
-  //     this.attendanceStatus[groupId] = {}
-  //   }
-  //   // Only update for the current day
-  //   const key = `${classId}-${this.currentDayName}`
-  //   this.attendanceStatus[groupId][key] = status
-  // }
-
-  // async setAttendanceStatus(groupId: string, classId: number, status: AttendanceStatus): Promise<void> {
-  //   if (!this.attendanceStatus[groupId]) {
-  //     this.attendanceStatus[groupId] = {};
-  //   }
-
-  //   // Clave única para esta clase y día
-  //   const key = `${classId}-${this.currentDayName}`;
-
-  //   // Si está marcando como asistido, significa que el valor de asistencia es true
-  //   const attendanceValue = status === "asistio";
-
-  //   // Actualiza el estado local
-  //   if (status === "pendiente" ||
-  //     (status === "asistio" && this.attendanceStatus[groupId][key] !== "asistio") ||
-  //     (status === "no-asistio" && this.attendanceStatus[groupId][key] !== "no-asistio")) {
-  //     this.attendanceStatus[groupId][key] = status;
-  //   } else {
-  //     // Si se hace clic en el mismo checkbox ya seleccionado, volver a pendiente
-  //     this.attendanceStatus[groupId][key] = "pendiente";
-
-  //   }
-  //   // Guarda los cambios inmediatamente en la base de datos
-  //   await this.saveAttendanceForClass(groupId, classId, key);
-  // }
-
   async setAttendanceStatus(groupId: string, classId: number, status: AttendanceStatus): Promise<void> {
     if (!this.attendanceStatus[groupId]) {
       this.attendanceStatus[groupId] = {};
@@ -761,57 +725,6 @@ export class ChecadorHomeComponent implements OnInit {
   getCareerName(careerId: string): string {
     const career = this.careers.find((c) => c.id === careerId)
     return career ? career.name : ""
-  }
-
-  // saveAttendance(): void {
-  //   console.log("Saving attendance for all groups:", this.attendanceStatus)
-  //   // Here you would typically send the data to a backend service
-  //   alert("Asistencias guardadas correctamente")
-  // }
-
-  /**
- * Método de utilidad para guardar todas las asistencias manualmente si es necesario.
- * No se utiliza actualmente ya que las asistencias se guardan automáticamente al marcar los checkboxes.
- */
-  async saveAttendance(): Promise<void> {
-    this.isSaving = true;
-
-    try {
-      // Recorrer todos los grupos y clases para guardar asistencias
-      for (const group of this.groupsData) {
-        for (const classItem of group.classes) {
-          // Solo procesar clases del día actual
-          if (classItem.day && classItem.day !== this.currentDayName) {
-            continue;
-          }
-
-          const key = `${classItem.id}-${this.currentDayName}`;
-
-          // Solo guardar si no está pendiente
-          if (this.attendanceStatus[group.id] &&
-            this.attendanceStatus[group.id][key] &&
-            this.attendanceStatus[group.id][key] !== "pendiente") {
-            await this.saveAttendanceForClass(group.id, classItem.id, key);
-          }
-        }
-      }
-
-      // Mostrar mensaje de éxito
-      this.saveSuccess = true;
-      setTimeout(() => {
-        this.saveSuccess = false;
-      }, 2000);
-
-    } catch (error) {
-      console.error('Error al guardar todas las asistencias:', error);
-      this.saveError = true;
-      this.errorMessage = 'Error al guardar las asistencias. Inténtalo nuevamente.';
-      setTimeout(() => {
-        this.saveError = false;
-      }, 3000);
-    } finally {
-      this.isSaving = false;
-    }
   }
 
   // Método para mostrar la notificación de éxito

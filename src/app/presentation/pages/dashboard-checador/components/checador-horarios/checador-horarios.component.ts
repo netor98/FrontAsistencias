@@ -1,13 +1,17 @@
 import { Component, type OnInit } from "@angular/core"
-import { CommonModule } from "@angular/common"
+import { CommonModule, KeyValue } from "@angular/common"
 import { FormsModule } from "@angular/forms"
+import { horariosService } from "src/app/services/horario-maestro"
+import { HorarioMaestro, Carrera } from "src/app/services/interfaces"
+import { carrerasService } from "src/app/services/carreras"
 
 interface ClassItem {
   id: number
   time: string
   subject: string
   teacher: string
-  classroom: string // Added classroom field
+  classroom: string
+  day: string
 }
 
 interface WeekInfo {
@@ -29,6 +33,7 @@ interface FilterOptions {
   teacher: string
   career: string
   time: string // Agregar filtro de tiempo
+  day: string
 }
 
 // Define attendance status type
@@ -40,7 +45,13 @@ type AttendanceStatus = "asistio" | "no-asistio" | "pendiente"
   imports: [CommonModule, FormsModule],
   templateUrl: "./checador-horarios.component.html",
 })
+
 export class ChecadorHorariosComponent implements OnInit {
+  // Propiedades para datos de la API
+  horarios: HorarioMaestro[] = [];
+  rawCarreras: Carrera[] = [];
+  isLoading = true;
+
   schoolCycle = "2024-2025"
   period = "1"
 
@@ -56,6 +67,7 @@ export class ChecadorHorariosComponent implements OnInit {
     teacher: "",
     career: "",
     time: "", // Inicializar filtro de tiempo
+    day: "",
   }
 
   // Options for dropdowns
@@ -73,118 +85,10 @@ export class ChecadorHorariosComponent implements OnInit {
   teacherOptions: string[] = []
   // Agregar timeOptions como propiedad
   timeOptions: string[] = []
+  dayOptions: string[] = [];
 
   // Sample data for multiple groups
-  groupsData: GroupInfo[] = [
-    {
-      id: "ing-sistemas-A",
-      name: "A",
-      career: "ing-sistemas",
-      classes: [
-        {
-          id: 1,
-          time: "07:00 - 08:30",
-          subject: "Programación Orientada a Objetos",
-          teacher: "Prof. García",
-          classroom: "A-101",
-        },
-        { id: 2, time: "08:30 - 10:00", subject: "Bases de Datos", teacher: "Prof. Rodríguez", classroom: "A-102" },
-        { id: 3, time: "10:30 - 12:00", subject: "Redes de Computadoras", teacher: "Prof. López", classroom: "A-103" },
-        { id: 4, time: "12:00 - 13:30", subject: "Sistemas Operativos", teacher: "Prof. Martínez", classroom: "A-104" },
-        {
-          id: 5,
-          time: "13:30 - 15:00",
-          subject: "Ingeniería de Software",
-          teacher: "Prof. Sánchez",
-          classroom: "A-105",
-        },
-      ],
-    },
-    {
-      id: "ing-sistemas-B",
-      name: "B",
-      career: "ing-sistemas",
-      classes: [
-        { id: 1, time: "07:00 - 08:30", subject: "Programación Web", teacher: "Prof. Torres", classroom: "B-201" },
-        {
-          id: 2,
-          time: "08:30 - 10:00",
-          subject: "Inteligencia Artificial",
-          teacher: "Prof. Gómez",
-          classroom: "B-202",
-        },
-        { id: 3, time: "10:30 - 12:00", subject: "Seguridad Informática", teacher: "Prof. Díaz", classroom: "B-203" },
-        { id: 4, time: "12:00 - 13:30", subject: "Desarrollo Móvil", teacher: "Prof. Pérez", classroom: "B-204" },
-        {
-          id: 5,
-          time: "13:30 - 15:00",
-          subject: "Arquitectura de Computadoras",
-          teacher: "Prof. Ramírez",
-          classroom: "B-205",
-        },
-      ],
-    },
-    {
-      id: "ing-industrial-A",
-      name: "A",
-      career: "ing-industrial",
-      classes: [
-        {
-          id: 1,
-          time: "07:00 - 08:30",
-          subject: "Procesos de Manufactura",
-          teacher: "Prof. Hernández",
-          classroom: "C-301",
-        },
-        { id: 2, time: "08:30 - 10:00", subject: "Gestión de Calidad", teacher: "Prof. Flores", classroom: "C-302" },
-        { id: 3, time: "10:30 - 12:00", subject: "Logística Industrial", teacher: "Prof. Vargas", classroom: "C-303" },
-        { id: 4, time: "12:00 - 13:30", subject: "Seguridad Industrial", teacher: "Prof. Castro", classroom: "C-304" },
-        {
-          id: 5,
-          time: "13:30 - 15:00",
-          subject: "Investigación de Operaciones",
-          teacher: "Prof. Morales",
-          classroom: "C-305",
-        },
-      ],
-    },
-    {
-      id: "ing-industrial-B",
-      name: "B",
-      career: "ing-industrial",
-      classes: [
-        { id: 1, time: "07:00 - 08:30", subject: "Diseño Industrial", teacher: "Prof. Mendoza", classroom: "D-401" },
-        { id: 2, time: "08:30 - 10:00", subject: "Ergonomía", teacher: "Prof. Jiménez", classroom: "D-402" },
-        { id: 3, time: "10:30 - 12:00", subject: "Gestión de Proyectos", teacher: "Prof. Ortega", classroom: "D-403" },
-        { id: 4, time: "12:00 - 13:30", subject: "Control Estadístico", teacher: "Prof. Núñez", classroom: "D-404" },
-        { id: 5, time: "13:30 - 15:00", subject: "Manufactura Esbelta", teacher: "Prof. Vega", classroom: "D-405" },
-      ],
-    },
-    {
-      id: "ing-mecatronica-A",
-      name: "A",
-      career: "ing-mecatronica",
-      classes: [
-        { id: 1, time: "07:00 - 08:30", subject: "Robótica", teacher: "Prof. Reyes", classroom: "E-501" },
-        { id: 2, time: "08:30 - 10:00", subject: "Sistemas Embebidos", teacher: "Prof. Luna", classroom: "E-502" },
-        { id: 3, time: "10:30 - 12:00", subject: "Automatización", teacher: "Prof. Soto", classroom: "E-503" },
-        { id: 4, time: "12:00 - 13:30", subject: "Electrónica Digital", teacher: "Prof. Campos", classroom: "E-504" },
-        { id: 5, time: "13:30 - 15:00", subject: "Diseño Mecánico", teacher: "Prof. Ríos", classroom: "E-505" },
-      ],
-    },
-    {
-      id: "lic-administracion-A",
-      name: "A",
-      career: "lic-administracion",
-      classes: [
-        { id: 1, time: "07:00 - 08:30", subject: "Contabilidad", teacher: "Prof. Guzmán", classroom: "F-601" },
-        { id: 2, time: "08:30 - 10:00", subject: "Economía", teacher: "Prof. Ponce", classroom: "F-602" },
-        { id: 3, time: "10:30 - 12:00", subject: "Mercadotecnia", teacher: "Prof. Aguilar", classroom: "F-603" },
-        { id: 4, time: "12:00 - 13:30", subject: "Recursos Humanos", teacher: "Prof. Zavala", classroom: "F-604" },
-        { id: 5, time: "13:30 - 15:00", subject: "Finanzas", teacher: "Prof. Montes", classroom: "F-605" },
-      ],
-    },
-  ]
+  groupsData: GroupInfo[] = []
 
   weekdays: string[] = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
 
@@ -193,7 +97,7 @@ export class ChecadorHorariosComponent implements OnInit {
 
   // For week tracking
   currentWeek: WeekInfo
-  weeks: WeekInfo[] = []
+  weeks: WeekInfo[] = [];
 
   constructor() {
     // Get current day information
@@ -223,36 +127,173 @@ export class ChecadorHorariosComponent implements OnInit {
     this.extractFilterOptions()
   }
 
-  ngOnInit(): void {
-    // Initialize attendance status for all classes and days in all groups
-    this.groupsData.forEach((group) => {
-      group.classes.forEach((classItem) => {
-        // Only initialize for the current day
-        const key = `${classItem.id}-${this.currentDayName}`
-        if (!this.attendanceStatus[group.id]) {
-          this.attendanceStatus[group.id] = {}
+  // ngOnInit(): void {
+  //   // Initialize attendance status for all classes and days in all groups
+  //   this.groupsData.forEach((group) => {
+  //     group.classes.forEach((classItem) => {
+  //       // Only initialize for the current day
+  //       const key = `${classItem.id}-${this.currentDayName}`
+  //       if (!this.attendanceStatus[group.id]) {
+  //         this.attendanceStatus[group.id] = {}
+  //       }
+  //       this.attendanceStatus[group.id][key] = "pendiente"
+  //     })
+  //   })
+  // }
+  async ngOnInit(): Promise<void> {
+    this.isLoading = true;
+
+    try {
+      // Obtener las carreras primero
+      this.rawCarreras = await carrerasService.getAll();
+      console.log('Carreras obtenidas:', this.rawCarreras);
+
+      // Mapear las carreras al formato requerido por el componente
+      this.mapCarreras();
+
+      // Obtener los horarios
+      this.horarios = await horariosService.getAll();
+      console.log('Horarios obtenidos:', this.horarios);
+
+      // Procesar los horarios para adaptarlos al formato del componente
+      this.processHorarios();
+
+      this.isLoading = false;
+    } catch (error) {
+      console.error('Error al obtener horarios:', error);
+      this.isLoading = false;
+    }
+  }
+
+  mapCarreras(): void {
+    if (!this.rawCarreras || this.rawCarreras.length === 0) {
+      return;
+    }
+
+    this.careers = this.rawCarreras.map(carrera => {
+      // Determinar el id según el nombre
+      let careerId = 'unknown';
+      const carreraNombre = carrera.nombre.toLowerCase();
+
+      if (carreraNombre.includes('sistemas')) {
+        careerId = 'ing-sistemas';
+      } else if (carreraNombre.includes('industrial')) {
+        careerId = 'ing-industrial';
+      } else if (carreraNombre.includes('mecatrónica') || carreraNombre.includes('mecatronica')) {
+        careerId = 'ing-mecatronica';
+      } else if (carreraNombre.includes('administración') || carreraNombre.includes('administracion')) {
+        careerId = 'lic-administracion';
+      } else {
+        // Para cualquier otra carrera, usar el ID como identificador
+        careerId = `carrera-${carrera.id}`;
+      }
+
+      return {
+        id: careerId,
+        name: carrera.nombre.trim()
+      };
+    });
+
+    console.log('Carreras mapeadas:', this.careers);
+  }
+
+  processHorarios(): void {
+    if (!this.horarios || this.horarios.length === 0) {
+      console.log('No hay horarios para procesar');
+      return;
+    }
+
+    // Crear mapa para agrupar por carrera y grupo
+    const groupMap: Map<string, GroupInfo> = new Map();
+
+    this.horarios.forEach(horario => {
+      // Determinar careerID basado en la carrera del horario
+      let careerId = 'unknown';
+      if (horario.carreras) {
+        // Usar el mapeo de carreras para encontrar el careerId
+        const carreraEncontrada = this.careers.find(
+          c => c.name.toLowerCase() === horario.carreras?.nombre?.toLowerCase().trim()
+        );
+
+        if (carreraEncontrada) {
+          careerId = carreraEncontrada.id;
+        } else {
+          // Si no se encuentra, usar el método anterior
+          const carreraNombre = horario.carreras.nombre || '';
+          if (carreraNombre.toLowerCase().includes('sistemas')) {
+            careerId = 'ing-sistemas';
+          } else if (carreraNombre.toLowerCase().includes('industrial')) {
+            careerId = 'ing-industrial';
+          } else if (carreraNombre.toLowerCase().includes('mecatrónica') ||
+            carreraNombre.toLowerCase().includes('mecatronica')) {
+            careerId = 'ing-mecatronica';
+          } else if (carreraNombre.toLowerCase().includes('administración') ||
+            carreraNombre.toLowerCase().includes('administracion')) {
+            careerId = 'lic-administracion';
+          }
         }
-        this.attendanceStatus[group.id][key] = "pendiente"
-      })
-    })
+      }
+
+      // Crear ID para el grupo
+      const groupName = horario.grupo?.name || 'default';
+      const groupId = `${careerId}-${groupName}`;
+
+      // Obtener o crear el grupo en el mapa
+      if (!groupMap.has(groupId)) {
+        groupMap.set(groupId, {
+          id: groupId,
+          name: groupName,
+          career: careerId,
+          classes: []
+        });
+      }
+
+      // Preparar el horario en formato compatible con el componente
+      const group = groupMap.get(groupId);
+      if (group) {
+        group.classes.push({
+          id: horario.id,
+          time: `${horario.hora_inicio.slice(0, 5)} - ${horario.hora_fin.slice(0, 5)}`,
+          subject: horario.materias?.name || 'Sin materia',
+          teacher: horario.maestro?.name || 'Sin profesor',
+          classroom: horario.aulas?.aula || 'Sin aula',
+          day: horario.dia || 'No especificado'  // Incluir el día del horario
+        });
+      }
+    });
+
+    // Convertir el mapa de grupos a un array
+    const processedGroups = Array.from(groupMap.values());
+    console.log('Grupos procesados:', processedGroups);
+
+    // Reemplazar los datos de prueba con los datos reales
+    this.groupsData = processedGroups;
+
+    // Actualizar las opciones de filtrado para los nuevos datos
+    this.extractFilterOptions();
   }
 
   // Modificar el método extractFilterOptions para incluir la extracción de horarios
   extractFilterOptions(): void {
     // Extract unique classrooms
-    const classrooms = new Set<string>()
+    const classrooms = new Set<string>();
     // Extract unique teachers
-    const teachers = new Set<string>()
+    const teachers = new Set<string>();
     // Extract unique times
-    const times = new Set<string>()
+    const times = new Set<string>();
+    // Extract unique days
+    const days = new Set<string>();
 
     this.groupsData.forEach((group) => {
       group.classes.forEach((classItem) => {
-        classrooms.add(classItem.classroom)
-        teachers.add(classItem.teacher)
-        times.add(classItem.time)
-      })
-    })
+        classrooms.add(classItem.classroom);
+        teachers.add(classItem.teacher);
+        times.add(classItem.time);
+        if (classItem.day) {
+          days.add(classItem.day);
+        }
+      });
+    });
 
     this.classroomOptions = Array.from(classrooms).sort()
     this.teacherOptions = Array.from(teachers).sort()
@@ -263,6 +304,71 @@ export class ChecadorHorariosComponent implements OnInit {
       const timeB = b.split(" - ")[0]
       return timeA.localeCompare(timeB)
     })
+
+    // Opcional: Si quieres añadir filtro por día
+    this.dayOptions = Array.from(days).sort((a, b) => {
+      const dayOrder: Record<string, number> = {
+        "Lunes": 1,
+        "Martes": 2,
+        "Miércoles": 3,
+        "Jueves": 4,
+        "Viernes": 5
+      };
+      return (dayOrder[a] || 99) - (dayOrder[b] || 99);
+    });
+  }
+
+  sortClassesByDayAndTime(classes: ClassItem[]): ClassItem[] {
+    // Crear un mapa del orden de los días para ordenar correctamente
+    const dayOrder: Record<string, number> = {
+      'Lunes': 1,
+      'Martes': 2,
+      'Miércoles': 3,
+      'Jueves': 4,
+      'Viernes': 5,
+      'No especificado': 99
+    };
+  
+    // Ordenar primero por día y luego por hora
+    return [...classes].sort((a, b) => {
+      // Si los días son diferentes, ordenar por día
+      if (a.day !== b.day) {
+        return (dayOrder[a.day] || 99) - (dayOrder[b.day] || 99);
+      }
+      
+      // Si los días son iguales, ordenar por hora
+      const timeA = a.time.split(' - ')[0];
+      const timeB = b.time.split(' - ')[0];
+      return timeA.localeCompare(timeB);
+    });
+  }
+
+  // Método para agrupar las clases por día
+  getClassesByDay(classes: ClassItem[]): { [key: string]: ClassItem[] } {
+    const classesByDay: { [key: string]: ClassItem[] } = {};
+
+    // Filtrar primero las clases según los filtros actuales
+    const filteredClasses = this.filterClasses(classes);
+
+    // Agrupar por día
+    filteredClasses.forEach(classItem => {
+      const day = classItem.day || 'No especificado';
+      if (!classesByDay[day]) {
+        classesByDay[day] = [];
+      }
+      classesByDay[day].push(classItem);
+    });
+
+    // Ordenar cada día por hora
+    Object.keys(classesByDay).forEach(day => {
+      classesByDay[day].sort((a, b) => {
+        const timeA = a.time.split(' - ')[0];
+        const timeB = b.time.split(' - ')[0];
+        return timeA.localeCompare(timeB);
+      });
+    });
+
+    return classesByDay;
   }
 
   getCurrentWeekInfo(): WeekInfo {
@@ -284,6 +390,8 @@ export class ChecadorHorariosComponent implements OnInit {
 
     return { weekNumber, startDate, endDate }
   }
+
+
 
   generateWeeksForSemester(): void {
     // Generate weeks for the current semester (approximately 16 weeks)
@@ -366,6 +474,7 @@ export class ChecadorHorariosComponent implements OnInit {
       teacher: "",
       career: "",
       time: "",
+      day: "",
     }
   }
 
@@ -378,8 +487,13 @@ export class ChecadorHorariosComponent implements OnInit {
       }
 
       // Filter by classroom, teacher, or time (check if any class matches)
-      if (this.filters.classroom || this.filters.teacher || this.filters.time) {
+      if (this.filters.classroom || this.filters.teacher || this.filters.time || this.filters.day) {
         return group.classes.some((classItem) => {
+          // Filter by day
+          if (this.filters.day && classItem.day !== this.filters.day) {
+            return false;
+          }
+
           // Filter by classroom
           if (this.filters.classroom && classItem.classroom !== this.filters.classroom) {
             return false

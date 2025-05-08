@@ -101,13 +101,13 @@
   </div>
 
   <div *ngIf="!isLoading">
-    <div *ngIf="!horarios || horarios.length === 0" class="flex justify-center items-center p-8">
+    <!-- <div *ngIf="!horarios || horarios.length === 0" class="flex justify-center items-center p-8">
       <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
       <span class="ml-3 text-gray-600">Cargando horarios...</span>
-    </div>
+    </div> -->
 
     <!-- Añade esto antes de las tablas de grupos en tu HTML -->
-    <div *ngIf="horarios && horarios.length > 0" class="p-4 border-t border-gray-200">
+    <!-- <div *ngIf="horarios && horarios.length > 0" class="p-4 border-t border-gray-200">
       <details class="mb-4">
         <summary class="text-blue-600 cursor-pointer font-medium">Ver datos originales de la API</summary>
         <div class="mt-2 overflow-x-auto">
@@ -139,7 +139,7 @@
           </table>
         </div>
       </details>
-    </div>
+    </div> -->
 
     <!-- Tables for each group -->
     <div *ngFor="let group of filterGroups()" class="mb-8 border-b border-gray-200 last:border-b-0">
