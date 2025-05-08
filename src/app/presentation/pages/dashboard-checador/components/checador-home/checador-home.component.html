@@ -3,7 +3,7 @@
   <div class="p-4 bg-blue-50 border-b border-gray-200 rounded-t-lg">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <h2 class="text-xl font-semibold text-gray-800">Sistema de Registro de Asistencias</h2>
-      <div class="flex flex-col sm:flex-row gap-4">
+      <!-- <div class="flex flex-col sm:flex-row gap-4">
         <div class="flex items-center gap-2">
           <label for="school-cycle" class="font-medium text-gray-700">Ciclo Escolar:</label>
           <select id="school-cycle" [(ngModel)]="schoolCycle"
@@ -18,7 +18,7 @@
             <option *ngFor="let p of periods" [value]="p">{{ p }}</option>
           </select>
         </div>
-      </div>
+      </div> -->
     </div>
 
     <!-- Current Date Information -->
@@ -33,6 +33,9 @@
       </div>
       <p class="mt-2 text-sm text-gray-600">
         Solo se puede registrar asistencia para el día actual.
+      </p>
+      <p class="mt-2 text-blue-600 font-semibold">
+        Para modificar la asistencia del día actual, por favor desmarca la asistencia y marcala correctamente.
       </p>
     </div>
 
@@ -181,7 +184,7 @@
                   <div class="flex items-center">
                     <input type="checkbox" [checked]="isAttendanceStatus(group.id, classItem.id, 'asistio')"
                       (change)="setAttendanceStatus(group.id, classItem.id, 'asistio')"
-                      [disabled]="isAttendanceStatus(group.id, classItem.id, 'no-asistio')"
+                      [disabled]="isAttendanceStatus(group.id, classItem.id, 'no-asistio') || isSaving"
                       class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
                     <span class="ml-1 text-xs text-green-700">Asistió</span>
                   </div>
@@ -190,10 +193,28 @@
                   <div class="flex items-center">
                     <input type="checkbox" [checked]="isAttendanceStatus(group.id, classItem.id, 'no-asistio')"
                       (change)="setAttendanceStatus(group.id, classItem.id, 'no-asistio')"
-                      [disabled]="isAttendanceStatus(group.id, classItem.id, 'asistio')"
+                      [disabled]="isAttendanceStatus(group.id, classItem.id, 'asistio') || isSaving"
                       class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
                     <span class="ml-1 text-xs text-red-700">No asistió</span>
                   </div>
+
+                  <!-- Attended checkbox -->
+                  <!-- <div class="flex items-center">
+                    <input type="checkbox" [checked]="isAttendanceStatus(group.id, classItem.id, 'asistio')"
+                      (change)="setAttendanceStatus(group.id, classItem.id, 'asistio')"
+                      [disabled]="isAttendanceStatus(group.id, classItem.id, 'no-asistio')"
+                      class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                    <span class="ml-1 text-xs text-green-700">Asistió</span>
+                  </div> -->
+
+                  <!-- Did not attend checkbox -->
+                  <!-- <div class="flex items-center">
+                    <input type="checkbox" [checked]="isAttendanceStatus(group.id, classItem.id, 'no-asistio')"
+                      (change)="setAttendanceStatus(group.id, classItem.id, 'no-asistio')"
+                      [disabled]="isAttendanceStatus(group.id, classItem.id, 'asistio')"
+                      class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                    <span class="ml-1 text-xs text-red-700">No asistió</span>
+                  </div> -->
                 </div>
               </td>
             </tr>
@@ -228,17 +249,41 @@
       </p>
     </div>
 
-    <!-- Footer -->
+    <!-- Footer con botón de guardar -->
     <!-- <div class="p-4 flex justify-end gap-2">
-      <button type="button"
-        class="px-4 py-2 border border-gray-300 rounded-md font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
-        Cancelar
-      </button>
-      <button type="button" (click)="saveAttendance()"
-        class="px-4 py-2 border border-transparent rounded-md font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-        Guardar Asistencias
+      <button type="button" (click)="saveAttendance()" [disabled]="isSaving"
+        class="px-4 py-2 border border-transparent rounded-xl font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
+        <svg *ngIf="isSaving" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg"
+          fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+        {{ isSaving ? 'Guardando...' : 'Guardar Todas las Asistencias' }}
       </button>
     </div> -->
+  </div>
+  <!-- Notificación de éxito con animación de deslizamiento -->
+  <div *ngIf="showingSuccess"
+    class="fixed bottom-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-lg"
+    [ngClass]="{'notification-enter': saveSuccess, 'notification-exit': !saveSuccess}">
+    <div class="flex items-center">
+      <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      </svg>
+      <span class="font-medium">Asistencia guardada correctamente.</span>
+    </div>
+  </div>
+
+  <!-- Notificación de error con animación de deslizamiento -->
+  <div *ngIf="showingError"
+    class="fixed bottom-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 transform"
+    [ngClass]="{'notificacion-enter': saveError, 'notification-exit': !saveError}">
+    <div class="flex items-center">
+      <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+      <span>{{ errorMessage }}</span>
+    </div>
   </div>
 
 </div>

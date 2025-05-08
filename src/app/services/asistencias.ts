@@ -33,14 +33,15 @@ export const asistenciasService = {
   async createAsistenciaChecador(horario_id: number, fecha: string, asistencia: boolean, id_user: number): Promise<Asistencia | null> {
     const { data, error } = await supabase
       .from('asistencia_checador')
-      .insert([{ horario_id, fecha, asistencia, id_user }]);
+      .insert([{ horario_id, fecha, asistencia, id_user }])
+      .select();
 
     if (error) {
       console.error('Error al crear la asistencia de checador:', error.message);
       return null;
     }
 
-    if (!data) {
+    if (!data || data.length === 0) {
       console.error('No se pudo crear la asistencia de checador');
       return null;
     }
@@ -52,19 +53,37 @@ export const asistenciasService = {
     const { data, error } = await supabase
       .from('asistencia_checador')
       .update({ horario_id, fecha, asistencia, id_user })
-      .eq('id', id);
+      .eq('id', id)
+      .select();
 
     if (error) {
       console.error('Error al actualizar la asistencia de checador:', error.message);
       return null;
     }
 
-    if (!data) {
+    // Verificar si data existe y tiene elementos
+    if (!data || data.length === 0) {
       console.error('Asistencia de checador no actualizada');
       return null;
     }
     return data[0] as Asistencia;
   },
+
+  async deleteAsistenciaChecador(id: number): Promise<boolean> {
+    const { error } = await supabase
+      .from('asistencia_checador')
+      .delete()
+      .eq('id', id);
+  
+    if (error) {
+      console.error('Error al eliminar la asistencia de checador:', error.message);
+      return false;
+    }
+  
+    // Si no hay error, consideramos que la eliminación fue exitosa
+    return true;
+  }
+
 
   // Métodos para manejar asistencias de maestro
 

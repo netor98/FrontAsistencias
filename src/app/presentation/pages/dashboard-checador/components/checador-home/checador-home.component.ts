@@ -2,9 +2,10 @@ import { Component, type OnInit } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { FormsModule } from "@angular/forms"
 import { horariosService } from "src/app/services/horario-maestro"
-import { HorarioMaestro, Carrera } from "src/app/services/interfaces"
+import { HorarioMaestro, Carrera, Asistencia } from "src/app/services/interfaces"
 import { carrerasService } from "src/app/services/carreras";
-
+import { asistenciasService } from "src/app/services/asistencias"
+import { authService } from "src/app/services/login";
 
 interface ClassItem {
   id: number
@@ -49,7 +50,11 @@ export class ChecadorHomeComponent implements OnInit {
   schoolCycle = "2024-2025"
   period = "1"
 
+  showingSuccess = false;
+  showingError = false;
+
   horarios: HorarioMaestro[] = [];
+  // asistencias: Asistencia[] = [];
 
   // Current date information
   today = new Date()
@@ -91,6 +96,15 @@ export class ChecadorHomeComponent implements OnInit {
   currentWeek: WeekInfo
   weeks: WeekInfo[] = []
 
+  // Mapa para registrar IDs de asistencias existentes
+  existingAttendances: Map<string, Asistencia> = new Map();
+
+  // Estado de guardado
+  isSaving = false;
+  saveSuccess = false;
+  saveError = false;
+  errorMessage = '';
+
   constructor() {
     // Get current day information
     const dayOfWeek = this.today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
@@ -126,39 +140,6 @@ export class ChecadorHomeComponent implements OnInit {
     this.extractFilterOptions()
   }
 
-  // async ngOnInit(): Promise<void> {
-  //   // Initialize attendance status for all classes and days in all groups
-  //   this.groupsData.forEach((group) => {
-  //     group.classes.forEach((classItem) => {
-  //       // Only initialize for the current day
-  //       const key = `${classItem.id}-${this.currentDayName}`;
-  //       if (!this.attendanceStatus[group.id]) {
-  //         this.attendanceStatus[group.id] = {};
-  //       }
-  //       this.attendanceStatus[group.id][key] = "pendiente";
-  //     });
-  //   });
-
-  //   // Obtener los horarios desde el servicio
-  //   try {
-  //     // Obtener las carreras primero
-  //     this.rawCarreras = await carrerasService.getAll();
-  //     console.log('Carreras obtenidas:', this.rawCarreras);
-
-  //     // Mapear las carreras al formato requerido por el componente
-  //     this.mapCarreras();
-
-  //     // Obtener los horarios
-  //     this.horarios = await horariosService.getAll();
-  //     console.log('Horarios obtenidos:', this.horarios);
-
-  //     // Procesar los horarios para adaptarlos al formato del componente
-  //     this.processHorarios();
-  //   } catch (error) {
-  //     console.error('Error al obtener horarios:', error);
-  //   }
-  // }
-
   async ngOnInit(): Promise<void> {
     this.isLoading = true; // Indicar que estamos cargando
 
@@ -176,6 +157,9 @@ export class ChecadorHomeComponent implements OnInit {
 
       // Procesar los horarios para adaptarlos al formato del componente
       this.processHorarios();
+
+      // Obtener asistencias registradas para el día actual
+      await this.loadExistingAttendances();
 
       // Ya hemos terminado de cargar
       this.isLoading = false;
@@ -402,14 +386,252 @@ export class ChecadorHomeComponent implements OnInit {
     return week1 && week2 ? week1.weekNumber === week2.weekNumber : week1 === week2
   }
 
-  // New method to set attendance status
-  setAttendanceStatus(groupId: string, classId: number, status: AttendanceStatus): void {
-    if (!this.attendanceStatus[groupId]) {
-      this.attendanceStatus[groupId] = {}
+  async loadExistingAttendances(): Promise<void> {
+    try {
+      // Obtener la fecha actual en formato YYYY-MM-DD
+      const today = new Date();
+      const formattedDate = today.toISOString().split('T')[0];
+
+      // Obtener todas las asistencias de checador
+      const asistencias = await asistenciasService.getAsistenciasChecador();
+
+      // Filtrar asistencias para el día actual
+      const todaysAttendances = asistencias.filter(a => a.fecha === formattedDate);
+      console.log('Asistencias encontradas para hoy:', todaysAttendances);
+
+      // IMPORTANTE: Limpiar el mapa antes de llenarlo
+      this.existingAttendances.clear();
+
+      // Actualizar el mapa de asistencias existentes y el estado de attendance
+      todaysAttendances.forEach(asistencia => {
+        // Crear una clave única para identificar esta asistencia
+        const key = `${asistencia.horario_id}-${this.currentDayName}`;
+
+        // Guardar la asistencia en el mapa para referencia futura
+        // Asegurarnos de almacenar el registro completo con su id
+        this.existingAttendances.set(key, asistencia);
+
+        // Identificar a qué grupo pertenece esta asistencia
+        const classInfo = this.findClassInfoByHorarioId(asistencia.horario_id);
+
+        if (classInfo) {
+          // Actualizar el estado de asistencia en nuestro modelo de UI
+          if (!this.attendanceStatus[classInfo.groupId]) {
+            this.attendanceStatus[classInfo.groupId] = {};
+          }
+
+          this.attendanceStatus[classInfo.groupId][key] = asistencia.asistencia ? "asistio" : "no-asistio";
+          console.log(`Cargada asistencia para ${key}: ${this.attendanceStatus[classInfo.groupId][key]}`);
+        }
+      });
+    } catch (error) {
+      console.error('Error al cargar asistencias existentes:', error);
     }
-    // Only update for the current day
-    const key = `${classId}-${this.currentDayName}`
-    this.attendanceStatus[groupId][key] = status
+  }
+
+  // Método auxiliar para encontrar información de una clase por su horario_id
+  findClassInfoByHorarioId(horarioId: number): { groupId: string, classItem: ClassItem } | null {
+    for (const group of this.groupsData) {
+      for (const classItem of group.classes) {
+        if (classItem.id === horarioId) {
+          return { groupId: group.id, classItem };
+        }
+      }
+    }
+    return null;
+  }
+
+  // New method to set attendance status
+  // setAttendanceStatus(groupId: string, classId: number, status: AttendanceStatus): void {
+  //   if (!this.attendanceStatus[groupId]) {
+  //     this.attendanceStatus[groupId] = {}
+  //   }
+  //   // Only update for the current day
+  //   const key = `${classId}-${this.currentDayName}`
+  //   this.attendanceStatus[groupId][key] = status
+  // }
+
+  // async setAttendanceStatus(groupId: string, classId: number, status: AttendanceStatus): Promise<void> {
+  //   if (!this.attendanceStatus[groupId]) {
+  //     this.attendanceStatus[groupId] = {};
+  //   }
+
+  //   // Clave única para esta clase y día
+  //   const key = `${classId}-${this.currentDayName}`;
+
+  //   // Si está marcando como asistido, significa que el valor de asistencia es true
+  //   const attendanceValue = status === "asistio";
+
+  //   // Actualiza el estado local
+  //   if (status === "pendiente" ||
+  //     (status === "asistio" && this.attendanceStatus[groupId][key] !== "asistio") ||
+  //     (status === "no-asistio" && this.attendanceStatus[groupId][key] !== "no-asistio")) {
+  //     this.attendanceStatus[groupId][key] = status;
+  //   } else {
+  //     // Si se hace clic en el mismo checkbox ya seleccionado, volver a pendiente
+  //     this.attendanceStatus[groupId][key] = "pendiente";
+
+  //   }
+  //   // Guarda los cambios inmediatamente en la base de datos
+  //   await this.saveAttendanceForClass(groupId, classId, key);
+  // }
+
+  async setAttendanceStatus(groupId: string, classId: number, status: AttendanceStatus): Promise<void> {
+    if (!this.attendanceStatus[groupId]) {
+      this.attendanceStatus[groupId] = {};
+    }
+
+    // Clave única para esta clase y día
+    const key = `${classId}-${this.currentDayName}`;
+    const currentStatus = this.attendanceStatus[groupId][key];
+
+    // Si se hace clic en el mismo estado ya seleccionado, volver a pendiente
+    // Si se hace clic en un estado diferente al actual, cambiar al nuevo estado
+    if (currentStatus === status) {
+      this.attendanceStatus[groupId][key] = "pendiente";
+    } else {
+      this.attendanceStatus[groupId][key] = status;
+    }
+
+    // Guarda los cambios inmediatamente en la base de datos
+    await this.saveAttendanceForClass(groupId, classId, key);
+  }
+
+  async saveAttendanceForClass(groupId: string, classId: number, key: string): Promise<void> {
+    try {
+      // Obtener el estado actual de asistencia para esta clase
+      const status = this.attendanceStatus[groupId][key];
+
+      // Preparar datos de asistencia
+      const fecha = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+      const asistencia = status === "asistio"; // true para asistio, false para no-asistio
+
+      // Obtener el ID de usuario del checador actual
+      const currentUser = authService.getCurrentUser();
+      const id_user = currentUser?.id ? Number(currentUser.id) : 0;
+
+      if (id_user === 0) {
+        console.error('No se pudo obtener el ID del usuario actual');
+        return;
+      }
+
+      // Verificar si ya existe una asistencia PARA ESTE HORARIO en este día
+      const existingAttendance = this.existingAttendances.get(key);
+
+      if (existingAttendance && existingAttendance.id) {
+        // Actualizar asistencia existente solo si no está en estado pendiente
+        if (status !== "pendiente") {
+          console.log('Actualizando asistencia existente ID:', existingAttendance.id);
+          console.log('Datos a actualizar:', {
+            id: existingAttendance.id,
+            horario_id: classId,
+            fecha,
+            asistencia,
+            id_user
+          });
+
+          const updatedAttendance = await asistenciasService.updateAsistenciaChecador(
+            existingAttendance.id,
+            classId,
+            fecha,
+            asistencia,
+            id_user
+          );
+
+          if (updatedAttendance) {
+            this.existingAttendances.set(key, updatedAttendance);
+          } else {
+            // Si falla la actualización, consulta directamente por ID
+            const refreshedAttendance = await asistenciasService.getAsistenciaChecadorById(existingAttendance.id);
+            if (refreshedAttendance) {
+              console.log('Asistencia refrescada:', refreshedAttendance);
+              this.existingAttendances.set(key, refreshedAttendance);
+            } else {
+              // Si todo falla, actualiza la instancia actual como fallback
+              existingAttendance.asistencia = asistencia;
+              this.existingAttendances.set(key, existingAttendance);
+            }
+          }
+        }
+        // Si está en pendiente, no hacemos nada pero mantenemos el registro
+      } else if (status !== "pendiente") {
+        // Crear nueva asistencia solo si no está en estado pendiente
+        console.log('Creando nueva asistencia para horario ID:', classId);
+
+        try {
+          const newAttendance = await asistenciasService.createAsistenciaChecador(
+            classId,
+            fecha,
+            asistencia,
+            id_user
+          );
+
+          if (newAttendance) {
+            console.log('Nueva asistencia creada:', newAttendance);
+            this.existingAttendances.set(key, newAttendance);
+            this.showSuccessNotification();
+          } else {
+            console.error('Error: No se recibieron datos después de crear la asistencia');
+            this.showErrorNotification('Error al crear la asistencia. Inténtalo nuevamente.');
+
+            // Verificar si se creó la asistencia a pesar del error
+            this.verificarAsistenciaCreada(classId, fecha);
+          }
+        } catch (error) {
+          console.error('Error al crear nueva asistencia:', error);
+          this.showErrorNotification('Error al crear la asistencia. Inténtalo nuevamente.');
+
+          // Verificar si se creó la asistencia a pesar del error
+          this.verificarAsistenciaCreada(classId, fecha);
+        }
+      }
+
+      // Solo mostramos notificación de éxito si no está en pendiente
+      if (status !== "pendiente") {
+        this.showSuccessNotification();
+      }
+
+    } catch (error) {
+      console.error('Error al guardar asistencia:', error);
+      this.saveError = true;
+      this.errorMessage = 'Error al guardar la asistencia. Inténtalo nuevamente.';
+      setTimeout(() => {
+        this.saveError = false;
+      }, 3000);
+    }
+  }
+
+  // Método para verificar si la asistencia se creó a pesar del error
+  async verificarAsistenciaCreada(horarioId: number, fecha: string): Promise<void> {
+    try {
+      // Obtener todas las asistencias
+      const asistencias = await asistenciasService.getAsistenciasChecador();
+
+      // Filtrar por horario y fecha
+      const asistenciaEncontrada = asistencias.find(a =>
+        a.horario_id === horarioId && a.fecha === fecha
+      );
+
+      if (asistenciaEncontrada) {
+        console.log('Se encontró la asistencia que parecía fallida:', asistenciaEncontrada);
+
+        // Actualizar el mapa de asistencias existentes
+        const key = `${horarioId}-${this.currentDayName}`;
+        this.existingAttendances.set(key, asistenciaEncontrada);
+
+        // Actualizar UI
+        const classInfo = this.findClassInfoByHorarioId(horarioId);
+        if (classInfo) {
+          if (!this.attendanceStatus[classInfo.groupId]) {
+            this.attendanceStatus[classInfo.groupId] = {};
+          }
+
+          this.attendanceStatus[classInfo.groupId][key] = asistenciaEncontrada.asistencia ? "asistio" : "no-asistio";
+        }
+      }
+    } catch (error) {
+      console.error('Error al verificar la asistencia creada:', error);
+    }
   }
 
   // New method to check if a specific status is set
@@ -455,7 +677,7 @@ export class ChecadorHomeComponent implements OnInit {
     if (!this.groupsData || this.groupsData.length === 0) {
       return [];
     }
-    
+
     return this.groupsData.filter((group) => {
       // First check if the group has any classes for the current day
       const hasClassesForCurrentDay = group.classes.some(classItem =>
@@ -541,9 +763,87 @@ export class ChecadorHomeComponent implements OnInit {
     return career ? career.name : ""
   }
 
-  saveAttendance(): void {
-    console.log("Saving attendance for all groups:", this.attendanceStatus)
-    // Here you would typically send the data to a backend service
-    alert("Asistencias guardadas correctamente")
+  // saveAttendance(): void {
+  //   console.log("Saving attendance for all groups:", this.attendanceStatus)
+  //   // Here you would typically send the data to a backend service
+  //   alert("Asistencias guardadas correctamente")
+  // }
+
+  /**
+ * Método de utilidad para guardar todas las asistencias manualmente si es necesario.
+ * No se utiliza actualmente ya que las asistencias se guardan automáticamente al marcar los checkboxes.
+ */
+  async saveAttendance(): Promise<void> {
+    this.isSaving = true;
+
+    try {
+      // Recorrer todos los grupos y clases para guardar asistencias
+      for (const group of this.groupsData) {
+        for (const classItem of group.classes) {
+          // Solo procesar clases del día actual
+          if (classItem.day && classItem.day !== this.currentDayName) {
+            continue;
+          }
+
+          const key = `${classItem.id}-${this.currentDayName}`;
+
+          // Solo guardar si no está pendiente
+          if (this.attendanceStatus[group.id] &&
+            this.attendanceStatus[group.id][key] &&
+            this.attendanceStatus[group.id][key] !== "pendiente") {
+            await this.saveAttendanceForClass(group.id, classItem.id, key);
+          }
+        }
+      }
+
+      // Mostrar mensaje de éxito
+      this.saveSuccess = true;
+      setTimeout(() => {
+        this.saveSuccess = false;
+      }, 2000);
+
+    } catch (error) {
+      console.error('Error al guardar todas las asistencias:', error);
+      this.saveError = true;
+      this.errorMessage = 'Error al guardar las asistencias. Inténtalo nuevamente.';
+      setTimeout(() => {
+        this.saveError = false;
+      }, 3000);
+    } finally {
+      this.isSaving = false;
+    }
+  }
+
+  // Método para mostrar la notificación de éxito
+  showSuccessNotification(): void {
+    this.saveSuccess = true;
+    this.showingSuccess = true;
+
+    // Ocultar después de un tiempo
+    setTimeout(() => {
+      this.saveSuccess = false;
+
+      // Dar tiempo para que termine la animación antes de eliminar completamente
+      setTimeout(() => {
+        this.showingSuccess = false;
+      }, 300);
+    }, 1500);
+  }
+
+  // Método para mostrar la notificación de error
+  showErrorNotification(message: string): void {
+    this.errorMessage = message;
+    this.saveError = true;
+    this.showingError = true;
+
+    // Ocultar después de un tiempo
+    setTimeout(() => {
+      this.saveError = false;
+
+      // Dar tiempo para que termine la animación antes de eliminar completamente
+      setTimeout(() => {
+        this.showingError = false;
+      }, 300);
+    }, 3000);
   }
 }
