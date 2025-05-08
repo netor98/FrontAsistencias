@@ -3,7 +3,7 @@
   <div class="p-4 bg-blue-50 border-b border-gray-200 rounded-t-lg">
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <h2 class="text-xl font-semibold text-gray-800">Sistema de Registro de Asistencias</h2>
-      <div class="flex flex-col sm:flex-row gap-4">
+      <!-- <div class="flex flex-col sm:flex-row gap-4">
         <div class="flex items-center gap-2">
           <label for="school-cycle" class="font-medium text-gray-700">Ciclo Escolar:</label>
           <select id="school-cycle" [(ngModel)]="schoolCycle" 
@@ -18,7 +18,7 @@
             <option *ngFor="let p of periods" [value]="p">{{ p }}</option>
           </select>
         </div>
-      </div>
+      </div> -->
     </div>
     
     <!-- Current Date Information -->
@@ -34,19 +34,19 @@
     </div>
     
     <!-- Week selector -->
-    <div class="mt-4 pt-4 border-t border-gray-200 flex flex-wrap items-center gap-4">
-      <label class="font-medium text-gray-700">Semana actual:</label>
-      <select [(ngModel)]="currentWeek" [compareWith]="compareWeeks"
+    <div class="mt-4 pt-4 border-gray-200 flex flex-wrap items-center gap-4">
+      <label class="font-medium text-lg text-gray-700">Semana actual:</label>
+      <!-- <select [(ngModel)]="currentWeek" [compareWith]="compareWeeks"
               class="p-2 border border-gray-300 rounded-md bg-white min-w-[250px] focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
         <option *ngFor="let week of weeks" [ngValue]="week" 
                 [ngClass]="{'font-bold bg-blue-50': isCurrentWeek(week)}">
           {{ formatWeekDisplay(week) }}
         </option>
-      </select>
+      </select> -->
       <div class="flex items-center gap-2 font-medium text-gray-700">
-        <span>{{ formatWeekDisplay(currentWeek) }}</span>
-        <span *ngIf="isCurrentWeek(currentWeek)" 
-              class="bg-blue-500 text-white px-2 py-1 rounded-full text-xs">Actual</span>
+        <span class="bg-blue-500 text-white px-2 py-1 rounded-full">{{ formatWeekDisplay(currentWeek) }}</span>
+        <!-- <span *ngIf="isCurrentWeek(currentWeek)" 
+              class="bg-blue-500 text-white px-2 py-1 rounded-full text-xs">Actual</span> -->
       </div>
     </div>
     

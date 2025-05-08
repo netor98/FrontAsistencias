@@ -1,6 +1,8 @@
 import { Component, type OnInit } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { FormsModule } from "@angular/forms"
+import { horariosService } from "src/app/services/horario-maestro"
+import { authService } from "src/app/services/login"
 
 interface ClassItem {
   id: number
@@ -296,7 +298,51 @@ export class MaestroHomeComponent implements OnInit {
     this.extractFilterOptions()
   }
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
+    // Obtener el usuario actual
+    const currentUser = authService.getCurrentUser();
+
+    if (currentUser && currentUser.id) {
+      console.log('Usuario maestro actual:', currentUser);
+
+      try {
+        // Convertir el ID a número si viene como string
+        const maestroId = typeof currentUser.id === 'string'
+          ? parseInt(currentUser.id, 10)
+          : currentUser.id;
+
+        console.log('Obteniendo horarios para maestro ID:', maestroId);
+
+        // Obtener los horarios del maestro
+        const horarios = await horariosService.getByMaestro(maestroId);
+
+        console.log('Horarios del maestro obtenidos:', horarios);
+
+        if (horarios.length === 0) {
+          console.log('El maestro no tiene horarios asignados.');
+        } else {
+          // Mostrar información detallada de cada horario
+          console.log('Detalle de horarios:');
+          horarios.forEach((horario, index) => {
+            console.log(`Horario #${index + 1}:`);
+            console.log(`- Día: ${horario.dia}`);
+            console.log(`- Hora: ${horario.hora_inicio} - ${horario.hora_fin}`);
+            console.log(`- Materia: ${horario.materias?.name || 'No especificada'}`);
+            console.log(`- Grupo: ${horario.grupo?.name || 'No especificado'}`);
+            console.log(`- Aula: ${horario.aulas?.aula || 'No especificada'}`);
+            console.log(`- Carrera: ${horario.carreras?.nombre || 'No especificada'}`);
+          });
+
+          // Procesar los horarios para mostrarlos en la UI
+          this.processHorarios(horarios);
+        }
+      } catch (error) {
+        console.error('Error al obtener horarios del maestro:', error);
+      }
+    } else {
+      console.error('No se pudo obtener el ID del maestro actual');
+    }
+
     // Initialize attendance status for all classes and days in all groups
     this.groupsData.forEach((group) => {
       group.classes.forEach((classItem) => {
@@ -309,6 +355,71 @@ export class MaestroHomeComponent implements OnInit {
         })
       })
     })
+  }
+
+  // Método para procesar los horarios obtenidos de la API
+  processHorarios(horarios: any[]): void {
+    // Crear mapa para agrupar por carrera y grupo
+    const groupMap: Map<string, GroupInfo> = new Map();
+
+    horarios.forEach(horario => {
+      // Determinar careerID basado en la carrera del horario
+      let careerId = 'unknown';
+      if (horario.carreras) {
+        const carreraNombre = horario.carreras.nombre || '';
+
+        if (carreraNombre.toLowerCase().includes('sistemas')) {
+          careerId = 'ing-sistemas';
+        } else if (carreraNombre.toLowerCase().includes('industrial')) {
+          careerId = 'ing-industrial';
+        } else if (carreraNombre.toLowerCase().includes('mecatrónica') ||
+          carreraNombre.toLowerCase().includes('mecatronica')) {
+          careerId = 'ing-mecatronica';
+        } else if (carreraNombre.toLowerCase().includes('administración') ||
+          carreraNombre.toLowerCase().includes('administracion')) {
+          careerId = 'lic-administracion';
+        } else {
+          careerId = `carrera-${horario.carreras.id}`;
+        }
+      }
+
+      // Crear ID para el grupo
+      const groupName = horario.grupo?.name || 'default';
+      const groupId = `${careerId}-${groupName}`;
+
+      // Obtener o crear el grupo en el mapa
+      if (!groupMap.has(groupId)) {
+        groupMap.set(groupId, {
+          id: groupId,
+          name: groupName,
+          career: careerId,
+          classes: []
+        });
+      }
+
+      // Preparar el horario en formato compatible con el componente
+      const group = groupMap.get(groupId);
+      if (group) {
+        group.classes.push({
+          id: horario.id,
+          time: `${horario.hora_inicio.slice(0, 5)} - ${horario.hora_fin.slice(0, 5)}`,
+          subject: horario.materias?.name || 'Sin materia',
+          teacher: horario.maestro?.name || 'Sin profesor',
+          classroom: horario.aulas?.aula || 'Sin aula',
+          group: groupName
+        });
+      }
+    });
+
+    // Convertir el mapa de grupos a un array
+    const processedGroups = Array.from(groupMap.values());
+    console.log('Grupos procesados para UI:', processedGroups);
+
+    // Reemplazar los datos de prueba con los datos reales
+    this.groupsData = processedGroups;
+
+    // Actualizar las opciones de filtrado para los nuevos datos
+    this.extractFilterOptions();
   }
 
   extractFilterOptions(): void {
