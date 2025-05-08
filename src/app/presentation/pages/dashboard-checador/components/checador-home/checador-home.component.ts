@@ -69,12 +69,6 @@ export class ChecadorHomeComponent implements OnInit {
   // Options for dropdowns
   schoolCycles: string[] = ["2023-2024", "2024-2025", "2025-2026"]
   periods: string[] = ["1", "2", "3"]
-  // careers: { id: string; name: string }[] = [
-  //   { id: "ing-sistemas", name: "Ingeniería en Sistemas Computacionales" },
-  //   { id: "ing-industrial", name: "Ingeniería Industrial" },
-  //   { id: "ing-mecatronica", name: "Ingeniería Mecatrónica" },
-  //   { id: "lic-administracion", name: "Licenciatura en Administración" },
-  // ]
 
   careers: { id: string; name: string }[] = [];
   rawCarreras: Carrera[] = [];
@@ -84,117 +78,9 @@ export class ChecadorHomeComponent implements OnInit {
   teacherOptions: string[] = []
   timeOptions: string[] = []
 
-  // Sample data for multiple groups
-  groupsData: GroupInfo[] = [
-    {
-      id: "ing-sistemas-A",
-      name: "A",
-      career: "ing-sistemas",
-      classes: [
-        {
-          id: 1,
-          time: "07:00 - 08:30",
-          subject: "Programación Orientada a Objetos",
-          teacher: "Prof. García",
-          classroom: "A-101",
-        },
-        { id: 2, time: "08:30 - 10:00", subject: "Bases de Datos", teacher: "Prof. Rodríguez", classroom: "A-102" },
-        { id: 3, time: "10:30 - 12:00", subject: "Redes de Computadoras", teacher: "Prof. López", classroom: "A-103" },
-        { id: 4, time: "12:00 - 13:30", subject: "Sistemas Operativos", teacher: "Prof. Martínez", classroom: "A-104" },
-        {
-          id: 5,
-          time: "13:30 - 15:00",
-          subject: "Ingeniería de Software",
-          teacher: "Prof. Sánchez",
-          classroom: "A-105",
-        },
-      ],
-    },
-    {
-      id: "ing-sistemas-B",
-      name: "B",
-      career: "ing-sistemas",
-      classes: [
-        { id: 1, time: "07:00 - 08:30", subject: "Programación Web", teacher: "Prof. Torres", classroom: "B-201" },
-        {
-          id: 2,
-          time: "08:30 - 10:00",
-          subject: "Inteligencia Artificial",
-          teacher: "Prof. Gómez",
-          classroom: "B-202",
-        },
-        { id: 3, time: "10:30 - 12:00", subject: "Seguridad Informática", teacher: "Prof. Díaz", classroom: "B-203" },
-        { id: 4, time: "12:00 - 13:30", subject: "Desarrollo Móvil", teacher: "Prof. Pérez", classroom: "B-204" },
-        {
-          id: 5,
-          time: "13:30 - 15:00",
-          subject: "Arquitectura de Computadoras",
-          teacher: "Prof. Ramírez",
-          classroom: "B-205",
-        },
-      ],
-    },
-    {
-      id: "ing-industrial-A",
-      name: "A",
-      career: "ing-industrial",
-      classes: [
-        {
-          id: 1,
-          time: "07:00 - 08:30",
-          subject: "Procesos de Manufactura",
-          teacher: "Prof. Hernández",
-          classroom: "C-301",
-        },
-        { id: 2, time: "08:30 - 10:00", subject: "Gestión de Calidad", teacher: "Prof. Flores", classroom: "C-302" },
-        { id: 3, time: "10:30 - 12:00", subject: "Logística Industrial", teacher: "Prof. Vargas", classroom: "C-303" },
-        { id: 4, time: "12:00 - 13:30", subject: "Seguridad Industrial", teacher: "Prof. Castro", classroom: "C-304" },
-        {
-          id: 5,
-          time: "13:30 - 15:00",
-          subject: "Investigación de Operaciones",
-          teacher: "Prof. Morales",
-          classroom: "C-305",
-        },
-      ],
-    },
-    {
-      id: "ing-industrial-B",
-      name: "B",
-      career: "ing-industrial",
-      classes: [
-        { id: 1, time: "07:00 - 08:30", subject: "Diseño Industrial", teacher: "Prof. Mendoza", classroom: "D-401" },
-        { id: 2, time: "08:30 - 10:00", subject: "Ergonomía", teacher: "Prof. Jiménez", classroom: "D-402" },
-        { id: 3, time: "10:30 - 12:00", subject: "Gestión de Proyectos", teacher: "Prof. Ortega", classroom: "D-403" },
-        { id: 4, time: "12:00 - 13:30", subject: "Control Estadístico", teacher: "Prof. Núñez", classroom: "D-404" },
-        { id: 5, time: "13:30 - 15:00", subject: "Manufactura Esbelta", teacher: "Prof. Vega", classroom: "D-405" },
-      ],
-    },
-    {
-      id: "ing-mecatronica-A",
-      name: "A",
-      career: "ing-mecatronica",
-      classes: [
-        { id: 1, time: "07:00 - 08:30", subject: "Robótica", teacher: "Prof. Reyes", classroom: "E-501" },
-        { id: 2, time: "08:30 - 10:00", subject: "Sistemas Embebidos", teacher: "Prof. Luna", classroom: "E-502" },
-        { id: 3, time: "10:30 - 12:00", subject: "Automatización", teacher: "Prof. Soto", classroom: "E-503" },
-        { id: 4, time: "12:00 - 13:30", subject: "Electrónica Digital", teacher: "Prof. Campos", classroom: "E-504" },
-        { id: 5, time: "13:30 - 15:00", subject: "Diseño Mecánico", teacher: "Prof. Ríos", classroom: "E-505" },
-      ],
-    },
-    {
-      id: "lic-administracion-A",
-      name: "A",
-      career: "lic-administracion",
-      classes: [
-        { id: 1, time: "07:00 - 08:30", subject: "Contabilidad", teacher: "Prof. Guzmán", classroom: "F-601" },
-        { id: 2, time: "08:30 - 10:00", subject: "Economía", teacher: "Prof. Ponce", classroom: "F-602" },
-        { id: 3, time: "10:30 - 12:00", subject: "Mercadotecnia", teacher: "Prof. Aguilar", classroom: "F-603" },
-        { id: 4, time: "12:00 - 13:30", subject: "Recursos Humanos", teacher: "Prof. Zavala", classroom: "F-604" },
-        { id: 5, time: "13:30 - 15:00", subject: "Finanzas", teacher: "Prof. Montes", classroom: "F-605" },
-      ],
-    },
-  ]
+  groupsData: GroupInfo[] = []
+
+  isLoading = true;
 
   weekdays: string[] = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
 
@@ -240,25 +126,47 @@ export class ChecadorHomeComponent implements OnInit {
     this.extractFilterOptions()
   }
 
-  async ngOnInit(): Promise<void> {
-    // Initialize attendance status for all classes and days in all groups
-    this.groupsData.forEach((group) => {
-      group.classes.forEach((classItem) => {
-        // Only initialize for the current day
-        const key = `${classItem.id}-${this.currentDayName}`;
-        if (!this.attendanceStatus[group.id]) {
-          this.attendanceStatus[group.id] = {};
-        }
-        this.attendanceStatus[group.id][key] = "pendiente";
-      });
-    });
+  // async ngOnInit(): Promise<void> {
+  //   // Initialize attendance status for all classes and days in all groups
+  //   this.groupsData.forEach((group) => {
+  //     group.classes.forEach((classItem) => {
+  //       // Only initialize for the current day
+  //       const key = `${classItem.id}-${this.currentDayName}`;
+  //       if (!this.attendanceStatus[group.id]) {
+  //         this.attendanceStatus[group.id] = {};
+  //       }
+  //       this.attendanceStatus[group.id][key] = "pendiente";
+  //     });
+  //   });
 
-    // Obtener los horarios desde el servicio
+  //   // Obtener los horarios desde el servicio
+  //   try {
+  //     // Obtener las carreras primero
+  //     this.rawCarreras = await carrerasService.getAll();
+  //     console.log('Carreras obtenidas:', this.rawCarreras);
+
+  //     // Mapear las carreras al formato requerido por el componente
+  //     this.mapCarreras();
+
+  //     // Obtener los horarios
+  //     this.horarios = await horariosService.getAll();
+  //     console.log('Horarios obtenidos:', this.horarios);
+
+  //     // Procesar los horarios para adaptarlos al formato del componente
+  //     this.processHorarios();
+  //   } catch (error) {
+  //     console.error('Error al obtener horarios:', error);
+  //   }
+  // }
+
+  async ngOnInit(): Promise<void> {
+    this.isLoading = true; // Indicar que estamos cargando
+
     try {
       // Obtener las carreras primero
       this.rawCarreras = await carrerasService.getAll();
       console.log('Carreras obtenidas:', this.rawCarreras);
-      
+
       // Mapear las carreras al formato requerido por el componente
       this.mapCarreras();
 
@@ -268,8 +176,12 @@ export class ChecadorHomeComponent implements OnInit {
 
       // Procesar los horarios para adaptarlos al formato del componente
       this.processHorarios();
+
+      // Ya hemos terminado de cargar
+      this.isLoading = false;
     } catch (error) {
       console.error('Error al obtener horarios:', error);
+      this.isLoading = false; // Asegurarnos de quitar el estado de carga incluso si hay error
     }
   }
 
@@ -323,7 +235,7 @@ export class ChecadorHomeComponent implements OnInit {
         const carreraEncontrada = this.careers.find(
           c => c.name.toLowerCase() === horario.carreras?.nombre?.toLowerCase().trim()
         );
-        
+
         if (carreraEncontrada) {
           careerId = carreraEncontrada.id;
         } else {
@@ -333,11 +245,11 @@ export class ChecadorHomeComponent implements OnInit {
             careerId = 'ing-sistemas';
           } else if (carreraNombre.toLowerCase().includes('industrial')) {
             careerId = 'ing-industrial';
-          } else if (carreraNombre.toLowerCase().includes('mecatrónica') || 
-                   carreraNombre.toLowerCase().includes('mecatronica')) {
+          } else if (carreraNombre.toLowerCase().includes('mecatrónica') ||
+            carreraNombre.toLowerCase().includes('mecatronica')) {
             careerId = 'ing-mecatronica';
-          } else if (carreraNombre.toLowerCase().includes('administración') || 
-                   carreraNombre.toLowerCase().includes('administracion')) {
+          } else if (carreraNombre.toLowerCase().includes('administración') ||
+            carreraNombre.toLowerCase().includes('administracion')) {
             careerId = 'lic-administracion';
           }
         }
@@ -529,38 +441,67 @@ export class ChecadorHomeComponent implements OnInit {
     }
   }
 
+  hasAnyClassForCurrentDay(): boolean {
+    return this.groupsData.some(group =>
+      group.classes.some(classItem =>
+        !classItem.day || classItem.day === this.currentDayName
+      )
+    );
+  }
+
   // Filter groups based on selected criteria
   filterGroups(): GroupInfo[] {
+    // Si no hay datos, retornar array vacío
+    if (!this.groupsData || this.groupsData.length === 0) {
+      return [];
+    }
+    
     return this.groupsData.filter((group) => {
+      // First check if the group has any classes for the current day
+      const hasClassesForCurrentDay = group.classes.some(classItem =>
+        !classItem.day || classItem.day === this.currentDayName
+      );
+
+      // If no classes for the current day, filter out this group
+      if (!hasClassesForCurrentDay) {
+        return false;
+      }
+
+      // Continue with other filters as before
       // Filter by career
       if (this.filters.career && group.career !== this.filters.career) {
-        return false
+        return false;
       }
 
       // Filter by classroom or teacher (check if any class matches)
       if (this.filters.classroom || this.filters.teacher || this.filters.time) {
         return group.classes.some((classItem) => {
+          // Only consider classes for the current day
+          if (classItem.day && classItem.day !== this.currentDayName) {
+            return false;
+          }
+
           // Filter by classroom
           if (this.filters.classroom && classItem.classroom !== this.filters.classroom) {
-            return false
+            return false;
           }
 
           // Filter by teacher
           if (this.filters.teacher && classItem.teacher !== this.filters.teacher) {
-            return false
+            return false;
           }
 
           // Filter by time
           if (this.filters.time && classItem.time !== this.filters.time) {
-            return false
+            return false;
           }
 
-          return true
-        })
+          return true;
+        });
       }
 
-      return true
-    })
+      return true;
+    });
   }
 
   // Filter classes within a group based on selected criteria

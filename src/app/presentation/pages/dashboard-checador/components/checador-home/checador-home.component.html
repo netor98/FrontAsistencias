@@ -91,127 +91,154 @@
     </div>
   </div>
 
-  <div *ngIf="!horarios || horarios.length === 0" class="flex justify-center items-center p-8">
-    <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
-    <span class="ml-3 text-gray-600">Cargando horarios...</span>
+  <!-- Spinner para cuando está cargando los datos -->
+  <div *ngIf="isLoading" class="flex flex-col items-center justify-center p-12">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600"></div>
+    <p class="mt-4 text-lg text-gray-600">Cargando horarios...</p>
   </div>
 
-  <!-- Añade esto antes de las tablas de grupos en tu HTML -->
-  <div *ngIf="horarios && horarios.length > 0" class="p-4 border-t border-gray-200">
-    <details class="mb-4">
-      <summary class="text-blue-600 cursor-pointer font-medium">Ver datos originales de la API</summary>
-      <div class="mt-2 overflow-x-auto">
-        <table class="w-full border-collapse">
+  <div *ngIf="!isLoading">
+    <div *ngIf="!horarios || horarios.length === 0" class="flex justify-center items-center p-8">
+      <div class="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+      <span class="ml-3 text-gray-600">Cargando horarios...</span>
+    </div>
+
+    <!-- Añade esto antes de las tablas de grupos en tu HTML -->
+    <div *ngIf="horarios && horarios.length > 0" class="p-4 border-t border-gray-200">
+      <details class="mb-4">
+        <summary class="text-blue-600 cursor-pointer font-medium">Ver datos originales de la API</summary>
+        <div class="mt-2 overflow-x-auto">
+          <table class="w-full border-collapse">
+            <thead>
+              <tr class="bg-gray-100">
+                <th class="p-2 border text-left">ID</th>
+                <th class="p-2 border text-left">Día</th>
+                <th class="p-2 border text-left">Hora</th>
+                <th class="p-2 border text-left">Materia</th>
+                <th class="p-2 border text-left">Maestro</th>
+                <th class="p-2 border text-left">Grupo</th>
+                <th class="p-2 border text-left">Aula</th>
+                <th class="p-2 border text-left">Carrera</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let horario of horarios" class="hover:bg-gray-50">
+                <td class="p-2 border">{{ horario.id }}</td>
+                <td class="p-2 border">{{ horario.dia }}</td>
+                <td class="p-2 border">{{ horario.hora_inicio.slice(0, 5) }} - {{ horario.hora_fin.slice(0, 5) }}</td>
+                <td class="p-2 border">{{ horario.materias?.name || 'N/A' }}</td>
+                <td class="p-2 border">{{ horario.maestro?.name || 'N/A' }}</td>
+                <td class="p-2 border">{{ horario.grupo?.name || 'N/A' }}</td>
+                <td class="p-2 border">{{ horario.aulas?.aula || 'N/A' }}</td>
+                <td class="p-2 border">{{ horario.carreras?.nombre || 'N/A' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+
+    <!-- Tables for each group -->
+    <div *ngFor="let group of filterGroups()" class="mb-8 border-b border-gray-200 last:border-b-0">
+      <!-- Group header -->
+      <div class="p-4 bg-gray-50 border-b border-gray-200">
+        <div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-6">
+          <div>
+            <span class="font-medium text-gray-700">Carrera:</span>
+            <span class="ml-2 text-gray-800">{{ getCareerName(group.career) }}</span>
+          </div>
+          <div>
+            <span class="font-medium text-gray-700">Grupo:</span>
+            <span class="ml-2 text-gray-800">{{ group.name }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group table -->
+      <div class="overflow-x-auto">
+        <table class="w-full">
           <thead>
             <tr class="bg-gray-100">
-              <th class="p-2 border text-left">ID</th>
-              <th class="p-2 border text-left">Día</th>
-              <th class="p-2 border text-left">Hora</th>
-              <th class="p-2 border text-left">Materia</th>
-              <th class="p-2 border text-left">Maestro</th>
-              <th class="p-2 border text-left">Grupo</th>
-              <th class="p-2 border text-left">Aula</th>
-              <th class="p-2 border text-left">Carrera</th>
+              <th class="p-3 text-left font-medium text-gray-700 border-b border-gray-200">Hora</th>
+              <th class="p-3 text-left font-medium text-gray-700 border-b border-gray-200">Materia</th>
+              <th class="p-3 text-left font-medium text-gray-700 border-b border-gray-200">Maestro</th>
+              <th class="p-3 text-left font-medium text-gray-700 border-b border-gray-200">Aula</th>
+              <th class="p-3 text-center font-medium text-gray-700 border-b border-gray-200">
+                Asistencia ({{ currentDayName }})
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let horario of horarios" class="hover:bg-gray-50">
-              <td class="p-2 border">{{ horario.id }}</td>
-              <td class="p-2 border">{{ horario.dia }}</td>
-              <td class="p-2 border">{{ horario.hora_inicio.slice(0, 5) }} - {{ horario.hora_fin.slice(0, 5) }}</td>
-              <td class="p-2 border">{{ horario.materias?.name || 'N/A' }}</td>
-              <td class="p-2 border">{{ horario.maestro?.name || 'N/A' }}</td>
-              <td class="p-2 border">{{ horario.grupo?.name || 'N/A' }}</td>
-              <td class="p-2 border">{{ horario.aulas?.aula || 'N/A' }}</td>
-              <td class="p-2 border">{{ horario.carreras?.nombre || 'N/A' }}</td>
+            <tr *ngFor="let classItem of filterClasses(group.classes)" class="hover:bg-gray-50">
+              <td class="p-3 font-medium text-gray-700 border-b border-gray-200">{{ classItem.time }}</td>
+              <td class="p-3 text-gray-700 border-b border-gray-200">{{ classItem.subject }}</td>
+              <td class="p-3 text-gray-700 border-b border-gray-200">{{ classItem.teacher }}</td>
+              <td class="p-3 text-gray-700 border-b border-gray-200">{{ classItem.classroom }}</td>
+              <td class="p-3 text-center border-b border-gray-200">
+                <!-- Replace select with two checkboxes -->
+                <div class="flex justify-center items-center gap-3">
+                  <!-- Attended checkbox -->
+                  <div class="flex items-center">
+                    <input type="checkbox" [checked]="isAttendanceStatus(group.id, classItem.id, 'asistio')"
+                      (change)="setAttendanceStatus(group.id, classItem.id, 'asistio')"
+                      [disabled]="isAttendanceStatus(group.id, classItem.id, 'no-asistio')"
+                      class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
+                    <span class="ml-1 text-xs text-green-700">Asistió</span>
+                  </div>
+
+                  <!-- Did not attend checkbox -->
+                  <div class="flex items-center">
+                    <input type="checkbox" [checked]="isAttendanceStatus(group.id, classItem.id, 'no-asistio')"
+                      (change)="setAttendanceStatus(group.id, classItem.id, 'no-asistio')"
+                      [disabled]="isAttendanceStatus(group.id, classItem.id, 'asistio')"
+                      class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
+                    <span class="ml-1 text-xs text-red-700">No asistió</span>
+                  </div>
+                </div>
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
-    </details>
-  </div>
-
-  <!-- Tables for each group -->
-  <div *ngFor="let group of filterGroups()" class="mb-8 border-b border-gray-200 last:border-b-0">
-    <!-- Group header -->
-    <div class="p-4 bg-gray-50 border-b border-gray-200">
-      <div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-6">
-        <div>
-          <span class="font-medium text-gray-700">Carrera:</span>
-          <span class="ml-2 text-gray-800">{{ getCareerName(group.career) }}</span>
-        </div>
-        <div>
-          <span class="font-medium text-gray-700">Grupo:</span>
-          <span class="ml-2 text-gray-800">{{ group.name }}</span>
-        </div>
-      </div>
     </div>
 
-    <!-- Group table -->
-    <div class="overflow-x-auto">
-      <table class="w-full">
-        <thead>
-          <tr class="bg-gray-100">
-            <th class="p-3 text-left font-medium text-gray-700 border-b border-gray-200">Hora</th>
-            <th class="p-3 text-left font-medium text-gray-700 border-b border-gray-200">Materia</th>
-            <th class="p-3 text-left font-medium text-gray-700 border-b border-gray-200">Maestro</th>
-            <th class="p-3 text-left font-medium text-gray-700 border-b border-gray-200">Aula</th>
-            <th class="p-3 text-center font-medium text-gray-700 border-b border-gray-200">
-              Asistencia ({{ currentDayName }})
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let classItem of filterClasses(group.classes)" class="hover:bg-gray-50">
-            <td class="p-3 font-medium text-gray-700 border-b border-gray-200">{{ classItem.time }}</td>
-            <td class="p-3 text-gray-700 border-b border-gray-200">{{ classItem.subject }}</td>
-            <td class="p-3 text-gray-700 border-b border-gray-200">{{ classItem.teacher }}</td>
-            <td class="p-3 text-gray-700 border-b border-gray-200">{{ classItem.classroom }}</td>
-            <td class="p-3 text-center border-b border-gray-200">
-              <!-- Replace select with two checkboxes -->
-              <div class="flex justify-center items-center gap-3">
-                <!-- Attended checkbox -->
-                <div class="flex items-center">
-                  <input type="checkbox" [checked]="isAttendanceStatus(group.id, classItem.id, 'asistio')"
-                    (change)="setAttendanceStatus(group.id, classItem.id, 'asistio')"
-                    [disabled]="isAttendanceStatus(group.id, classItem.id, 'no-asistio')"
-                    class="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
-                  <span class="ml-1 text-xs text-green-700">Asistió</span>
-                </div>
-
-                <!-- Did not attend checkbox -->
-                <div class="flex items-center">
-                  <input type="checkbox" [checked]="isAttendanceStatus(group.id, classItem.id, 'no-asistio')"
-                    (change)="setAttendanceStatus(group.id, classItem.id, 'no-asistio')"
-                    [disabled]="isAttendanceStatus(group.id, classItem.id, 'asistio')"
-                    class="w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500">
-                  <span class="ml-1 text-xs text-red-700">No asistió</span>
-                </div>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- No results message -->
+    <div
+      *ngIf="!isLoading && horarios && horarios.length > 0 && filterGroups().length === 0 && hasAnyClassForCurrentDay()"
+      class="p-8 text-center text-gray-500">
+      <p>No se encontraron resultados con los filtros seleccionados.</p>
+      <button type="button" (click)="resetFilters()" class="mt-2 text-blue-500 hover:underline">
+        Limpiar filtros
+      </button>
     </div>
+
+    <!-- Mensaje cuando se cargaron datos pero no hay horarios para el día actual -->
+    <div *ngIf="!isLoading && (horarios && horarios.length > 0) && filterGroups().length === 0"
+      class="p-12 text-center">
+      <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <h3 class="mt-2 text-lg font-medium text-gray-900">Sin horarios para hoy</h3>
+      <p class="mt-1 text-gray-500">
+        No se encontraron horarios a los cuales checar la asistencia del maestro para el día {{ currentDayName }}.
+      </p>
+      <p *ngIf="isWeekend" class="mt-2 text-amber-600">
+        Hoy es fin de semana. Las clases regulares se imparten de lunes a viernes.
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <!-- <div class="p-4 flex justify-end gap-2">
+      <button type="button"
+        class="px-4 py-2 border border-gray-300 rounded-md font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        Cancelar
+      </button>
+      <button type="button" (click)="saveAttendance()"
+        class="px-4 py-2 border border-transparent rounded-md font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        Guardar Asistencias
+      </button>
+    </div> -->
   </div>
 
-  <!-- No results message -->
-  <div *ngIf="filterGroups().length === 0" class="p-8 text-center text-gray-500">
-    <p>No se encontraron resultados con los filtros seleccionados.</p>
-    <button type="button" (click)="resetFilters()" class="mt-2 text-blue-500 hover:underline">
-      Limpiar filtros
-    </button>
-  </div>
-
-  <!-- Footer -->
-  <div class="p-4 flex justify-end gap-2">
-    <button type="button"
-      class="px-4 py-2 border border-gray-300 rounded-md font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
-      Cancelar
-    </button>
-    <button type="button" (click)="saveAttendance()"
-      class="px-4 py-2 border border-transparent rounded-md font-medium text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-      Guardar Asistencias
-    </button>
-  </div>
 </div>
