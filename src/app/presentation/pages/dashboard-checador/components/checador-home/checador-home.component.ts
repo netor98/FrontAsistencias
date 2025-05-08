@@ -104,6 +104,10 @@ export class ChecadorHomeComponent implements OnInit {
   saveError = false;
   errorMessage = '';
 
+  // Propiedades para filtro de hora actual
+  currentTimeFilter: boolean = true; // Activado por defecto
+  currentTimeClasses: Set<number> = new Set(); // IDs de las clases actuales
+
   constructor() {
     // Get current day information
     const dayOfWeek = this.today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
@@ -156,6 +160,9 @@ export class ChecadorHomeComponent implements OnInit {
 
       // Procesar los horarios para adaptarlos al formato del componente
       this.processHorarios();
+
+      // Identificar clases en curso actualmente
+      this.identifyCurrentTimeClasses();
 
       // Obtener asistencias registradas para el día actual
       await this.loadExistingAttendances();
@@ -292,6 +299,43 @@ export class ChecadorHomeComponent implements OnInit {
       });
     });
   }
+
+  // Método para determinar qué clases están en curso ahora
+  identifyCurrentTimeClasses(): void {
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTimeInMinutes = currentHour * 60 + currentMinute;
+
+    // Limpiar set anterior
+    this.currentTimeClasses.clear();
+
+    this.groupsData.forEach(group => {
+      group.classes.forEach(classItem => {
+        // Solo procesar clases del día actual
+        if (classItem.day && classItem.day !== this.currentDayName) {
+          return;
+        }
+
+        const [startTime, endTime] = classItem.time.split(' - ');
+
+        // Convertir horas de inicio y fin a minutos desde medianoche
+        const [startHour, startMinute] = startTime.split(':').map(Number);
+        const [endHour, endMinute] = endTime.split(':').map(Number);
+
+        const startTimeInMinutes = startHour * 60 + startMinute;
+        const endTimeInMinutes = endHour * 60 + endMinute;
+
+        // Verificar si la hora actual está dentro del rango de la clase
+        if (currentTimeInMinutes >= startTimeInMinutes && currentTimeInMinutes <= endTimeInMinutes) {
+          this.currentTimeClasses.add(classItem.id);
+        }
+      });
+    });
+
+    console.log('Clases en curso actualmente:', Array.from(this.currentTimeClasses));
+  }
+
 
   extractFilterOptions(): void {
     // Extract unique classrooms
@@ -636,58 +680,139 @@ export class ChecadorHomeComponent implements OnInit {
   }
 
   // Filter groups based on selected criteria
+  // filterGroups(): GroupInfo[] {
+  //   // Si no hay datos, retornar array vacío
+  //   if (!this.groupsData || this.groupsData.length === 0) {
+  //     return [];
+  //   }
+
+  //   return this.groupsData.filter((group) => {
+  //     // First check if the group has any classes for the current day
+  //     const hasClassesForCurrentDay = group.classes.some(classItem =>
+  //       !classItem.day || classItem.day === this.currentDayName
+  //     );
+
+  //     // If no classes for the current day, filter out this group
+  //     if (!hasClassesForCurrentDay) {
+  //       return false;
+  //     }
+
+  //     // Continue with other filters as before
+  //     // Filter by career
+  //     if (this.filters.career && group.career !== this.filters.career) {
+  //       return false;
+  //     }
+
+  //     // Filter by classroom or teacher (check if any class matches)
+  //     if (this.filters.classroom || this.filters.teacher || this.filters.time) {
+  //       return group.classes.some((classItem) => {
+  //         // Only consider classes for the current day
+  //         if (classItem.day && classItem.day !== this.currentDayName) {
+  //           return false;
+  //         }
+
+  //         // Filter by current time if that filter is enabled
+  //         if (this.currentTimeFilter && !this.currentTimeClasses.has(classItem.id)) {
+  //           return false;
+  //         }
+
+  //         // Filter by classroom
+  //         if (this.filters.classroom && classItem.classroom !== this.filters.classroom) {
+  //           return false;
+  //         }
+
+  //         // Filter by teacher
+  //         if (this.filters.teacher && classItem.teacher !== this.filters.teacher) {
+  //           return false;
+  //         }
+
+  //         // Filter by time
+  //         if (this.filters.time && classItem.time !== this.filters.time) {
+  //           return false;
+  //         }
+
+  //         return true;
+  //       });
+  //     }
+
+  //     return true;
+  //   });
+  // }
+
+  // Filter groups based on selected criteria
   filterGroups(): GroupInfo[] {
     // Si no hay datos, retornar array vacío
     if (!this.groupsData || this.groupsData.length === 0) {
       return [];
     }
 
-    return this.groupsData.filter((group) => {
-      // First check if the group has any classes for the current day
-      const hasClassesForCurrentDay = group.classes.some(classItem =>
-        !classItem.day || classItem.day === this.currentDayName
-      );
+    return this.groupsData
+      .filter((group) => {
+        // First check if the group has any classes for the current day
+        const hasClassesForCurrentDay = group.classes.some(classItem =>
+          !classItem.day || classItem.day === this.currentDayName
+        );
 
-      // If no classes for the current day, filter out this group
-      if (!hasClassesForCurrentDay) {
-        return false;
-      }
+        // If no classes for the current day, filter out this group
+        if (!hasClassesForCurrentDay) {
+          return false;
+        }
 
-      // Continue with other filters as before
-      // Filter by career
-      if (this.filters.career && group.career !== this.filters.career) {
-        return false;
-      }
+        // Continue with other filters as before
+        // Filter by career
+        if (this.filters.career && group.career !== this.filters.career) {
+          return false;
+        }
 
-      // Filter by classroom or teacher (check if any class matches)
-      if (this.filters.classroom || this.filters.teacher || this.filters.time) {
-        return group.classes.some((classItem) => {
-          // Only consider classes for the current day
-          if (classItem.day && classItem.day !== this.currentDayName) {
-            return false;
-          }
+        // Filter by classroom or teacher (check if any class matches)
+        if (this.filters.classroom || this.filters.teacher || this.filters.time || this.currentTimeFilter) {
+          const hasAnyMatchingClass = group.classes.some((classItem) => {
+            // Only consider classes for the current day
+            if (classItem.day && classItem.day !== this.currentDayName) {
+              return false;
+            }
 
-          // Filter by classroom
-          if (this.filters.classroom && classItem.classroom !== this.filters.classroom) {
-            return false;
-          }
+            // Filter by current time if that filter is enabled
+            if (this.currentTimeFilter && !this.currentTimeClasses.has(classItem.id)) {
+              return false;
+            }
 
-          // Filter by teacher
-          if (this.filters.teacher && classItem.teacher !== this.filters.teacher) {
-            return false;
-          }
+            // Filter by classroom
+            if (this.filters.classroom && classItem.classroom !== this.filters.classroom) {
+              return false;
+            }
 
-          // Filter by time
-          if (this.filters.time && classItem.time !== this.filters.time) {
-            return false;
-          }
+            // Filter by teacher
+            if (this.filters.teacher && classItem.teacher !== this.filters.teacher) {
+              return false;
+            }
 
-          return true;
-        });
-      }
+            // Filter by time
+            if (this.filters.time && classItem.time !== this.filters.time) {
+              return false;
+            }
 
-      return true;
-    });
+            return true;
+          });
+
+          return hasAnyMatchingClass;
+        }
+
+        return true;
+      })
+      // Filtrar para eliminar los grupos que no tienen clases después de aplicar los filtros
+      .map(group => {
+        return {
+          ...group,
+          classes: this.filterClasses(group.classes)
+        };
+      })
+      .filter(group => group.classes.length > 0); // Solo mantener grupos con clases
+  }
+
+  // Método para verificar si hay alguna clase en curso actualmente
+  hasCurrentTimeClasses(): boolean {
+    return this.currentTimeClasses.size > 0;
   }
 
   // Filter classes within a group based on selected criteria
@@ -696,6 +821,13 @@ export class ChecadorHomeComponent implements OnInit {
     let filteredClasses = classes.filter(classItem =>
       !classItem.day || classItem.day === this.currentDayName
     );
+
+    // Filtrar por hora actual si está habilitado
+    if (this.currentTimeFilter) {
+      filteredClasses = filteredClasses.filter(classItem =>
+        this.currentTimeClasses.has(classItem.id)
+      );
+    }
 
     // Luego aplicar los demás filtros
     if (!this.filters.classroom && !this.filters.teacher && !this.filters.time) {
