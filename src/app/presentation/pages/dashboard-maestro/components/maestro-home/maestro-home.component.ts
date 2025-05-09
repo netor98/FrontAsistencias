@@ -3,6 +3,8 @@ import { CommonModule } from "@angular/common"
 import { FormsModule } from "@angular/forms"
 import { horariosService } from "src/app/services/horario-maestro"
 import { authService } from "src/app/services/login"
+import { carrerasService } from "src/app/services/carreras"
+import { Carrera } from "src/app/services/interfaces"
 
 interface ClassItem {
   id: number
@@ -11,6 +13,7 @@ interface ClassItem {
   teacher: string
   classroom: string
   group: string
+  dayOfWeek?: string // Día de la semana en que ocurre la clase
 }
 
 interface WeekInfo {
@@ -63,12 +66,8 @@ export class MaestroHomeComponent implements OnInit {
   // Options for dropdowns
   schoolCycles: string[] = ["2023-2024", "2024-2025", "2025-2026"]
   periods: string[] = ["1", "2"]
-  careers: { id: string; name: string }[] = [
-    { id: "ing-sistemas", name: "Ingeniería en Sistemas Computacionales" },
-    { id: "ing-industrial", name: "Ingeniería Industrial" },
-    { id: "ing-mecatronica", name: "Ingeniería Mecatrónica" },
-    { id: "lic-administracion", name: "Licenciatura en Administración" },
-  ]
+  careers: { id: string; name: string }[] = [];
+  rawCarreras: Carrera[] = [];
 
   // Derived filter options (will be populated from data)
   subjectOptions: string[] = []
@@ -77,189 +76,9 @@ export class MaestroHomeComponent implements OnInit {
   timeOptions: string[] = []
 
   // Sample data for multiple groups
-  groupsData: GroupInfo[] = [
-    {
-      id: "ing-sistemas-A",
-      name: "A",
-      career: "ing-sistemas",
-      classes: [
-        {
-          id: 1,
-          time: "7:00 - 8:30",
-          subject: "Programación Orientada a Objetos",
-          teacher: "Prof. García",
-          classroom: "A-101",
-          group: "A",
-        },
-        {
-          id: 2,
-          time: "8:30 - 10:00",
-          subject: "Bases de Datos",
-          teacher: "Prof. Rodríguez",
-          classroom: "A-102",
-          group: "A",
-        },
-        {
-          id: 3,
-          time: "10:30 - 12:00",
-          subject: "Redes de Computadoras",
-          teacher: "Prof. López",
-          classroom: "A-103",
-          group: "A",
-        },
-        {
-          id: 4,
-          time: "12:00 - 13:30",
-          subject: "Sistemas Operativos",
-          teacher: "Prof. Martínez",
-          classroom: "A-104",
-          group: "A",
-        },
-        {
-          id: 5,
-          time: "13:30 - 15:00",
-          subject: "Ingeniería de Software",
-          teacher: "Prof. Sánchez",
-          classroom: "A-105",
-          group: "A",
-        },
-      ],
-    },
-    {
-      id: "ing-sistemas-B",
-      name: "B",
-      career: "ing-sistemas",
-      classes: [
-        {
-          id: 1,
-          time: "7:00 - 8:30",
-          subject: "Programación Web",
-          teacher: "Prof. Torres",
-          classroom: "B-201",
-          group: "B",
-        },
-        {
-          id: 2,
-          time: "8:30 - 10:00",
-          subject: "Inteligencia Artificial",
-          teacher: "Prof. Gómez",
-          classroom: "B-202",
-          group: "B",
-        },
-        {
-          id: 3,
-          time: "10:30 - 12:00",
-          subject: "Seguridad Informática",
-          teacher: "Prof. Díaz",
-          classroom: "B-203",
-          group: "B",
-        },
-        {
-          id: 4,
-          time: "12:00 - 13:30",
-          subject: "Desarrollo Móvil",
-          teacher: "Prof. Pérez",
-          classroom: "B-204",
-          group: "B",
-        },
-        {
-          id: 5,
-          time: "13:30 - 15:00",
-          subject: "Arquitectura de Computadoras",
-          teacher: "Prof. Ramírez",
-          classroom: "B-205",
-          group: "B",
-        },
-      ],
-    },
-    {
-      id: "ing-industrial-A",
-      name: "A",
-      career: "ing-industrial",
-      classes: [
-        {
-          id: 1,
-          time: "7:00 - 8:30",
-          subject: "Procesos de Manufactura",
-          teacher: "Prof. Hernández",
-          classroom: "C-301",
-          group: "A",
-        },
-        {
-          id: 2,
-          time: "8:30 - 10:00",
-          subject: "Gestión de Calidad",
-          teacher: "Prof. Flores",
-          classroom: "C-302",
-          group: "A",
-        },
-        {
-          id: 3,
-          time: "10:30 - 12:00",
-          subject: "Logística Industrial",
-          teacher: "Prof. Vargas",
-          classroom: "C-303",
-          group: "A",
-        },
-        {
-          id: 4,
-          time: "12:00 - 13:30",
-          subject: "Seguridad Industrial",
-          teacher: "Prof. Castro",
-          classroom: "C-304",
-          group: "A",
-        },
-        {
-          id: 5,
-          time: "13:30 - 15:00",
-          subject: "Investigación de Operaciones",
-          teacher: "Prof. Morales",
-          classroom: "C-305",
-          group: "A",
-        },
-      ],
-    },
-    {
-      id: "ing-industrial-B",
-      name: "B",
-      career: "ing-industrial",
-      classes: [
-        {
-          id: 1,
-          time: "7:00 - 8:30",
-          subject: "Diseño Industrial",
-          teacher: "Prof. Mendoza",
-          classroom: "D-401",
-          group: "B",
-        },
-        { id: 2, time: "8:30 - 10:00", subject: "Ergonomía", teacher: "Prof. Jiménez", classroom: "D-402", group: "B" },
-        {
-          id: 3,
-          time: "10:30 - 12:00",
-          subject: "Gestión de Proyectos",
-          teacher: "Prof. Ortega",
-          classroom: "D-403",
-          group: "B",
-        },
-        {
-          id: 4,
-          time: "12:00 - 13:30",
-          subject: "Control Estadístico",
-          teacher: "Prof. Núñez",
-          classroom: "D-404",
-          group: "B",
-        },
-        {
-          id: 5,
-          time: "13:30 - 15:00",
-          subject: "Manufactura Esbelta",
-          teacher: "Prof. Vega",
-          classroom: "D-405",
-          group: "B",
-        },
-      ],
-    },
-  ]
+  groupsData: GroupInfo[] = []
+
+  isLoading = true;
 
   weekdays: string[] = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
 
@@ -298,52 +117,139 @@ export class MaestroHomeComponent implements OnInit {
     this.extractFilterOptions()
   }
 
+  // async ngOnInit(): Promise<void> {
+
+  //   this.isLoading = true;
+
+  //   // Obtener el usuario actual
+  //   const currentUser = authService.getCurrentUser();
+
+  //   if (currentUser && currentUser.id) {
+  //     console.log('Usuario maestro actual:', currentUser);
+
+  //     try {
+  //       // Convertir el ID a número si viene como string
+  //       const maestroId = typeof currentUser.id === 'string'
+  //         ? parseInt(currentUser.id, 10)
+  //         : currentUser.id;
+
+  //       console.log('Obteniendo horarios para maestro ID:', maestroId);
+
+  //       // Obtener los horarios del maestro
+  //       const horarios = await horariosService.getByMaestro(maestroId);
+
+  //       console.log('Horarios del maestro obtenidos:', horarios);
+
+  //       if (horarios.length === 0) {
+  //         console.log('El maestro no tiene horarios asignados.');
+  //       } else {
+  //         // Mostrar información detallada de cada horario
+  //         console.log('Detalle de horarios:');
+  //         horarios.forEach((horario, index) => {
+  //           console.log(`Horario #${index + 1}:`);
+  //           console.log(`- Día: ${horario.dia}`);
+  //           console.log(`- Hora: ${horario.hora_inicio} - ${horario.hora_fin}`);
+  //           console.log(`- Materia: ${horario.materias?.name || 'No especificada'}`);
+  //           console.log(`- Grupo: ${horario.grupo?.name || 'No especificado'}`);
+  //           console.log(`- Aula: ${horario.aulas?.aula || 'No especificada'}`);
+  //           console.log(`- Carrera: ${horario.carreras?.nombre || 'No especificada'}`);
+  //         });
+
+  //         // Procesar los horarios para mostrarlos en la UI
+  //         this.processHorarios(horarios);
+  //         // Al terminar:
+  //         this.isLoading = false;
+  //       }
+  //     } catch (error) {
+  //       console.error('Error al obtener horarios del maestro:', error);
+
+  //     }
+  //   } else {
+  //     console.error('No se pudo obtener el ID del maestro actual');
+  //   }
+
+  //   // Initialize attendance status for all classes and days in all groups
+  //   this.groupsData.forEach((group) => {
+  //     group.classes.forEach((classItem) => {
+  //       // Initialize for all days of the week
+  //       this.weekdays.forEach((day) => {
+  //         if (!this.attendanceStatus[group.id]) {
+  //           this.attendanceStatus[group.id] = {}
+  //         }
+  //         this.attendanceStatus[group.id][`${classItem.id}-${day}`] = "pendiente"
+  //       })
+  //     })
+  //   })
+  // }
+
+  // Método para procesar los horarios obtenidos de la API
   async ngOnInit(): Promise<void> {
-    // Obtener el usuario actual
-    const currentUser = authService.getCurrentUser();
+    this.isLoading = true;
 
-    if (currentUser && currentUser.id) {
-      console.log('Usuario maestro actual:', currentUser);
+    try {
+      // Obtener las carreras primero (similar a checador-home)
+      this.rawCarreras = await carrerasService.getAll();
+      console.log('Carreras obtenidas:', this.rawCarreras);
 
-      try {
-        // Convertir el ID a número si viene como string
-        const maestroId = typeof currentUser.id === 'string'
-          ? parseInt(currentUser.id, 10)
-          : currentUser.id;
+      // Mapear las carreras al formato requerido por el componente
+      this.mapCarreras();
 
-        console.log('Obteniendo horarios para maestro ID:', maestroId);
+      // Obtener el usuario actual
+      const currentUser = authService.getCurrentUser();
 
-        // Obtener los horarios del maestro
-        const horarios = await horariosService.getByMaestro(maestroId);
+      if (currentUser && currentUser.id) {
+        console.log('Usuario maestro actual:', currentUser);
 
-        console.log('Horarios del maestro obtenidos:', horarios);
+        try {
+          // Convertir el ID a número si viene como string
+          const maestroId = typeof currentUser.id === 'string'
+            ? parseInt(currentUser.id, 10)
+            : currentUser.id;
 
-        if (horarios.length === 0) {
-          console.log('El maestro no tiene horarios asignados.');
-        } else {
-          // Mostrar información detallada de cada horario
-          console.log('Detalle de horarios:');
-          horarios.forEach((horario, index) => {
-            console.log(`Horario #${index + 1}:`);
-            console.log(`- Día: ${horario.dia}`);
-            console.log(`- Hora: ${horario.hora_inicio} - ${horario.hora_fin}`);
-            console.log(`- Materia: ${horario.materias?.name || 'No especificada'}`);
-            console.log(`- Grupo: ${horario.grupo?.name || 'No especificado'}`);
-            console.log(`- Aula: ${horario.aulas?.aula || 'No especificada'}`);
-            console.log(`- Carrera: ${horario.carreras?.nombre || 'No especificada'}`);
-          });
+          console.log('Obteniendo horarios para maestro ID:', maestroId);
 
-          // Procesar los horarios para mostrarlos en la UI
-          this.processHorarios(horarios);
+          // Obtener los horarios del maestro
+          const horarios = await horariosService.getByMaestro(maestroId);
+
+          console.log('Horarios del maestro obtenidos:', horarios);
+
+          if (horarios.length === 0) {
+            console.log('El maestro no tiene horarios asignados.');
+            this.isLoading = false;
+          } else {
+            // Mostrar información detallada de cada horario
+            console.log('Detalle de horarios:');
+            horarios.forEach((horario, index) => {
+              console.log(`Horario #${index + 1}:`);
+              console.log(`- Día: ${horario.dia}`);
+              console.log(`- Hora: ${horario.hora_inicio} - ${horario.hora_fin}`);
+              console.log(`- Materia: ${horario.materias?.name || 'No especificada'}`);
+              console.log(`- Grupo: ${horario.grupo?.name || 'No especificado'}`);
+              console.log(`- Aula: ${horario.aulas?.aula || 'No especificada'}`);
+              console.log(`- Carrera: ${horario.carreras?.nombre || 'No especificada'}`);
+            });
+
+            // Procesar los horarios para mostrarlos en la UI
+            this.processHorarios(horarios);
+          }
+        } catch (error) {
+          console.error('Error al obtener horarios del maestro:', error);
         }
-      } catch (error) {
-        console.error('Error al obtener horarios del maestro:', error);
+      } else {
+        console.error('No se pudo obtener el ID del maestro actual');
+        this.isLoading = false;
       }
-    } else {
-      console.error('No se pudo obtener el ID del maestro actual');
+    } catch (error) {
+      console.error('Error al obtener carreras:', error);
+      this.isLoading = false;
     }
 
     // Initialize attendance status for all classes and days in all groups
+    this.initializeAttendanceStatus();
+  }
+
+  // Método para inicializar el estado de asistencia
+  initializeAttendanceStatus(): void {
     this.groupsData.forEach((group) => {
       group.classes.forEach((classItem) => {
         // Initialize for all days of the week
@@ -351,13 +257,47 @@ export class MaestroHomeComponent implements OnInit {
           if (!this.attendanceStatus[group.id]) {
             this.attendanceStatus[group.id] = {}
           }
-          this.attendanceStatus[group.id][`${classItem.id}-${day}`] = "pendiente"
+          if (this.hasClassOnDay(classItem, day)) {
+            this.attendanceStatus[group.id][`${classItem.id}-${day}`] = "pendiente"
+          }
         })
       })
     })
   }
 
-  // Método para procesar los horarios obtenidos de la API
+  // Método para mapear las carreras de la API al formato del componente
+  mapCarreras(): void {
+    if (!this.rawCarreras || this.rawCarreras.length === 0) {
+      return;
+    }
+
+    this.careers = this.rawCarreras.map(carrera => {
+      // Determinar el id según el nombre
+      let careerId = 'unknown';
+      const carreraNombre = carrera.nombre.toLowerCase();
+
+      if (carreraNombre.includes('sistemas')) {
+        careerId = 'ing-sistemas';
+      } else if (carreraNombre.includes('industrial')) {
+        careerId = 'ing-industrial';
+      } else if (carreraNombre.includes('mecatrónica') || carreraNombre.includes('mecatronica')) {
+        careerId = 'ing-mecatronica';
+      } else if (carreraNombre.includes('administración') || carreraNombre.includes('administracion')) {
+        careerId = 'lic-administracion';
+      } else {
+        // Para cualquier otra carrera, usar el ID como identificador
+        careerId = `carrera-${carrera.id}`;
+      }
+
+      return {
+        id: careerId,
+        name: carrera.nombre.trim()
+      };
+    });
+
+    console.log('Carreras mapeadas:', this.careers);
+  }
+
   processHorarios(horarios: any[]): void {
     // Crear mapa para agrupar por carrera y grupo
     const groupMap: Map<string, GroupInfo> = new Map();
@@ -366,20 +306,30 @@ export class MaestroHomeComponent implements OnInit {
       // Determinar careerID basado en la carrera del horario
       let careerId = 'unknown';
       if (horario.carreras) {
-        const carreraNombre = horario.carreras.nombre || '';
+        // Usar el mapeo de carreras para encontrar el careerId
+        const carreraEncontrada = this.careers.find(
+          c => c.name.toLowerCase() === horario.carreras?.nombre?.toLowerCase().trim()
+        );
 
-        if (carreraNombre.toLowerCase().includes('sistemas')) {
-          careerId = 'ing-sistemas';
-        } else if (carreraNombre.toLowerCase().includes('industrial')) {
-          careerId = 'ing-industrial';
-        } else if (carreraNombre.toLowerCase().includes('mecatrónica') ||
-          carreraNombre.toLowerCase().includes('mecatronica')) {
-          careerId = 'ing-mecatronica';
-        } else if (carreraNombre.toLowerCase().includes('administración') ||
-          carreraNombre.toLowerCase().includes('administracion')) {
-          careerId = 'lic-administracion';
+        if (carreraEncontrada) {
+          careerId = carreraEncontrada.id;
         } else {
-          careerId = `carrera-${horario.carreras.id}`;
+          // Si no se encuentra, usar el método anterior
+          const carreraNombre = horario.carreras.nombre || '';
+          if (carreraNombre.toLowerCase().includes('sistemas')) {
+            careerId = 'ing-sistemas';
+          } else if (carreraNombre.toLowerCase().includes('industrial')) {
+            careerId = 'ing-industrial';
+          } else if (carreraNombre.toLowerCase().includes('mecatrónica') ||
+            carreraNombre.toLowerCase().includes('mecatronica')) {
+            careerId = 'ing-mecatronica';
+          } else if (carreraNombre.toLowerCase().includes('administración') ||
+            carreraNombre.toLowerCase().includes('administracion')) {
+            careerId = 'lic-administracion';
+          } else {
+            // Para cualquier otra carrera, usar el ID como identificador
+            careerId = `carrera-${horario.carreras.id}`;
+          }
         }
       }
 
@@ -402,14 +352,20 @@ export class MaestroHomeComponent implements OnInit {
       if (group) {
         group.classes.push({
           id: horario.id,
-          time: `${horario.hora_inicio.slice(0, 5)} - ${horario.hora_fin.slice(0, 5)}`,
+          time: `${horario.hora_inicio?.slice(0, 5) || '00:00'} - ${horario.hora_fin?.slice(0, 5) || '00:00'}`,
           subject: horario.materias?.name || 'Sin materia',
           teacher: horario.maestro?.name || 'Sin profesor',
           classroom: horario.aulas?.aula || 'Sin aula',
-          group: groupName
+          group: groupName,
+          // Guardar el día de la semana para esta clase
+          dayOfWeek: horario.dia || ''
         });
       }
     });
+
+    // Log para depuración
+    console.log('IDs de carreras identificadas:',
+      Array.from(groupMap.values()).map(g => g.career).filter((v, i, a) => a.indexOf(v) === i));
 
     // Convertir el mapa de grupos a un array
     const processedGroups = Array.from(groupMap.values());
@@ -420,6 +376,20 @@ export class MaestroHomeComponent implements OnInit {
 
     // Actualizar las opciones de filtrado para los nuevos datos
     this.extractFilterOptions();
+
+    // Marcar que la carga ha finalizado
+    this.isLoading = false;
+  }
+
+  
+  hasClassOnDay(classItem: ClassItem, day: string): boolean {
+    if (!classItem.dayOfWeek) return false;
+
+    // Normaliza los nombres de los días para la comparación (elimina acentos y convierte a minúsculas)
+    const normalizeDay = (d: string) => d.toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+    return normalizeDay(classItem.dayOfWeek) === normalizeDay(day);
   }
 
   extractFilterOptions(): void {
@@ -608,8 +578,8 @@ export class MaestroHomeComponent implements OnInit {
   }
 
   getCareerName(careerId: string): string {
-    const career = this.careers.find((c) => c.id === careerId)
-    return career ? career.name : ""
+    const career = this.careers.find((c) => c.id === careerId);
+    return career ? career.name : "Carrera no especificada";
   }
 
   saveAttendance(): void {
