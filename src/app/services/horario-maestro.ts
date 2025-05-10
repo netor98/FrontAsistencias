@@ -21,29 +21,29 @@ export const horariosService = {
         materias:materia_id(id, name),
         grupo:grupo_id(id, name)
       `);
-  
+
     if (error) throw new Error(error.message);
-    
+
     // Si no hay horarios, retornamos un array vacío
     if (!horarios || horarios.length === 0) {
       return [];
     }
-    
+
     // Obtenemos los grupos para conseguir aula_id y carrera_id
     const grupoIds = [...new Set(horarios.map(h => h.grupo_id).filter(Boolean))];
-    
+
     if (grupoIds.length > 0) {
       const { data: grupos, error: gruposError } = await supabase
         .from('grupo')
         .select('id, aula_id, carrera_id')
         .in('id', grupoIds);
-        
+
       if (gruposError) throw new Error(gruposError.message);
-      
+
       if (grupos && grupos.length > 0) {
         // Creamos mapas para buscar rápidamente
         const gruposMap = Object.fromEntries(grupos.map(g => [g.id, g]));
-        
+
         // Obtenemos aulas
         const aulaIds = [...new Set(grupos.map(g => g.aula_id).filter(Boolean))];
         if (aulaIds.length > 0) {
@@ -51,12 +51,12 @@ export const horariosService = {
             .from('aulas')
             .select('id, aula')
             .in('id', aulaIds);
-            
+
           if (aulasError) throw new Error(aulasError.message);
-          
+
           if (aulas && aulas.length > 0) {
             const aulasMap = Object.fromEntries(aulas.map(a => [a.id, a]));
-            
+
             // Asignamos aulas a los horarios
             horarios.forEach(horario => {
               const grupo = gruposMap[horario.grupo_id];
@@ -66,7 +66,7 @@ export const horariosService = {
             });
           }
         }
-        
+
         // Obtenemos carreras
         const carreraIds = [...new Set(grupos.map(g => g.carrera_id).filter(Boolean))];
         if (carreraIds.length > 0) {
@@ -74,12 +74,12 @@ export const horariosService = {
             .from('carreras')
             .select('id, nombre')
             .in('id', carreraIds);
-            
+
           if (carrerasError) throw new Error(carrerasError.message);
-          
+
           if (carreras && carreras.length > 0) {
             const carrerasMap = Object.fromEntries(carreras.map(c => [c.id, c]));
-            
+
             // Asignamos carreras a los horarios
             horarios.forEach(horario => {
               const grupo = gruposMap[horario.grupo_id];
@@ -91,7 +91,7 @@ export const horariosService = {
         }
       }
     }
-    
+
     return horarios;
   },
 
@@ -118,29 +118,29 @@ export const horariosService = {
         grupo:grupo_id(id, name)
       `)
       .eq('maestro_id', maestroId); // Filtro por ID de maestro
-    
+
     if (error) throw new Error(error.message);
-    
+
     // Si no hay horarios, retornamos un array vacío
     if (!horarios || horarios.length === 0) {
       return [];
     }
-    
+
     // Obtenemos los grupos para conseguir aula_id y carrera_id
     const grupoIds = [...new Set(horarios.map(h => h.grupo_id).filter(Boolean))];
-    
+
     if (grupoIds.length > 0) {
       const { data: grupos, error: gruposError } = await supabase
         .from('grupo')
         .select('id, aula_id, carrera_id')
         .in('id', grupoIds);
-        
+
       if (gruposError) throw new Error(gruposError.message);
-      
+
       if (grupos && grupos.length > 0) {
         // Creamos mapas para buscar rápidamente
         const gruposMap = Object.fromEntries(grupos.map(g => [g.id, g]));
-        
+
         // Obtenemos aulas
         const aulaIds = [...new Set(grupos.map(g => g.aula_id).filter(Boolean))];
         if (aulaIds.length > 0) {
@@ -148,12 +148,12 @@ export const horariosService = {
             .from('aulas')
             .select('id, aula')
             .in('id', aulaIds);
-            
+
           if (aulasError) throw new Error(aulasError.message);
-          
+
           if (aulas && aulas.length > 0) {
             const aulasMap = Object.fromEntries(aulas.map(a => [a.id, a]));
-            
+
             // Asignamos aulas a los horarios
             horarios.forEach(horario => {
               const grupo = gruposMap[horario.grupo_id];
@@ -163,7 +163,7 @@ export const horariosService = {
             });
           }
         }
-        
+
         // Obtenemos carreras
         const carreraIds = [...new Set(grupos.map(g => g.carrera_id).filter(Boolean))];
         if (carreraIds.length > 0) {
@@ -171,12 +171,12 @@ export const horariosService = {
             .from('carreras')
             .select('id, nombre')
             .in('id', carreraIds);
-            
+
           if (carrerasError) throw new Error(carrerasError.message);
-          
+
           if (carreras && carreras.length > 0) {
             const carrerasMap = Object.fromEntries(carreras.map(c => [c.id, c]));
-            
+
             // Asignamos carreras a los horarios
             horarios.forEach(horario => {
               const grupo = gruposMap[horario.grupo_id];
@@ -188,8 +188,22 @@ export const horariosService = {
         }
       }
     }
-    
+
     return horarios;
+  },
+
+  async getByJefeNoCuenta(numeroCuenta: string): Promise<Grupo | null> {
+    const { data, error } = await supabase
+      .from('grupo')
+      .select('*')
+      .eq('jefe_nocuenta', numeroCuenta)
+      .single();
+
+    if (error) {
+      console.error('Error obteniendo grupo por jefe:', error.message);
+      return null;
+    }
+    return data as Grupo;
   },
 
   async getByGrupo(grupoId: number): Promise<any[]> {
@@ -203,27 +217,27 @@ export const horariosService = {
         grupo:grupo_id(id, name)
       `)
       .eq('grupo_id', grupoId); // Filtro por ID de grupo
-    
+
     if (error) throw new Error(error.message);
-    
+
     // Si no hay horarios, retornamos un array vacío
     if (!horarios || horarios.length === 0) {
       return [];
     }
-    
+
     // Obtenemos los datos del grupo para conseguir aula_id y carrera_id
     const { data: grupo, error: grupoError } = await supabase
       .from('grupo')
       .select('id, aula_id, carrera_id')
       .eq('id', grupoId)
       .single();
-      
+
     if (grupoError) throw new Error(grupoError.message);
-    
+
     if (grupo) {
       // Creamos el mapa para buscar rápidamente
       const gruposMap = { [grupo.id]: grupo };
-      
+
       // Obtenemos aulas si el grupo tiene aula_id
       if (grupo.aula_id) {
         const { data: aula, error: aulaError } = await supabase
@@ -231,19 +245,19 @@ export const horariosService = {
           .select('id, aula')
           .eq('id', grupo.aula_id)
           .single();
-          
+
         if (aulaError) throw new Error(aulaError.message);
-        
+
         if (aula) {
           const aulasMap = { [aula.id]: aula };
-          
+
           // Asignamos aulas a los horarios
           horarios.forEach(horario => {
             horario.aulas = aula;
           });
         }
       }
-      
+
       // Obtenemos carrera si el grupo tiene carrera_id
       if (grupo.carrera_id) {
         const { data: carrera, error: carreraError } = await supabase
@@ -251,9 +265,9 @@ export const horariosService = {
           .select('id, nombre')
           .eq('id', grupo.carrera_id)
           .single();
-          
+
         if (carreraError) throw new Error(carreraError.message);
-        
+
         if (carrera) {
           // Asignamos carrera a los horarios
           horarios.forEach(horario => {
@@ -262,7 +276,7 @@ export const horariosService = {
         }
       }
     }
-    
+
     return horarios;
   },
 
