@@ -4,7 +4,8 @@ import { FormsModule } from "@angular/forms"
 import { horariosService } from "src/app/services/horario-maestro"
 import { authService } from "src/app/services/login"
 import { carrerasService } from "src/app/services/carreras"
-import { Carrera } from "src/app/services/interfaces"
+import { asistenciasService } from "src/app/services/asistencias"
+import { Carrera, Asistencia } from "src/app/services/interfaces"
 
 interface ClassItem {
   id: number
@@ -87,7 +88,23 @@ export class MaestroHomeComponent implements OnInit {
 
   // For week tracking
   currentWeek: WeekInfo
-  weeks: WeekInfo[] = []
+  weeks: WeekInfo[] = [];
+
+  // Mapa para registrar IDs de asistencias existentes
+  existingAttendances: Map<string, Asistencia> = new Map();
+
+  // Estado de guardado y notificaciones
+  isSaving = false;
+  saveSuccess = false;
+  saveError = false;
+  errorMessage = '';
+  showingSuccess = false;
+  showingError = false;
+  pendingNotification = false;
+  showingPending = false;
+
+  // Para almacenar el ID del maestro actual
+  currentMaestroId: number = 0;
 
   constructor() {
     // Get current day information
@@ -117,72 +134,72 @@ export class MaestroHomeComponent implements OnInit {
     this.extractFilterOptions()
   }
 
+  // Método para procesar los horarios obtenidos de la API
   // async ngOnInit(): Promise<void> {
-
   //   this.isLoading = true;
 
-  //   // Obtener el usuario actual
-  //   const currentUser = authService.getCurrentUser();
+  //   try {
+  //     // Obtener las carreras primero (similar a checador-home)
+  //     this.rawCarreras = await carrerasService.getAll();
+  //     console.log('Carreras obtenidas:', this.rawCarreras);
 
-  //   if (currentUser && currentUser.id) {
-  //     console.log('Usuario maestro actual:', currentUser);
+  //     // Mapear las carreras al formato requerido por el componente
+  //     this.mapCarreras();
 
-  //     try {
-  //       // Convertir el ID a número si viene como string
-  //       const maestroId = typeof currentUser.id === 'string'
-  //         ? parseInt(currentUser.id, 10)
-  //         : currentUser.id;
+  //     // Obtener el usuario actual
+  //     const currentUser = authService.getCurrentUser();
 
-  //       console.log('Obteniendo horarios para maestro ID:', maestroId);
+  //     if (currentUser && currentUser.id) {
+  //       console.log('Usuario maestro actual:', currentUser);
 
-  //       // Obtener los horarios del maestro
-  //       const horarios = await horariosService.getByMaestro(maestroId);
+  //       try {
+  //         // Convertir el ID a número si viene como string
+  //         const maestroId = typeof currentUser.id === 'string'
+  //           ? parseInt(currentUser.id, 10)
+  //           : currentUser.id;
 
-  //       console.log('Horarios del maestro obtenidos:', horarios);
+  //         console.log('Obteniendo horarios para maestro ID:', maestroId);
 
-  //       if (horarios.length === 0) {
-  //         console.log('El maestro no tiene horarios asignados.');
-  //       } else {
-  //         // Mostrar información detallada de cada horario
-  //         console.log('Detalle de horarios:');
-  //         horarios.forEach((horario, index) => {
-  //           console.log(`Horario #${index + 1}:`);
-  //           console.log(`- Día: ${horario.dia}`);
-  //           console.log(`- Hora: ${horario.hora_inicio} - ${horario.hora_fin}`);
-  //           console.log(`- Materia: ${horario.materias?.name || 'No especificada'}`);
-  //           console.log(`- Grupo: ${horario.grupo?.name || 'No especificado'}`);
-  //           console.log(`- Aula: ${horario.aulas?.aula || 'No especificada'}`);
-  //           console.log(`- Carrera: ${horario.carreras?.nombre || 'No especificada'}`);
-  //         });
+  //         // Obtener los horarios del maestro
+  //         const horarios = await horariosService.getByMaestro(maestroId);
 
-  //         // Procesar los horarios para mostrarlos en la UI
-  //         this.processHorarios(horarios);
-  //         // Al terminar:
-  //         this.isLoading = false;
+  //         console.log('Horarios del maestro obtenidos:', horarios);
+
+  //         if (horarios.length === 0) {
+  //           console.log('El maestro no tiene horarios asignados.');
+  //           this.isLoading = false;
+  //         } else {
+  //           // Mostrar información detallada de cada horario
+  //           console.log('Detalle de horarios:');
+  //           horarios.forEach((horario, index) => {
+  //             console.log(`Horario #${index + 1}:`);
+  //             console.log(`- Día: ${horario.dia}`);
+  //             console.log(`- Hora: ${horario.hora_inicio} - ${horario.hora_fin}`);
+  //             console.log(`- Materia: ${horario.materias?.name || 'No especificada'}`);
+  //             console.log(`- Grupo: ${horario.grupo?.name || 'No especificado'}`);
+  //             console.log(`- Aula: ${horario.aulas?.aula || 'No especificada'}`);
+  //             console.log(`- Carrera: ${horario.carreras?.nombre || 'No especificada'}`);
+  //           });
+
+  //           // Procesar los horarios para mostrarlos en la UI
+  //           this.processHorarios(horarios);
+  //         }
+  //       } catch (error) {
+  //         console.error('Error al obtener horarios del maestro:', error);
   //       }
-  //     } catch (error) {
-  //       console.error('Error al obtener horarios del maestro:', error);
-
+  //     } else {
+  //       console.error('No se pudo obtener el ID del maestro actual');
+  //       this.isLoading = false;
   //     }
-  //   } else {
-  //     console.error('No se pudo obtener el ID del maestro actual');
+  //   } catch (error) {
+  //     console.error('Error al obtener carreras:', error);
+  //     this.isLoading = false;
   //   }
 
   //   // Initialize attendance status for all classes and days in all groups
-  //   this.groupsData.forEach((group) => {
-  //     group.classes.forEach((classItem) => {
-  //       // Initialize for all days of the week
-  //       this.weekdays.forEach((day) => {
-  //         if (!this.attendanceStatus[group.id]) {
-  //           this.attendanceStatus[group.id] = {}
-  //         }
-  //         this.attendanceStatus[group.id][`${classItem.id}-${day}`] = "pendiente"
-  //       })
-  //     })
-  //   })
+  //   this.initializeAttendanceStatus();
   // }
 
-  // Método para procesar los horarios obtenidos de la API
   async ngOnInit(): Promise<void> {
     this.isLoading = true;
 
@@ -200,11 +217,14 @@ export class MaestroHomeComponent implements OnInit {
       if (currentUser && currentUser.id) {
         console.log('Usuario maestro actual:', currentUser);
 
+        // Guardar el ID del maestro para uso posterior
+        this.currentMaestroId = typeof currentUser.id === 'string'
+          ? parseInt(currentUser.id, 10)
+          : currentUser.id;
+
         try {
           // Convertir el ID a número si viene como string
-          const maestroId = typeof currentUser.id === 'string'
-            ? parseInt(currentUser.id, 10)
-            : currentUser.id;
+          const maestroId = this.currentMaestroId;
 
           console.log('Obteniendo horarios para maestro ID:', maestroId);
 
@@ -217,23 +237,15 @@ export class MaestroHomeComponent implements OnInit {
             console.log('El maestro no tiene horarios asignados.');
             this.isLoading = false;
           } else {
-            // Mostrar información detallada de cada horario
-            console.log('Detalle de horarios:');
-            horarios.forEach((horario, index) => {
-              console.log(`Horario #${index + 1}:`);
-              console.log(`- Día: ${horario.dia}`);
-              console.log(`- Hora: ${horario.hora_inicio} - ${horario.hora_fin}`);
-              console.log(`- Materia: ${horario.materias?.name || 'No especificada'}`);
-              console.log(`- Grupo: ${horario.grupo?.name || 'No especificado'}`);
-              console.log(`- Aula: ${horario.aulas?.aula || 'No especificada'}`);
-              console.log(`- Carrera: ${horario.carreras?.nombre || 'No especificada'}`);
-            });
-
             // Procesar los horarios para mostrarlos en la UI
             this.processHorarios(horarios);
+
+            // Cargar asistencias existentes para la semana actual
+            await this.loadExistingAttendances();
           }
         } catch (error) {
           console.error('Error al obtener horarios del maestro:', error);
+          this.isLoading = false;
         }
       } else {
         console.error('No se pudo obtener el ID del maestro actual');
@@ -243,9 +255,94 @@ export class MaestroHomeComponent implements OnInit {
       console.error('Error al obtener carreras:', error);
       this.isLoading = false;
     }
+  }
 
-    // Initialize attendance status for all classes and days in all groups
-    this.initializeAttendanceStatus();
+  async loadExistingAttendances(): Promise<void> {
+    try {
+      if (!this.currentMaestroId) {
+        console.error('ID de maestro no disponible para cargar asistencias');
+        return;
+      }
+
+      // Obtener fechas de inicio y fin de la semana actual
+      const startDate = this.formatDateForDB(this.currentWeek.startDate);
+      const endDate = this.formatDateForDB(this.currentWeek.endDate);
+
+      console.log(`Cargando asistencias desde ${startDate} hasta ${endDate}`);
+
+      // Obtener asistencias del maestro para el rango de fechas
+      const asistencias = await asistenciasService.getAsistenciasByMaestroAndDateRange(
+        this.currentMaestroId,
+        startDate,
+        endDate
+      );
+
+      console.log('Asistencias encontradas para esta semana:', asistencias);
+
+      // Limpiar el mapa antes de llenarlo
+      this.existingAttendances.clear();
+
+      // Actualizar el mapa de asistencias existentes
+      asistencias.forEach(asistencia => {
+        // Encontrar a qué día de la semana corresponde esta fecha
+        const asistenciaDate = new Date(asistencia.fecha);
+        const dayIndex = asistenciaDate.getDay() - 1; // 0=lunes, 4=viernes
+
+        if (dayIndex >= 0 && dayIndex < 5) { // Solo procesar días entre lunes y viernes
+          const dayName = this.weekdays[dayIndex];
+
+          // Crear clave única para identificar esta asistencia
+          const key = `${asistencia.horario_id}-${dayName}`;
+
+          // Guardar la asistencia en el mapa
+          this.existingAttendances.set(key, asistencia);
+
+          // Identificar a qué grupo pertenece esta horario_id
+          const classInfo = this.findClassInfoByHorarioId(asistencia.horario_id);
+
+          if (classInfo) {
+            // Actualizar estado en la UI
+            if (!this.attendanceStatus[classInfo.groupId]) {
+              this.attendanceStatus[classInfo.groupId] = {};
+            }
+
+            this.attendanceStatus[classInfo.groupId][key] = this.convertToAttendanceStatus(asistencia.asistencia);
+            console.log(`Cargada asistencia para ${key}: ${asistencia.asistencia}`);
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error al cargar asistencias existentes:', error);
+    }
+  }
+
+  // Método para convertir valor de asistencia de la API al tipo AttendanceStatus
+  convertToAttendanceStatus(value: any): AttendanceStatus {
+    // El valor puede venir como booleano true/false o como string "asistio"/"no-asistio"
+    if (value === true || value === "true" || value === "asistio" || value === 1) {
+      return "asistio";
+    } else if (value === false || value === "false" || value === "no-asistio" || value === 0) {
+      return "no-asistio";
+    } else {
+      return "pendiente";
+    }
+  }
+
+  // Método auxiliar para formatear fecha para la base de datos
+  formatDateForDB(date: Date): string {
+    return date.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+  }
+
+  // Método auxiliar para encontrar información de una clase por su horario_id
+  findClassInfoByHorarioId(horarioId: number): { groupId: string, classItem: ClassItem } | null {
+    for (const group of this.groupsData) {
+      for (const classItem of group.classes) {
+        if (classItem.id === horarioId) {
+          return { groupId: group.id, classItem };
+        }
+      }
+    }
+    return null;
   }
 
   // Método para inicializar el estado de asistencia
@@ -381,7 +478,7 @@ export class MaestroHomeComponent implements OnInit {
     this.isLoading = false;
   }
 
-  
+
   hasClassOnDay(classItem: ClassItem, day: string): boolean {
     if (!classItem.dayOfWeek) return false;
 
@@ -488,13 +585,120 @@ export class MaestroHomeComponent implements OnInit {
     return week1 && week2 ? week1.weekNumber === week2.weekNumber : week1 === week2
   }
 
-  setAttendanceStatus(groupId: string, classId: number, day: string, status: AttendanceStatus): void {
+  async setAttendanceStatus(groupId: string, classId: number, day: string, status: AttendanceStatus): Promise<void> {
     if (!this.attendanceStatus[groupId]) {
-      this.attendanceStatus[groupId] = {}
+      this.attendanceStatus[groupId] = {};
     }
-    const key = `${classId}-${day}`
-    this.attendanceStatus[groupId][key] = status
+
+    // Clave única para esta clase y día
+    const key = `${classId}-${day}`;
+    const currentStatus = this.attendanceStatus[groupId][key];
+
+    // Si se hace clic en el mismo estado ya seleccionado, volver a pendiente
+    if (currentStatus === status) {
+      this.attendanceStatus[groupId][key] = "pendiente";
+    } else {
+      this.attendanceStatus[groupId][key] = status;
+    }
+
+    console.log(`Cambiado estado para ${key} a: ${this.attendanceStatus[groupId][key]}`);
+
+    // Guardar inmediatamente en la base de datos (como en checador-home)
+    await this.saveAttendanceForClass(groupId, classId, day, key);
   }
+
+  async saveAttendanceForClass(groupId: string, classId: number, day: string, key: string): Promise<void> {
+    if (!this.currentMaestroId) {
+      this.showErrorNotification("No se pudo identificar al maestro actual");
+      return;
+    }
+
+    this.isSaving = true;
+
+    try {
+      // Obtener el estado actual de asistencia para esta clase
+      const status = this.attendanceStatus[groupId][key];
+
+      // Calcular la fecha correspondiente al día de la semana
+      const dayIndex = this.weekdays.findIndex(d => d === day);
+      if (dayIndex === -1) {
+        console.error(`Día inválido: ${day}`);
+        this.isSaving = false;
+        return;
+      }
+
+      // Calcular la fecha para este día en la semana actual
+      const fecha = new Date(this.currentWeek.startDate);
+      fecha.setDate(fecha.getDate() + dayIndex);
+      const formattedDate = this.formatDateForDB(fecha);
+
+      // IMPORTANTE: Convertir el valor de estado de asistencia a booleano
+      // Versión corregida: siempre devuelve un booleano
+      const asistenciaBool = status === "asistio";
+
+      // Si es pendiente, borrar la asistencia existente
+      if (status === "pendiente") {
+        const existingAttendance = this.existingAttendances.get(key);
+        if (existingAttendance && existingAttendance.id) {
+          console.log(`Eliminando asistencia ID ${existingAttendance.id} para ${key}`);
+          await asistenciasService.deleteAsistenciaMaestro(existingAttendance.id);
+          this.existingAttendances.delete(key);
+          this.showPendingNotification();
+        }
+        this.isSaving = false;
+        return;
+      }
+
+      console.log(`Guardando asistencia para horario ${classId}, día ${day}, fecha ${formattedDate}, status ${status}, valor booleano: ${asistenciaBool}`);
+
+      // Verificar si ya existe una asistencia para esta fecha y horario
+      const existingAttendance = this.existingAttendances.get(key);
+
+      if (existingAttendance) {
+        // Actualizar asistencia existente
+        console.log(`Actualizando asistencia ID ${existingAttendance.id}`);
+
+        const updatedAttendance = await asistenciasService.updateAsistenciaMaestro(
+          existingAttendance.id,
+          classId,
+          formattedDate,
+          asistenciaBool, // Ahora siempre es boolean
+          this.currentMaestroId
+        );
+
+        if (updatedAttendance) {
+          this.existingAttendances.set(key, updatedAttendance);
+          this.showSuccessNotification();
+        } else {
+          this.showErrorNotification("Error al actualizar la asistencia");
+        }
+      } else {
+        // Crear nueva asistencia
+        console.log(`Creando nueva asistencia con valor booleano: ${asistenciaBool}`);
+
+        const newAttendance = await asistenciasService.createAsistenciaMaestro(
+          classId,
+          formattedDate,
+          asistenciaBool, // Ahora siempre es boolean
+          this.currentMaestroId
+        );
+
+        if (newAttendance) {
+          this.existingAttendances.set(key, newAttendance);
+          this.showSuccessNotification();
+        } else {
+          this.showErrorNotification("Error al crear la asistencia");
+        }
+      }
+    } catch (error: any) { // Especificar tipo any
+      console.error('Error al guardar asistencia:', error);
+      // Acceso seguro a la propiedad message
+      this.showErrorNotification(`Error al guardar la asistencia: ${error && error.message ? error.message : 'Desconocido'}`);
+    } finally {
+      this.isSaving = false;
+    }
+  }
+
 
   getAttendanceStatus(groupId: string, classId: number, day: string): AttendanceStatus {
     if (!this.attendanceStatus[groupId]) {
@@ -592,5 +796,54 @@ export class MaestroHomeComponent implements OnInit {
   isCurrentDay(day: string): boolean {
     return day === this.currentDayName
   }
+
+  // Método para mostrar la notificación de éxito
+  showSuccessNotification(): void {
+    this.saveSuccess = true;
+    this.showingSuccess = true;
+
+    // Ocultar después de un tiempo
+    setTimeout(() => {
+      this.saveSuccess = false;
+
+      // Dar tiempo para que termine la animación antes de eliminar completamente
+      setTimeout(() => {
+        this.showingSuccess = false;
+      }, 300);
+    }, 1500);
+  }
+
+  showPendingNotification(): void {
+    this.pendingNotification = true;
+    this.showingPending = true;
+
+    // Ocultar después de un tiempo
+    setTimeout(() => {
+      this.pendingNotification = false;
+
+      // Dar tiempo para que termine la animación antes de eliminar completamente
+      setTimeout(() => {
+        this.showingPending = false;
+      }, 300);
+    }, 1500);
+  }
+
+  // Método para mostrar la notificación de error
+  showErrorNotification(message: string): void {
+    this.errorMessage = message;
+    this.saveError = true;
+    this.showingError = true;
+
+    // Ocultar después de un tiempo
+    setTimeout(() => {
+      this.saveError = false;
+
+      // Dar tiempo para que termine la animación antes de eliminar completamente
+      setTimeout(() => {
+        this.showingError = false;
+      }, 300);
+    }, 3000);
+  }
+
 }
 
