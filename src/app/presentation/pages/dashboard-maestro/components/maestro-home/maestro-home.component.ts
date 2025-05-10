@@ -607,6 +607,98 @@ export class MaestroHomeComponent implements OnInit {
     await this.saveAttendanceForClass(groupId, classId, day, key);
   }
 
+  // async saveAttendanceForClass(groupId: string, classId: number, day: string, key: string): Promise<void> {
+  //   if (!this.currentMaestroId) {
+  //     this.showErrorNotification("No se pudo identificar al maestro actual");
+  //     return;
+  //   }
+
+  //   this.isSaving = true;
+
+  //   try {
+  //     // Obtener el estado actual de asistencia para esta clase
+  //     const status = this.attendanceStatus[groupId][key];
+
+  //     // Calcular la fecha correspondiente al día de la semana
+  //     const dayIndex = this.weekdays.findIndex(d => d === day);
+  //     if (dayIndex === -1) {
+  //       console.error(`Día inválido: ${day}`);
+  //       this.isSaving = false;
+  //       return;
+  //     }
+
+  //     // Calcular la fecha para este día en la semana actual
+  //     const fecha = new Date(this.currentWeek.startDate);
+  //     fecha.setDate(fecha.getDate() + dayIndex);
+  //     const formattedDate = this.formatDateForDB(fecha);
+
+  //     // IMPORTANTE: Convertir el valor de estado de asistencia a booleano
+  //     // Versión corregida: siempre devuelve un booleano
+  //     const asistenciaBool = status === "asistio";
+
+  //     // Si es pendiente, borrar la asistencia existente
+  //     if (status === "pendiente") {
+  //       const existingAttendance = this.existingAttendances.get(key);
+  //       if (existingAttendance && existingAttendance.id) {
+  //         console.log(`Eliminando asistencia ID ${existingAttendance.id} para ${key}`);
+  //         await asistenciasService.deleteAsistenciaMaestro(existingAttendance.id);
+  //         this.existingAttendances.delete(key);
+  //         this.showPendingNotification();
+  //       }
+  //       this.isSaving = false;
+  //       return;
+  //     }
+
+  //     console.log(`Guardando asistencia para horario ${classId}, día ${day}, fecha ${formattedDate}, status ${status}, valor booleano: ${asistenciaBool}`);
+
+  //     // Verificar si ya existe una asistencia para esta fecha y horario
+  //     const existingAttendance = this.existingAttendances.get(key);
+
+  //     if (existingAttendance) {
+  //       // Actualizar asistencia existente
+  //       console.log(`Actualizando asistencia ID ${existingAttendance.id}`);
+
+  //       const updatedAttendance = await asistenciasService.updateAsistenciaMaestro(
+  //         existingAttendance.id,
+  //         classId,
+  //         formattedDate,
+  //         asistenciaBool, // Ahora siempre es boolean
+  //         this.currentMaestroId
+  //       );
+
+  //       if (updatedAttendance) {
+  //         this.existingAttendances.set(key, updatedAttendance);
+  //         this.showSuccessNotification();
+  //       } else {
+  //         this.showErrorNotification("Error al actualizar la asistencia");
+  //       }
+  //     } else {
+  //       // Crear nueva asistencia
+  //       console.log(`Creando nueva asistencia con valor booleano: ${asistenciaBool}`);
+
+  //       const newAttendance = await asistenciasService.createAsistenciaMaestro(
+  //         classId,
+  //         formattedDate,
+  //         asistenciaBool, // Ahora siempre es boolean
+  //         this.currentMaestroId
+  //       );
+
+  //       if (newAttendance) {
+  //         this.existingAttendances.set(key, newAttendance);
+  //         this.showSuccessNotification();
+  //       } else {
+  //         this.showErrorNotification("Error al crear la asistencia");
+  //       }
+  //     }
+  //   } catch (error: any) { // Especificar tipo any
+  //     console.error('Error al guardar asistencia:', error);
+  //     // Acceso seguro a la propiedad message
+  //     this.showErrorNotification(`Error al guardar la asistencia: ${error && error.message ? error.message : 'Desconocido'}`);
+  //   } finally {
+  //     this.isSaving = false;
+  //   }
+  // }
+
   async saveAttendanceForClass(groupId: string, classId: number, day: string, key: string): Promise<void> {
     if (!this.currentMaestroId) {
       this.showErrorNotification("No se pudo identificar al maestro actual");
@@ -618,6 +710,9 @@ export class MaestroHomeComponent implements OnInit {
     try {
       // Obtener el estado actual de asistencia para esta clase
       const status = this.attendanceStatus[groupId][key];
+
+      // Verificar si ya existe una asistencia para esta fecha y horario
+      const existingAttendance = this.existingAttendances.get(key);
 
       // Calcular la fecha correspondiente al día de la semana
       const dayIndex = this.weekdays.findIndex(d => d === day);
@@ -633,36 +728,32 @@ export class MaestroHomeComponent implements OnInit {
       const formattedDate = this.formatDateForDB(fecha);
 
       // IMPORTANTE: Convertir el valor de estado de asistencia a booleano
-      // Versión corregida: siempre devuelve un booleano
       const asistenciaBool = status === "asistio";
 
-      // Si es pendiente, borrar la asistencia existente
-      if (status === "pendiente") {
-        const existingAttendance = this.existingAttendances.get(key);
-        if (existingAttendance && existingAttendance.id) {
-          console.log(`Eliminando asistencia ID ${existingAttendance.id} para ${key}`);
-          await asistenciasService.deleteAsistenciaMaestro(existingAttendance.id);
-          this.existingAttendances.delete(key);
-          this.showPendingNotification();
-        }
+      // Caso 1: Si el estado es "pendiente" y NO existe un registro previo, no hacemos nada
+      if (status === "pendiente" && !existingAttendance) {
         this.isSaving = false;
         return;
       }
 
-      console.log(`Guardando asistencia para horario ${classId}, día ${day}, fecha ${formattedDate}, status ${status}, valor booleano: ${asistenciaBool}`);
+      // Caso 2: Si el estado es "pendiente" y SÍ existe un registro previo, tampoco hacemos nada
+      // (mantenemos el registro tal como está, similar a checador-home)
+      if (status === "pendiente" && existingAttendance) {
+        // Mostramos la notificación pero no modificamos el registro
+        this.showPendingNotification();
+        this.isSaving = false;
+        return;
+      }
 
-      // Verificar si ya existe una asistencia para esta fecha y horario
-      const existingAttendance = this.existingAttendances.get(key);
-
+      // Caso 3: Si el estado NO es "pendiente" y sí existe un registro, actualizamos
       if (existingAttendance) {
-        // Actualizar asistencia existente
-        console.log(`Actualizando asistencia ID ${existingAttendance.id}`);
+        console.log(`Actualizando asistencia ID ${existingAttendance.id} a ${status}`);
 
         const updatedAttendance = await asistenciasService.updateAsistenciaMaestro(
           existingAttendance.id,
           classId,
           formattedDate,
-          asistenciaBool, // Ahora siempre es boolean
+          asistenciaBool,
           this.currentMaestroId
         );
 
@@ -672,14 +763,15 @@ export class MaestroHomeComponent implements OnInit {
         } else {
           this.showErrorNotification("Error al actualizar la asistencia");
         }
-      } else {
-        // Crear nueva asistencia
-        console.log(`Creando nueva asistencia con valor booleano: ${asistenciaBool}`);
+      }
+      // Caso 4: Si el estado NO es "pendiente" y NO existe un registro, creamos uno nuevo
+      else {
+        console.log(`Creando nueva asistencia con valor: ${asistenciaBool}`);
 
         const newAttendance = await asistenciasService.createAsistenciaMaestro(
           classId,
           formattedDate,
-          asistenciaBool, // Ahora siempre es boolean
+          asistenciaBool,
           this.currentMaestroId
         );
 
@@ -690,15 +782,13 @@ export class MaestroHomeComponent implements OnInit {
           this.showErrorNotification("Error al crear la asistencia");
         }
       }
-    } catch (error: any) { // Especificar tipo any
+    } catch (error: any) {
       console.error('Error al guardar asistencia:', error);
-      // Acceso seguro a la propiedad message
       this.showErrorNotification(`Error al guardar la asistencia: ${error && error.message ? error.message : 'Desconocido'}`);
     } finally {
       this.isSaving = false;
     }
   }
-
 
   getAttendanceStatus(groupId: string, classId: number, day: string): AttendanceStatus {
     if (!this.attendanceStatus[groupId]) {
