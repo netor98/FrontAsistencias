@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PlanService } from '../../../infrastructure/admin/planes.service';
 import { Plan } from '../../../domain/models/planes.model';
+import {carrerasServiceSupa} from "../../../services/carreras";
 
 
 @Component({
@@ -14,10 +15,10 @@ import { Plan } from '../../../domain/models/planes.model';
 })
 export default class CarrerasFiltersComponent {
   searchTerm: string = '';
-  public plans: Plan[] = [];
+  public plans: number[] = [];
 
 
-  constructor(private planesService: PlanService) {
+  constructor() {
     this.loadPlans();
   }
 
@@ -32,9 +33,11 @@ export default class CarrerasFiltersComponent {
   }
 
   loadPlans(): void {
-    this.planesService.getAll().subscribe(data => {
+
+    carrerasServiceSupa.getPlanes().then((data) => {
       this.plans = data;
-    });
+      console.log(this.plans)
+    })
   }
 
   onCheckboxChange(event: Event): void {
@@ -61,8 +64,8 @@ export default class CarrerasFiltersComponent {
   // Para mostrar un resumen de los planes seleccionados
   formatSelectedPlans(): string {
     return this.plans
-      .filter(plan => this.selectedPlanIds.includes((plan.clave)))
-      .map(plan => plan.clave)
+      .filter(plan => this.selectedPlanIds.includes((plan.toString())))
+      .map(plan => plan)
       .join(', ');
   }
 

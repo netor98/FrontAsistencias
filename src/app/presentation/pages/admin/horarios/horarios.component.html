@@ -1,1 +1,252 @@
-<p>horarios works!</p>
+<div class="p-6 bg-gray-50 min-h-screen">
+  <div class="max-w-7xl mx-auto">
+
+    <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-semibold text-gray-800">Horarios de Profesores</h2>
+      <button (click)="onCreate()" class="px-4 py-2 bg-indigo-700 text-white rounded hover:bg-indigo-800 transition">
+        Nuevo Horario
+      </button>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-white p-4 rounded-lg shadow-sm mb-6">
+      <div class="flex flex-wrap gap-4 items-end">
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+          <input type="text" [(ngModel)]="searchTerm" (input)="applyFilters()" placeholder="Buscar por profesor o materia"
+            class="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500">
+        </div>
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Profesor</label>
+          <select [(ngModel)]="selectedMaestroFilter" (change)="applyFilters()"
+            class="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500">
+            <option [ngValue]="null">Todos los profesores</option>
+            <option *ngFor="let maestro of maestros" [ngValue]="maestro.id">{{ maestro.name }}</option>
+          </select>
+        </div>
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Materia</label>
+          <select [(ngModel)]="selectedMateriaFilter" (change)="applyFilters()"
+            class="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500">
+            <option [ngValue]="null">Todas las materias</option>
+            <option *ngFor="let materia of materias" [ngValue]="materia.id">{{ materia.name }}</option>
+          </select>
+        </div>
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Grupo</label>
+          <select [(ngModel)]="selectedGrupoFilter" (change)="applyFilters()"
+            class="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500">
+            <option [ngValue]="null">Todos los grupos</option>
+            <option *ngFor="let grupo of grupos" [ngValue]="grupo.id">{{ grupo.name }}</option>
+          </select>
+        </div>
+        <div class="flex-1 min-w-[200px]">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Día</label>
+          <select [(ngModel)]="selectedDiaFilter" (change)="applyFilters()"
+            class="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500">
+            <option [ngValue]="null">Todos los días</option>
+            <option *ngFor="let dia of diasSemana" [ngValue]="dia">{{ dia }}</option>
+          </select>
+        </div>
+        <button (click)="resetFilters()"
+          class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition">
+          Limpiar filtros
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="flex justify-center py-4">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-700"></div>
+    </div>
+
+    <!-- Tabla de horarios -->
+    <div *ngIf="!isLoading" class="overflow-x-auto bg-white rounded-lg shadow">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Profesor</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Materia</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grupo</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Día</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hora</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let horario of filteredHorarios">
+            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ getMaestroNombre(horario.maestro_id) }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ getMateriaNombre(horario.materia_id) }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ getGrupoNombre(horario.grupo_id) }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ horario.dia }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">
+              {{ horario.hora_inicio || horario.hora }} - {{ horario.hora_fin || '' }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+              <button (click)="openFormModal(horario)" 
+                class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-full bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-2 transition duration-150">
+                Editar
+              </button>
+              <button (click)="confirmDelete(horario.id!)" 
+                class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-full bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150">
+                Eliminar
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="filteredHorarios.length === 0">
+            <td colspan="7" class="px-6 py-4 text-center text-gray-500">No hay horarios para mostrar.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div *ngIf="!isLoading" class="flex justify-center items-center mt-6">
+      <nav class="flex items-center space-x-2">
+        <button (click)="prevPage()" [disabled]="currentPage === 1"
+          class="px-4 py-2 flex items-center justify-center me-3 text-sm font-medium text-gray-800 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 hover:cursor-pointer">
+          <svg class="w-3.5 h-3.5 me-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 14 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M13 5H1m0 0 4 4M1 5l4-4" />
+          </svg>
+          Anterior
+        </button>
+
+        <div class="px-4 py-2 bg-gray-200 border border-gray-300 text-gray-700 rounded">
+          Página {{ currentPage }} de {{ totalPages }}
+        </div>
+
+        <button (click)="nextPage()"
+          class="px-4 py-2 flex items-center justify-center text-sm font-medium text-gray-800 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 hover:cursor-pointer">
+          Siguiente
+          <svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 14 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M1 5h12m0 0L9 1m4 4L9 9" />
+          </svg>
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Modal de formulario -->
+  <div *ngIf="showFormModal" class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+      <h2 class="text-xl font-semibold mb-4">{{ editMode ? 'Editar Horario' : 'Nuevo Horario' }}</h2>
+      
+      <!-- Loading indicator for the entire form -->
+      <div *ngIf="!isModalDataLoaded" class="p-4 flex flex-col items-center justify-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-700 mb-3"></div>
+        <p class="text-gray-600">Cargando datos necesarios...</p>
+      </div>
+      
+      <form [formGroup]="horarioForm" (ngSubmit)="onSubmitForm()" *ngIf="isModalDataLoaded">
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Profesor</label>
+          <div *ngIf="isMaestrosLoading" class="flex items-center space-x-2">
+            <div class="animate-spin h-5 w-5 border-b-2 border-indigo-700"></div>
+            <span class="text-sm text-gray-500">Cargando profesores...</span>
+          </div>
+          <select *ngIf="!isMaestrosLoading" formControlName="maestro_id" class="w-full p-2 border border-gray-300 rounded">
+            <option [ngValue]="null">Seleccione un profesor</option>
+            <option *ngFor="let maestro of maestros" [ngValue]="maestro.id">{{ maestro.name }}</option>
+          </select>
+          <div *ngIf="horarioForm.get('maestro_id')?.invalid && horarioForm.get('maestro_id')?.touched" 
+            class="text-red-500 text-sm mt-1">
+            El profesor es requerido
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Materia</label>
+          <div *ngIf="isMateriasLoading" class="flex items-center space-x-2">
+            <div class="animate-spin h-5 w-5 border-b-2 border-indigo-700"></div>
+            <span class="text-sm text-gray-500">Cargando materias...</span>
+          </div>
+          <select *ngIf="!isMateriasLoading" formControlName="materia_id" class="w-full p-2 border border-gray-300 rounded">
+            <option [ngValue]="null">Seleccione una materia</option>
+            <option *ngFor="let materia of materias" [ngValue]="materia.id">{{ materia.name }}</option>
+          </select>
+          <div *ngIf="horarioForm.get('materia_id')?.invalid && horarioForm.get('materia_id')?.touched" 
+            class="text-red-500 text-sm mt-1">
+            La materia es requerida
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Grupo</label>
+          <div *ngIf="isGruposLoading" class="flex items-center space-x-2">
+            <div class="animate-spin h-5 w-5 border-b-2 border-indigo-700"></div>
+            <span class="text-sm text-gray-500">Cargando grupos...</span>
+          </div>
+          <select *ngIf="!isGruposLoading" formControlName="grupo_id" class="w-full p-2 border border-gray-300 rounded">
+            <option [ngValue]="null">Seleccione un grupo</option>
+            <option *ngFor="let grupo of grupos" [ngValue]="grupo.id">{{ grupo.name }}</option>
+          </select>
+          <div *ngIf="horarioForm.get('grupo_id')?.invalid && horarioForm.get('grupo_id')?.touched" 
+            class="text-red-500 text-sm mt-1">
+            El grupo es requerido
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Día</label>
+          <select formControlName="dia" class="w-full p-2 border border-gray-300 rounded">
+            <option value="">Seleccione un día</option>
+            <option *ngFor="let dia of diasSemana" [value]="dia">{{ dia }}</option>
+          </select>
+          <div *ngIf="horarioForm.get('dia')?.invalid && horarioForm.get('dia')?.touched" 
+            class="text-red-500 text-sm mt-1">
+            El día es requerido
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Hora Inicio</label>
+          <select formControlName="hora_inicio" class="w-full p-2 border border-gray-300 rounded">
+            <option value="">Seleccione hora de inicio</option>
+            <option *ngFor="let hora of horas" [value]="hora">{{ hora }}</option>
+          </select>
+          <div *ngIf="horarioForm.get('hora_inicio')?.invalid && horarioForm.get('hora_inicio')?.touched" 
+            class="text-red-500 text-sm mt-1">
+            La hora de inicio es requerida
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Hora Fin</label>
+          <select formControlName="hora_fin" class="w-full p-2 border border-gray-300 rounded">
+            <option value="">Seleccione hora de fin</option>
+            <option *ngFor="let hora of horas" [value]="hora">{{ hora }}</option>
+          </select>
+          <div *ngIf="horarioForm.get('hora_fin')?.invalid && horarioForm.get('hora_fin')?.touched" 
+            class="text-red-500 text-sm mt-1">
+            La hora de fin es requerida
+          </div>
+        </div>
+        <div class="flex justify-end gap-2">
+          <button type="button" (click)="closeFormModal()" 
+            class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+            Cancelar
+          </button>
+          <button type="submit" [disabled]="horarioForm.invalid || isLoading"
+            class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50">
+            {{ isLoading ? 'Guardando...' : (editMode ? 'Actualizar' : 'Crear') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de confirmación de borrado -->
+  <div *ngIf="showDeleteModal" class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+      <h2 class="text-xl font-semibold mb-4">¿Eliminar Horario?</h2>
+      <p class="mb-4">¿Estás seguro de que deseas eliminar este horario?</p>
+      <div class="flex justify-end gap-2">
+        <button (click)="cancelDelete()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+          Cancelar
+        </button>
+        <button (click)="onDelete(horarioIdToDelete!)" [disabled]="isLoading"
+          class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50">
+          {{ isLoading ? 'Eliminando...' : 'Eliminar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

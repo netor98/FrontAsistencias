@@ -1,16 +1,10 @@
-import { Component, Inject, OnInit } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Carrera } from '@domain/models/carreras.model';
-import { CarreraService } from '../../../../infrastructure/admin/carreras.service';
-import { Router } from '@angular/router';
+import { Component,  OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {Carrera} from "../../../../services/interfaces";
 import { CommonModule } from '@angular/common';
 import CarrerasFiltersComponent from '../../../components/carrera-filters/carrera-filters.component';
-import { CarreeraCreateUseCase } from '../../../../application/usecases/carreras/create.usecase';
 import { HotToastService } from '@ngxpert/hot-toast';
-import { CarreeraDeleteUseCase } from '../../../../application/usecases/carreras/delete.usecase';
-import { PlanService } from '../../../../infrastructure/admin/planes.service';
-import { Plan } from '@domain/models/planes.model';
-import { CarreeraUpdateUseCase } from '@application/usecases/carreras/update.usecase';
+import { carrerasServiceSupa } from 'src/app/services/carreras';
 
 @Component({
   selector: 'app-carreras',
@@ -21,13 +15,10 @@ import { CarreeraUpdateUseCase } from '@application/usecases/carreras/update.use
 })
 export class CarrerasComponent implements OnInit {
   carreras: Carrera[] = [];
-  planes: Plan[] = [];
   filteredCarreras: Carrera[] = [];
 
   currentFilters: { search: string; plans: string[] } = { search: '', plans: [] };
 
-  searchControl = new FormControl('');
-  planControl = new FormControl('');
 
   // Para la paginación
   currentPage: number = 1;
@@ -39,38 +30,27 @@ export class CarrerasComponent implements OnInit {
   editMode = false;
   carreraToDelete!: number;
   carreraForm!: FormGroup;
+  isLoading = false;
 
-
-  constructor(private router: Router,
+  constructor(
     private fb: FormBuilder,
-    private carreraService: CarreraService,
-    private createUseCase: CarreeraCreateUseCase,
     private toast: HotToastService,
-    private deleteUseCase: CarreeraDeleteUseCase,
-    private updateUseCase: CarreeraUpdateUseCase,
-    private planesService: PlanService
   ) { }
 
   ngOnInit(): void {
     this.loadCarreras();
     this.initForm();
-    this.loadPlanes();
-  }
-
-  loadPlanes(): void {
-    this.planesService.getAll().subscribe(data => {
-      this.planes = data;
-    });
   }
 
   loadCarreras(): void {
-    this.carreraService.getAll().subscribe(data => {
+    this.isLoading = true;
+    carrerasServiceSupa.getAll().then((data) => {
       this.carreras = data;
-      console.log(this.carreras)
-      this.applyFilters({ search: '', plans: [] });
-    }, error => {
-      console.error('Error al cargar las carreras:', error);
-    });
+
+      this.totalPages = Math.ceil(this.carreras.length / this.pageSize);
+      this.filteredCarreras = this.carreras
+      this.isLoading = false;
+    })
   }
 
   onFilterChanged(filters: { search: string, plans: string[] }): void {
@@ -81,12 +61,11 @@ export class CarrerasComponent implements OnInit {
 
   applyFilters(filters: { search: string, plans: string[] }): void {
     let filtered = this.carreras;
-    console.log(filters)
+
     // Filtrado por término de búsqueda
     if (filters.search && filters.search.trim() !== '') {
       const term = filters.search.trim().toLowerCase();
       filtered = filtered.filter(carrera =>
-        carrera.clave.toLowerCase().includes(term) ||
         carrera.nombre.toLowerCase().includes(term)
       );
     }
@@ -94,7 +73,7 @@ export class CarrerasComponent implements OnInit {
     // Filtrado por planes seleccionados (solo si hay alguno seleccionado)
     if (filters.plans.length > 0) {
       filtered = filtered.filter(carrera =>
-        filters.plans.includes(carrera.planClave)
+        filters.plans.includes(carrera.plan.toString())
       );
     }
 
@@ -123,12 +102,6 @@ export class CarrerasComponent implements OnInit {
   openFormModal(carrera?: Carrera): void {
     console.log(carrera)
     if (carrera) {
-      const planSeleccionado = this.planes.find(
-        (plan) => plan.clave === carrera.planClave
-      );
-
-      carrera.planId = planSeleccionado!.id;
-
       this.editMode = true;
       this.carreraForm.patchValue(carrera);
     } else {
@@ -143,13 +116,11 @@ export class CarrerasComponent implements OnInit {
   }
 
   onSubmitForm(): void {
-    if (this.carreraForm.invalid) return;
     let carrera = this.carreraForm.value;
-    carrera.plan = { id: carrera.planId };
     if (this.editMode) {
-      this.updateUseCase.execute(carrera.id, carrera).subscribe(() => {
-        this.loadCarreras();
-      });
+
+      console.log(this.carreraForm.value);
+      carrerasServiceSupa.update(carrera.id, carrera).then(() => this.loadCarreras())
       this.toast.success('Carrera editada correctamente', {
         position: 'top-right',
         style: {
@@ -162,9 +133,8 @@ export class CarrerasComponent implements OnInit {
         }
       });
     } else {
-      this.createUseCase.execute(carrera).subscribe(() => {
-        this.loadCarreras();
-      });
+      delete carrera.id
+      carrerasServiceSupa.create(carrera).then(() => this.loadCarreras())
 
       this.toast.success('Carrera creada correctamente', {
         position: 'top-right',
@@ -181,21 +151,13 @@ export class CarrerasComponent implements OnInit {
     this.closeFormModal();
   }
 
-  openDeleteModal(carrera: Carrera): void {
-    this.carreraToDelete = carrera.id;
-    this.showDeleteModal = true;
-  }
-
   closeDeleteModal(): void {
     this.showDeleteModal = false;
   }
 
   confirmDelete(): void {
     console.log(this.carreraToDelete)
-    this.deleteUseCase.execute(this.carreraToDelete).subscribe(() => {
-      this.loadCarreras();
-    });
-
+    carrerasServiceSupa.delete(this.carreraToDelete).then(() => this.loadCarreras())
     this.toast.success('Carrera eliminada correctamente', {
       position: 'top-right',
       style: {
@@ -217,7 +179,6 @@ export class CarrerasComponent implements OnInit {
     if (this.currentPage > 1) {
       this.currentPage--;
       this.applyFilters(this.currentFilters);
-
     }
   }
 
@@ -230,11 +191,10 @@ export class CarrerasComponent implements OnInit {
 
   private initForm(): void {
     this.carreraForm = this.fb.group({
-      id: [''], // Oculto o de solo lectura si es necesario
-      clave: ['', Validators.required],
+      id: [null],
       nombre: ['', Validators.required],
-      activa: [true],
-      planId: [null, Validators.required]
+      semestres: [null, Validators.required],
+      plan: [null, Validators.required]
     });
   }
 }

@@ -5,4 +5,7 @@ import { environment } from 'src/environments/environment.development'
 const supabaseUrl = environment.SUPABASE_URL || 'your-supabase-url'
 const supabaseAnonKey = environment.SUPABASE_ANON_KEY || 'your-supabase-anon-key'
 
+console.log('supabaseUrl', supabaseUrl)
+console.log('supabaseAnonKey', supabaseAnonKey)
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)

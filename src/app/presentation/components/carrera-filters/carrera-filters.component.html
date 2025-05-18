@@ -32,9 +32,9 @@
       <ul class="max-h-60 overflow-auto py-1">
         <li *ngFor="let plan of plans" class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
           <label class="flex items-center">
-            <input type="checkbox" [value]="plan.clave" (change)="onCheckboxChange($event)"
-              [checked]="isSelected(plan.clave)" class="mr-2" />
-            <span>{{ plan.clave }}</span>
+            <input type="checkbox" [value]="plan" (change)="onCheckboxChange($event)"
+              [checked]="isSelected(plan.toString())" class="mr-2" />
+            <span>{{ plan}}</span>
           </label>
         </li>
       </ul>

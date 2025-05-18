@@ -4,10 +4,8 @@ export class Carrera {
   constructor(
     public id: number,
     public nombre: string,
-    public clave: string,
-    public activa: boolean,
-    public planId: number,
-    public planClave: string,
+    public semestres: number,
+    public plan: number
   ) { }
 
 }

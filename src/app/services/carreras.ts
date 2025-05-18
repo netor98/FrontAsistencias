@@ -1,15 +1,27 @@
 import { supabase } from './supabaseConnection';
 import { Carrera } from './interfaces';
 
-
-export const carrerasService = {
+export const carrerasServiceSupa = {
   async getAll(): Promise<Carrera[]> {
+
     const { data, error } = await supabase
       .from('carreras')
       .select('*');
 
+    console.log(data)
     if (error) throw new Error(error.message);
     return data as Carrera[];
+  },
+
+  async getPlanes(): Promise<number[]> {
+    const { data, error } = await supabase
+      .from('carreras')
+      .select('plan');
+
+    if (error) throw new Error(error.message);
+
+    const uniquePlans = new Set(data.map((item: any) => item.plan));
+    return Array.from(uniquePlans) as number[];
   },
 
   async getById(id: number): Promise<Carrera | null> {

@@ -11,8 +11,11 @@
     <!-- Filtros -->
     <carreras-filters (filterChanged)="onFilterChanged($event)"></carreras-filters>
 
+    <div *ngIf="isLoading" class="flex justify-center py-4">
+      <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-700"></div>
+    </div>
     <!-- Tabla de Carreras -->
-    <div class="bg-white shadow-md overflow-x-auto rounded-lg">
+    <div *ngIf="!isLoading" class="bg-white shadow-md overflow-x-auto rounded-lg">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-100">
           <tr>
@@ -20,16 +23,10 @@
               ID
             </th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Clave
-            </th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
               Nombre
             </th>
-            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Activa
-            </th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Plan ID
+              Plan
             </th>
             <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
               Acciones
@@ -37,25 +34,18 @@
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
+
           <tr *ngFor="let carrera of filteredCarreras">
             <td class="px-6 py-4 whitespace-nowrap text-sm">{{ carrera.id }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ carrera.clave }}</td>
             <td class="px-6 py-4 whitespace-nowrap text-sm">{{ carrera.nombre }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-center">
-              <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                [class.bg-green-100]="carrera.activa" [class.text-green-800]="carrera.activa"
-                [class.bg-red-100]="!carrera.activa" [class.text-red-800]="!carrera.activa">
-                {{ carrera.activa ? 'Activa' : 'Inactiva' }}
-              </span>
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ carrera.planClave}}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ carrera.plan}}</td>
 
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
               <button (click)="openFormModal(carrera)"
                 class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-full bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-2 transition duration-150">
 
 
-                <svg class="w-5 h-5 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                <svg class="w-5 h-5 text-white " aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                   fill="currentColor" viewBox="0 0 24 24">
                   <path fill-rule="evenodd"
                     d="M14 4.182A4.136 4.136 0 0 1 16.9 3c1.087 0 2.13.425 2.899 1.182A4.01 4.01 0 0 1 21 7.037c0 1.068-.43 2.092-1.194 2.849L18.5 11.214l-5.8-5.71 1.287-1.31.012-.012Zm-2.717 2.763L6.186 12.13l2.175 2.141 5.063-5.218-2.141-2.108Zm-6.25 6.886-1.98 5.849a.992.992 0 0 0 .245 1.026 1.03 1.03 0 0 0 1.043.242L10.282 19l-5.25-5.168Zm6.954 4.01 5.096-5.186-2.218-2.183-5.063 5.218 2.185 2.15Z"
@@ -63,10 +53,10 @@
                 </svg>
                 Editar
               </button>
-              <button (click)="onDelete(carrera.id)"
+              <button (click)="onDelete(carrera.id!)"
                 class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-full bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150">
 
-                <svg class="w-5 h-5 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                <svg class="w-5 h-5 text-white " aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                   width="24" height="24" fill="none" viewBox="0 0 24 24">
                   <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M6 18 17.94 6M18 18 6.06 6" />
@@ -86,7 +76,7 @@
     </div>
 
     <!-- Paginación -->
-    <div class="flex justify-center items-center mt-6">
+    <div *ngIf="!isLoading" class="flex justify-center items-center mt-6">
       <nav class="flex items-center space-x-2">
 
         <button (click)="prevPage()" [disabled]="currentPage === 1"
@@ -104,12 +94,9 @@
         </div>
 
 
-
-
         <button (click)="nextPage()"
           class="px-4 py-2 flex items-center justify-center text-sm font-medium text-gray-800 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 hover:cursor-pointer">
           Siguiente
-
           <svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
             viewBox="0 0 14 10">
             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -130,37 +117,30 @@
       class="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none">
       <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    </button>
-    <h3 class="text-xl font-semibold text-gray-800 mb-4">
+      </svg> </button> <h3 class="text-xl font-semibold text-gray-800 mb-4">
       {{ editMode ? 'Editar Carrera' : 'Nueva Carrera' }}
     </h3>
+
     <form [formGroup]="carreraForm" (ngSubmit)="onSubmitForm()">
       <div class="space-y-4">
-        <div>
-          <label class="block text-gray-700">Clave</label>
-          <input type="text" formControlName="clave" placeholder="Ingrese la clave"
-            class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
-        </div>
         <div>
           <label class="block text-gray-700">Nombre</label>
           <input type="text" formControlName="nombre" placeholder="Ingrese el nombre"
             class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
         </div>
-        <div class="flex items-center">
-          <input type="checkbox" formControlName="activa"
-            class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded" />
-          <label class="ml-2 block text-gray-700">Activa</label>
-        </div>
         <div>
           <label class="block text-gray-700">Seleccionar Plan</label>
-          <select formControlName="planId"
-            class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-            <option value="" disabled>Seleccione un plan...</option>
-            <option *ngFor="let plan of planes" [value]="plan.id">
-              {{ plan.clave }}
-            </option>
-          </select>
+          <input type="number" formControlName="plan"
+                 min="2000" max="2100" placeholder="Ingrese el año del plan"
+                 class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+        </div>
+
+
+        <div>
+          <label class="block text-gray-700">Seleccionar Semestres</label>
+          <input type="number" formControlName="semestres"
+                 min="5" max="11" placeholder="Ingrese cantidad de semestres"
+                 class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
         </div>
       </div>
       <div class="mt-6 flex justify-end">

@@ -1,100 +1,343 @@
 <div class="p-6 bg-gray-50 min-h-screen">
   <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">
-    Administración de Asistencias
+    Comparación de Asistencias
   </h2>
 
   <!-- Filtros -->
   <div class="mb-6 bg-white rounded-lg shadow p-4">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <div class="form-group">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Carrera</label>
-        <select class="w-full rounded-md border border-gray-300 p-2">
-          <option value="">Todas las carreras</option>
-        </select>
+    <form [formGroup]="searchForm" (ngSubmit)="onSearch()">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="form-group">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Profesor</label>
+          <select formControlName="maestroId" class="w-full rounded-md border border-gray-300 p-2">
+            <option [ngValue]="null">Todos los profesores</option>
+            <option *ngFor="let maestro of maestros" [ngValue]="maestro.id">{{ maestro.name }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Inicio <span class="text-red-500">*</span></label>
+          <input type="date" formControlName="fechaInicio" class="w-full rounded-md border border-gray-300 p-2">
+          <div *ngIf="searchForm.get('fechaInicio')?.invalid && searchForm.get('fechaInicio')?.touched" class="text-red-500 text-sm mt-1">
+            Fecha de inicio es requerida
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Fin <span class="text-red-500">*</span></label>
+          <input type="date" formControlName="fechaFin" class="w-full rounded-md border border-gray-300 p-2">
+          <div *ngIf="searchForm.get('fechaFin')?.invalid && searchForm.get('fechaFin')?.touched" class="text-red-500 text-sm mt-1">
+            Fecha fin es requerida
+          </div>
+        </div>
       </div>
-      <div class="form-group">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Materia</label>
-        <select class="w-full rounded-md border border-gray-300 p-2">
-          <option value="">Todas las materias</option>
-        </select>
+      <div class="mt-4 flex justify-end gap-2">
+        <button type="button" (click)="resetForm()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+          Limpiar
+        </button>
+        <button type="submit" [disabled]="searchForm.invalid || isLoading" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50">
+          {{ isLoading ? 'Cargando...' : 'Buscar' }}
+        </button>
       </div>
-      <div class="form-group">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Inicio</label>
-        <input type="date" class="w-full rounded-md border border-gray-300 p-2">
+    </form>
+  </div>
+
+  <!-- Mensaje de error -->
+  <div *ngIf="error" class="mb-6 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Mensaje de carga -->
+  <div *ngIf="isLoading" class="flex justify-center py-12">
+    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-700"></div>
+  </div>
+
+  <!-- Resumen de datos y botón para exportar PDF -->
+  <div *ngIf="!isLoading && !error && comparisonData.length > 0" class="mb-6 bg-white rounded-lg shadow p-4">
+    <div class="flex justify-between items-center">
+      <div>
+        <h3 class="text-lg font-semibold">Resumen de datos</h3>
+        <p class="text-gray-600">Total de registros: {{ comparisonData.length }}</p>
+        <div class="mt-2 flex gap-4">
+          <span class="text-sm">
+            <span class="font-medium">Profesor:</span> {{ profesorData.length }} registros
+          </span>
+          <span class="text-sm">
+            <span class="font-medium">Alumno:</span> {{ alumnoData.length }} registros
+          </span>
+          <span class="text-sm">
+            <span class="font-medium">Checador:</span> {{ checadorData.length }} registros
+          </span>
+        </div>
       </div>
-      <div class="form-group">
-        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha Fin</label>
-        <input type="date" class="w-full rounded-md border border-gray-300 p-2">
-      </div>
+      <button 
+        type="button" 
+        (click)="generatePDF()" 
+        class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd" />
+        </svg>
+        Exportar PDF
+      </button>
     </div>
   </div>
 
-  <!-- Tabla de Asistencias -->
-  <div class="bg-white rounded-lg shadow overflow-hidden">
-    <table class="min-w-full divide-y divide-gray-200">
-      <thead class="bg-gray-50">
-        <tr>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Materia</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Profesor</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Checador</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-          <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-        </tr>
-      </thead>
-      <tbody class="bg-white divide-y divide-gray-200">
-        <tr>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2024-01-20</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Matemáticas</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Juan Pérez</td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Ana García</td>
-          <td class="px-6 py-4 whitespace-nowrap">
-            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-              Verificado
+  <!-- Contenido principal (solo visible cuando hay datos y no hay errores) -->
+  <div *ngIf="!isLoading && !error && comparisonData.length > 0">
+
+    <!-- Tabla de Comparación de Asistencias -->
+    <div class="bg-white rounded-lg shadow overflow-hidden mb-6">
+      <table class="min-w-full divide-y divide-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Materia</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Grupo</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Profesor</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registro de Asistencia</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-gray-200">
+          <tr *ngFor="let attendance of filteredComparisonData">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ attendance.fecha }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ attendance.materia }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ attendance.grupo }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ attendance.maestro }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <div class="flex flex-col space-y-2">
+                <div class="flex items-center space-x-3">
+                  <span class="w-28 inline-flex items-center">
+                    <span class="text-xs text-gray-600 w-20">Profesor:</span>
+                    <span *ngIf="attendance.asistenciaProfesor !== null" 
+                          [class]="attendance.asistenciaProfesor ? 'text-green-600' : 'text-red-600'">
+                      {{ attendance.asistenciaProfesor ? '✓' : '✗' }}
+                    </span>
+                    <span *ngIf="attendance.asistenciaProfesor === null" class="text-gray-400">-</span>
+                  </span>
+                  <span class="text-xs text-gray-500">Registrado por: Profesor</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <span class="w-28 inline-flex items-center">
+                    <span class="text-xs text-gray-600 w-20">Alumno:</span>
+                    <span *ngIf="attendance.asistenciaAlumno !== null" 
+                          [class]="attendance.asistenciaAlumno ? 'text-green-600' : 'text-red-600'">
+                      {{ attendance.asistenciaAlumno ? '✓' : '✗' }}
+                    </span>
+                    <span *ngIf="attendance.asistenciaAlumno === null" class="text-gray-400">-</span>
+                  </span>
+                  <span class="text-xs text-gray-500">Registrado por: Jefe de Grupo</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                  <span class="w-28 inline-flex items-center">
+                    <span class="text-xs text-gray-600 w-20">Checador:</span>
+                    <span *ngIf="attendance.asistenciaChecador !== null" 
+                          [class]="attendance.asistenciaChecador ? 'text-green-600' : 'text-red-600'">
+                      {{ attendance.asistenciaChecador ? '✓' : '✗' }}
+                    </span>
+                    <span *ngIf="attendance.asistenciaChecador === null" class="text-gray-400">-</span>
+                  </span>
+                  <span class="text-xs text-gray-500">Registrado por: Checador</span>
+                </div>
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + getStatusClass(attendance.status)">
+                {{ getStatusText(attendance.status) }}
+              </span>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-500">
+              <button (click)="viewAttendanceDetails(attendance)" class="text-indigo-600 hover:text-indigo-900">
+                Ver detalles
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="filteredComparisonData.length === 0">
+            <td colspan="7" class="px-6 py-4 text-center text-gray-500">No hay registros para mostrar.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 rounded-lg shadow">
+      <div class="flex-1 flex justify-center sm:hidden">
+        <button (click)="prevPage()" [disabled]="currentPage === 1" 
+          class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50">
+          Anterior
+        </button>
+        <button (click)="nextPage()" [disabled]="currentPage === totalPages" 
+          class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50">
+          Siguiente
+        </button>
+      </div>
+      <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+        <div>
+          <p class="text-sm text-gray-700">
+            Mostrando <span class="font-medium">{{ (currentPage - 1) * pageSize + 1 }}</span> a 
+            <span class="font-medium">{{ Math.min(currentPage * pageSize, comparisonData.length) }}</span> de 
+            <span class="font-medium">{{ comparisonData.length }}</span> resultados
+          </p>
+        </div>
+        <div>
+          <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+            <button (click)="prevPage()" [disabled]="currentPage === 1" 
+              class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50">
+              <span class="sr-only">Anterior</span>
+              ←
+            </button>
+            <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+              {{ currentPage }} de {{ totalPages }}
             </span>
-          </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-            <button class="text-indigo-600 hover:text-indigo-900">Ver detalles</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+            <button (click)="nextPage()" [disabled]="currentPage === totalPages" 
+              class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50">
+              <span class="sr-only">Siguiente</span>
+              →
+            </button>
+          </nav>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <!-- Paginación -->
-  <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6 mt-4 rounded-lg shadow">
-    <div class="flex-1 flex justify-between sm:hidden">
-      <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-        Anterior
-      </button>
-      <button class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-        Siguiente
-      </button>
-    </div>
-    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-      <div>
-        <p class="text-sm text-gray-700">
-          Mostrando <span class="font-medium">1</span> a <span class="font-medium">10</span> de <span class="font-medium">100</span> resultados
-        </p>
+  <!-- Mensaje cuando no hay datos -->
+  <div *ngIf="!isLoading && !error && comparisonData.length === 0" class="bg-white rounded-lg shadow p-8 text-center">
+    <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+    </svg>
+    <h3 class="mt-2 text-sm font-medium text-gray-900">No hay datos</h3>
+    <p class="mt-1 text-sm text-gray-500">
+      Usa los filtros para buscar registros de asistencia.
+    </p>
+  </div>
+
+  <!-- Modal de detalles -->
+  <div *ngIf="showDetailModal && selectedAttendance" class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
+    <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-xl">
+      <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">Detalles de Asistencia</h3>
+      
+      <div class="mb-4">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <p class="text-sm font-medium text-gray-500">Fecha</p>
+            <p class="mt-1 text-sm text-gray-900">{{ selectedAttendance.fecha }}</p>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-500">Estado</p>
+            <p class="mt-1">
+              <span [class]="'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + getStatusClass(selectedAttendance.status)">
+                {{ getStatusText(selectedAttendance.status) }}
+              </span>
+            </p>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-500">Materia</p>
+            <p class="mt-1 text-sm text-gray-900">{{ selectedAttendance.materia }}</p>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-500">Grupo</p>
+            <p class="mt-1 text-sm text-gray-900">{{ selectedAttendance.grupo }}</p>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-500">Profesor</p>
+            <p class="mt-1 text-sm text-gray-900">{{ selectedAttendance.maestro }}</p>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-gray-500">Horario ID</p>
+            <p class="mt-1 text-sm text-gray-900">{{ selectedAttendance.horario_id }}</p>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <h4 class="text-md font-medium text-gray-900 mb-3">Registros de Asistencia</h4>
+          <div class="border border-gray-200 rounded-md overflow-hidden">
+            <div class="px-4 py-3 bg-gray-50 border-b border-gray-200">
+              <div class="grid grid-cols-4 gap-4">
+                <div class="text-sm font-medium text-gray-900">Tipo</div>
+                <div class="text-sm font-medium text-gray-900">Asistencia</div>
+                <div class="text-sm font-medium text-gray-900">Estado</div>
+                <div class="text-sm font-medium text-gray-900">Registrado por</div>
+              </div>
+            </div>
+            <div class="divide-y divide-gray-200">
+              <div class="px-4 py-3">
+                <div class="grid grid-cols-4 gap-4">
+                  <div class="text-sm text-gray-900">Profesor</div>
+                  <div class="text-sm text-gray-900">
+                    <span *ngIf="selectedAttendance.asistenciaProfesor !== null" 
+                      [class]="selectedAttendance.asistenciaProfesor ? 'text-green-600' : 'text-red-600'">
+                      {{ selectedAttendance.asistenciaProfesor ? 'Asistió' : 'No asistió' }}
+                    </span>
+                    <span *ngIf="selectedAttendance.asistenciaProfesor === null" class="text-gray-400">No registrado</span>
+                  </div>
+                  <div class="text-sm text-gray-500">
+                    <span *ngIf="selectedAttendance.asistenciaProfesor !== null" class="px-2 py-1 inline-flex text-xs leading-4 font-medium rounded-full bg-green-100 text-green-800">
+                      Completo
+                    </span>
+                    <span *ngIf="selectedAttendance.asistenciaProfesor === null" class="px-2 py-1 inline-flex text-xs leading-4 font-medium rounded-full bg-gray-100 text-gray-800">
+                      Pendiente
+                    </span>
+                  </div>
+                  <div class="text-sm text-gray-900">
+                    Profesor
+                  </div>
+                </div>
+              </div>
+              <div class="px-4 py-3">
+                <div class="grid grid-cols-4 gap-4">
+                  <div class="text-sm text-gray-900">Alumno</div>
+                  <div class="text-sm text-gray-900">
+                    <span *ngIf="selectedAttendance.asistenciaAlumno !== null" 
+                      [class]="selectedAttendance.asistenciaAlumno ? 'text-green-600' : 'text-red-600'">
+                      {{ selectedAttendance.asistenciaAlumno ? 'Asistió' : 'No asistió' }}
+                    </span>
+                    <span *ngIf="selectedAttendance.asistenciaAlumno === null" class="text-gray-400">No registrado</span>
+                  </div>
+                  <div class="text-sm text-gray-500">
+                    <span *ngIf="selectedAttendance.asistenciaAlumno !== null" class="px-2 py-1 inline-flex text-xs leading-4 font-medium rounded-full bg-green-100 text-green-800">
+                      Completo
+                    </span>
+                    <span *ngIf="selectedAttendance.asistenciaAlumno === null" class="px-2 py-1 inline-flex text-xs leading-4 font-medium rounded-full bg-gray-100 text-gray-800">
+                      Pendiente
+                    </span>
+                  </div>
+                  <div class="text-sm text-gray-900">
+                    Jefe de Grupo
+                  </div>
+                </div>
+              </div>
+              <div class="px-4 py-3">
+                <div class="grid grid-cols-4 gap-4">
+                  <div class="text-sm text-gray-900">Checador</div>
+                  <div class="text-sm text-gray-900">
+                    <span *ngIf="selectedAttendance.asistenciaChecador !== null" 
+                      [class]="selectedAttendance.asistenciaChecador ? 'text-green-600' : 'text-red-600'">
+                      {{ selectedAttendance.asistenciaChecador ? 'Asistió' : 'No asistió' }}
+                    </span>
+                    <span *ngIf="selectedAttendance.asistenciaChecador === null" class="text-gray-400">No registrado</span>
+                  </div>
+                  <div class="text-sm text-gray-500">
+                    <span *ngIf="selectedAttendance.asistenciaChecador !== null" class="px-2 py-1 inline-flex text-xs leading-4 font-medium rounded-full bg-green-100 text-green-800">
+                      Completo
+                    </span>
+                    <span *ngIf="selectedAttendance.asistenciaChecador === null" class="px-2 py-1 inline-flex text-xs leading-4 font-medium rounded-full bg-gray-100 text-gray-800">
+                      Pendiente
+                    </span>
+                  </div>
+                  <div class="text-sm text-gray-900">
+                    Checador
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div>
-        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-          <button class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-            Anterior
-          </button>
-          <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-            1
-          </button>
-          <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-            2
-          </button>
-          <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-            3
-          </button>
-          <button class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-            Siguiente
-          </button>
-        </nav>
+      
+      <div class="mt-6 flex justify-end">
+        <button type="button" (click)="closeDetailModal()" 
+          class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">
+          Cerrar
+        </button>
       </div>
     </div>
   </div>

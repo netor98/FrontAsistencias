@@ -42,27 +42,45 @@
         <thead class="bg-gray-100">
           <tr>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Clave</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Créditos</th>
             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Carrera</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Semestres</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Temario</th>
             <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
           </tr>
         </thead>
         <tbody class="bg-white divide-y divide-gray-200">
           <tr *ngFor="let materia of filteredMaterias">
             <td class="px-6 py-4 whitespace-nowrap text-sm">{{ materia.id }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ materia.clave }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ materia.nombre }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ materia.creditos }}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ getCarreraNombre(materia.carrera.id) }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ materia.name }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ getCarreraNombre(materia.carrera_id) }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">{{ materia.semestre }}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <a [href]="materia.temario_url" target="_blank" class="text-indigo-600 hover:text-indigo-800">
+                Ver Temario
+              </a>
+            </td>
             <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
+
               <button (click)="openFormModal(materia)"
                 class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-full bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-2 transition duration-150">
+
+                <svg class="w-5 h-5 text-white " aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd"
+                    d="M14 4.182A4.136 4.136 0 0 1 16.9 3c1.087 0 2.13.425 2.899 1.182A4.01 4.01 0 0 1 21 7.037c0 1.068-.43 2.092-1.194 2.849L18.5 11.214l-5.8-5.71 1.287-1.31.012-.012Zm-2.717 2.763L6.186 12.13l2.175 2.141 5.063-5.218-2.141-2.108Zm-6.25 6.886-1.98 5.849a.992.992 0 0 0 .245 1.026 1.03 1.03 0 0 0 1.043.242L10.282 19l-5.25-5.168Zm6.954 4.01 5.096-5.186-2.218-2.183-5.063 5.218 2.185 2.15Z"
+                    clip-rule="evenodd" />
+                </svg>
                 Editar
               </button>
               <button (click)="confirmDelete(materia.id)"
                 class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-full bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150">
+
+                <svg class="w-5 h-5 text-white " aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                  width="24" height="24" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M6 18 17.94 6M18 18 6.06 6" />
+                </svg>
                 Eliminar
               </button>
             </td>
@@ -80,6 +98,11 @@
         <button (click)="prevPage()" [disabled]="currentPage === 1"
           [ngClass]="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''"
           class="px-4 py-2 flex items-center justify-center text-sm font-medium text-gray-800 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700">
+  <svg class="w-3.5 h-3.5 me-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 14 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M13 5H1m0 0 4 4M1 5l4-4" />
+          </svg>
           Anterior
         </button>
         <div class="px-4 py-2 bg-gray-200 border border-gray-300 text-gray-700 rounded">
@@ -88,7 +111,13 @@
         <button (click)="nextPage()" [disabled]="currentPage === totalPages"
           [ngClass]="currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''"
           class="px-4 py-2 flex items-center justify-center text-sm font-medium text-gray-800 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700">
+
           Siguiente
+<svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 14 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M1 5h12m0 0L9 1m4 4L9 9" />
+          </svg>
         </button>
       </nav>
     </div>
@@ -111,56 +140,56 @@
     <form [formGroup]="materiaForm" (ngSubmit)="onSubmitForm()">
       <div class="space-y-4">
         <div>
-          <label class="block text-gray-700">Clave</label>
-          <input type="text" formControlName="clave" placeholder="Ingrese la clave"
-            class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
-          <div *ngIf="materiaForm.get('clave')?.touched && materiaForm.get('clave')?.errors?.['required']"
-            class="text-red-500 text-sm mt-1">
-            La clave es obligatoria
-          </div>
-          <div *ngIf="materiaForm.get('clave')?.touched && materiaForm.get('clave')?.errors?.['maxlength']"
-            class="text-red-500 text-sm mt-1">
-            La clave debe tener máximo 20 caracteres
-          </div>
-        </div>
-        <div>
           <label class="block text-gray-700">Nombre</label>
-          <input type="text" formControlName="nombre" placeholder="Ingrese el nombre"
+          <input type="text" formControlName="name" placeholder="Ingrese el nombre"
             class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
-          <div *ngIf="materiaForm.get('nombre')?.touched && materiaForm.get('nombre')?.errors?.['required']"
+          <div *ngIf="materiaForm.get('name')?.touched && materiaForm.get('name')?.errors?.['required']"
             class="text-red-500 text-sm mt-1">
             El nombre es obligatorio
           </div>
-          <div *ngIf="materiaForm.get('nombre')?.touched && materiaForm.get('nombre')?.errors?.['maxlength']"
+          <div *ngIf="materiaForm.get('name')?.touched && materiaForm.get('name')?.errors?.['maxlength']"
             class="text-red-500 text-sm mt-1">
             El nombre debe tener máximo 100 caracteres
           </div>
         </div>
         <div>
-          <label class="block text-gray-700">Créditos</label>
-          <input type="number" formControlName="creditos" min="1" max="10"
+          <label class="block text-gray-700">Semestre</label>
+          <input type="number" formControlName="semestre" min="1" max="20"
             class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
-          <div *ngIf="materiaForm.get('creditos')?.touched && materiaForm.get('creditos')?.errors?.['required']"
+          <div *ngIf="materiaForm.get('semestre')?.touched && materiaForm.get('semestre')?.errors?.['required']"
             class="text-red-500 text-sm mt-1">
-            Los créditos son obligatorios
+            El semestre es obligatorio
           </div>
-          <div *ngIf="materiaForm.get('creditos')?.touched && (materiaForm.get('creditos')?.errors?.['min'] || materiaForm.get('creditos')?.errors?.['max'])"
+          <div *ngIf="materiaForm.get('semestre')?.touched && (materiaForm.get('semestre')?.errors?.['min'] || materiaForm.get('semestre')?.errors?.['max'])"
             class="text-red-500 text-sm mt-1">
-            Los créditos deben estar entre 1 y 10
+            El semestre debe estar entre 1 y 20
           </div>
         </div>
         <div>
           <label class="block text-gray-700">Seleccionar Carrera</label>
-          <select formControlName="carreraId"
+          <select formControlName="carrera_id"
             class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
             <option [ngValue]="null">Seleccione una carrera...</option>
             <option *ngFor="let carrera of carreras" [ngValue]="carrera.id">
               {{ carrera.nombre }}
             </option>
           </select>
-          <div *ngIf="materiaForm.get('carreraId')?.touched && materiaForm.get('carreraId')?.errors?.['required']"
+          <div *ngIf="materiaForm.get('carrera_id')?.touched && materiaForm.get('carrera_id')?.errors?.['required']"
             class="text-red-500 text-sm mt-1">
             Debe seleccionar una carrera
+          </div>
+        </div>
+        <div>
+          <label class="block text-gray-700">Temario (PDF)</label>
+          <input type="file" accept=".pdf" (change)="onFileSelected($event)"
+            class="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
+          <div *ngIf="selectedFile" class="text-sm text-gray-600 mt-1">
+            Archivo seleccionado: {{ selectedFile.name }}
+          </div>
+          <div *ngIf="materiaForm.get('temario_url')?.value && !selectedFile" class="text-sm text-gray-600 mt-1">
+            <a [href]="materiaForm.get('temario_url')?.value" target="_blank" class="text-indigo-600 hover:text-indigo-800">
+              Ver temario actual
+            </a>
           </div>
         </div>
       </div>

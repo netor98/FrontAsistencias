@@ -4,7 +4,6 @@ import { AuthComponent } from '@presentation/pages/auth/auth.component';
 import { SignInComponent } from '@presentation/pages/auth/sign-in/sign-in.component';
 import { SignUpComponent } from '@presentation/pages/auth/sign-up/sign-up.component';
 import { DashboardMessageComponent } from '@components/dashboard-message/dashboard-message.component';
-import { HorariosComponent } from '@presentation/pages/horarios/horarios.component';
 import { HorariosgeneralComponent } from '@presentation/pages/horariosgeneral/horariosgeneral.component';
 
 import { DashboardJefeComponent } from '@presentation/pages/dashboard-jefe/dashboard-jefe.component';
@@ -25,7 +24,11 @@ import { AdminDashboardComponent } from '@presentation/pages/admin/dashboard/das
 import { CarrerasComponent } from '@presentation/pages/admin/carreras/carreras.component';
 import { MateriasComponent } from '@presentation/pages/admin/materias/materias.component';
 import { UsersComponent } from '@presentation/pages/admin/users/users.component';
-
+import { GruposComponent } from '@presentation/pages/admin/grupos/grupos.component';
+import { FacultadesComponent } from '@presentation/pages/admin/facultades/facultades.component';
+import { EdificiosComponent } from '@presentation/pages/admin/edificios/edificios.component';
+import { AulasComponent } from '@presentation/pages/admin/aulas/aulas.component';
+import { HorariosComponent } from '@presentation/pages/admin/horarios/horarios.component';
 export const routes: Routes = [
 
   // Página de inicio
@@ -128,6 +131,21 @@ export const routes: Routes = [
       },
       {
         path: 'asistencias', component: AsistenciasComponent
+      },
+      {
+        path: 'grupos', component: GruposComponent
+      },
+      {
+        path: 'facultades', component: FacultadesComponent
+      },
+      {
+        path: 'edificios', component: EdificiosComponent
+      },
+      {
+        path: 'aulas', component: AulasComponent
+      },
+      {
+        path: 'horarios', component: HorariosComponent
       }
     ]
   }

@@ -1,0 +1,161 @@
+
+<div class="p-6 bg-gray-50 min-h-screen">
+  <div class="max-w-7xl mx-auto">
+
+  <div class="flex justify-between items-center mb-6">
+      <h2 class="text-2xl font-semibold text-gray-800">Aulas</h2>
+      <button (click)="onCreate()" class="px-4 py-2 bg-indigo-700 text-white rounded hover:bg-indigo-800 transition">
+        Nueva Aula
+      </button>
+    </div>
+
+<div *ngIf="isLoading" class="flex justify-center items-center h-screen">
+  <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+</div>
+
+<!-- Filtros -->
+<div class="bg-white p-4 rounded-lg shadow-sm mb-6">
+  <div class="flex flex-wrap gap-4 items-end">
+    <div class="flex-1 min-w-[200px]">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Buscar</label>
+      <input type="text" [(ngModel)]="searchTerm" (input)="applyFilters()" placeholder="Buscar por nombre"
+        class="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500">
+    </div>
+    <div class="flex-1 min-w-[200px]">
+      <label class="block text-sm font-medium text-gray-700 mb-1">Filtrar por Edificio</label>
+      <select [(ngModel)]="selectedEdificioFilter" (change)="applyFilters()"
+        class="w-full p-2 border border-gray-300 rounded focus:ring-indigo-500 focus:border-indigo-500">
+        <option [ngValue]="null">Todos los edificios</option>
+        <option *ngFor="let edificio of edificios" [ngValue]="edificio.id">{{ edificio.nombre }}</option>
+      </select>
+    </div>
+    <button (click)="searchTerm = ''; selectedEdificioFilter = null; applyFilters()"
+      class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition">
+      Limpiar filtros
+    </button>
+  </div>
+</div>
+
+<!-- Tabla de aulas -->
+<div *ngIf="!isLoading" class="overflow-x-auto bg-white rounded-lg shadow">
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-gray-50">
+      <tr>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Edificio</th>
+        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+      </tr>
+    </thead>
+    <tbody class="bg-white divide-y divide-gray-200">
+      <tr *ngFor="let aula of filteredAulas">
+        <td class="px-6 py-4 whitespace-nowrap text-sm">{{ aula.aula}}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm">{{ getEdificioNombre(aula.edificio_id) }}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+<button (click)="openFormModal(aula)"
+                class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-full bg-indigo-600 text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 mr-2 transition duration-150">
+
+                <svg class="w-5 h-5 text-white " aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor" viewBox="0 0 24 24">
+                  <path fill-rule="evenodd"
+                    d="M14 4.182A4.136 4.136 0 0 1 16.9 3c1.087 0 2.13.425 2.899 1.182A4.01 4.01 0 0 1 21 7.037c0 1.068-.43 2.092-1.194 2.849L18.5 11.214l-5.8-5.71 1.287-1.31.012-.012Zm-2.717 2.763L6.186 12.13l2.175 2.141 5.063-5.218-2.141-2.108Zm-6.25 6.886-1.98 5.849a.992.992 0 0 0 .245 1.026 1.03 1.03 0 0 0 1.043.242L10.282 19l-5.25-5.168Zm6.954 4.01 5.096-5.186-2.218-2.183-5.063 5.218 2.185 2.15Z"
+                    clip-rule="evenodd" />
+                </svg>
+                Editar
+              </button>
+
+<button (click)="confirmDelete(aula.id!)"
+                class="inline-flex items-center px-3 py-1 border border-transparent text-sm leading-4 font-medium rounded-full bg-red-600 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150">
+
+                <svg class="w-5 h-5 text-white " aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                  width="24" height="24" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M6 18 17.94 6M18 18 6.06 6" />
+                </svg>
+                Eliminar
+              </button>
+        </td>
+      </tr>
+      <tr *ngIf="filteredAulas.length === 0">
+        <td colspan="3" class="px-6 py-4 text-center text-gray-500">No hay aulas para mostrar.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+ <!-- Paginación -->
+    <div *ngIf="!isLoading && filteredAulas.length > 0" class="flex justify-center items-center mt-6">
+      <nav class="flex items-center space-x-2">
+        <button (click)="prevPage()" [disabled]="currentPage === 1"
+          [ngClass]="currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''"
+          class="px-4 py-2 flex items-center justify-center text-sm font-medium text-gray-800 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700">
+  <svg class="w-3.5 h-3.5 me-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 14 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M13 5H1m0 0 4 4M1 5l4-4" />
+          </svg>
+          Anterior
+        </button>
+        <div class="px-4 py-2 bg-gray-200 border border-gray-300 text-gray-700 rounded">
+          Página {{ currentPage }} de {{ totalPages }}
+        </div>
+        <button (click)="nextPage()" [disabled]="currentPage === totalPages"
+          [ngClass]="currentPage === totalPages ? 'opacity-50 cursor-not-allowed' : ''"
+          class="px-4 py-2 flex items-center justify-center text-sm font-medium text-gray-800 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700">
+
+          Siguiente
+<svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
+            viewBox="0 0 14 10">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M1 5h12m0 0L9 1m4 4L9 9" />
+          </svg>
+        </button>
+      </nav>
+    </div>
+
+<!-- Modal de formulario -->
+<div *ngIf="showFormModal" class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+    <h2 class="text-xl font-semibold mb-4">{{ editMode ? 'Editar Aula' : 'Nueva Aula' }}</h2>
+    <form [formGroup]="aulaForm" (ngSubmit)="onSubmitForm()">
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
+        <input type="text" formControlName="aula" class="w-full p-2 border border-gray-300 rounded">
+        <div *ngIf="aulaForm.get('aula')?.invalid && aulaForm.get('aula')?.touched" class="text-red-500 text-sm mt-1">
+          El nombre es requerido y debe tener máximo 100 caracteres
+        </div>
+      </div>
+      <div class="mb-4">
+        <label class="block text-sm font-medium text-gray-700 mb-1">Edificio</label>
+        <select formControlName="edificio_id" class="w-full p-2 border border-gray-300 rounded">
+          <option [ngValue]="null">Seleccione un edificio</option>
+          <option *ngFor="let edificio of edificios" [ngValue]="edificio.id">{{ edificio.nombre }}</option>
+        </select>
+        <div *ngIf="aulaForm.get('edificio_id')?.invalid && aulaForm.get('edificio_id')?.touched" class="text-red-500 text-sm mt-1">
+          El edificio es requerido
+        </div>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button type="button" (click)="closeFormModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Cancelar</button>
+        <button type="submit" [disabled]="aulaForm.invalid || isLoading"
+          class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 disabled:opacity-50">
+          {{ isLoading ? 'Guardando...' : (editMode ? 'Actualizar' : 'Crear') }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de confirmación de borrado -->
+<div *ngIf="showDeleteModal" class="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
+  <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
+    <h2 class="text-xl font-semibold mb-4">¿Eliminar Aula?</h2>
+    <p class="mb-4">¿Estás seguro de que deseas eliminar esta aula?</p>
+    <div class="flex justify-end gap-2">
+      <button (click)="cancelDelete()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300">Cancelar</button>
+      <button (click)="onDelete(aulaIdToDelete!)" [disabled]="isLoading"
+        class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50">
+        {{ isLoading ? 'Eliminando...' : 'Eliminar' }}
+      </button>
+    </div>
+  </div>
+</div> 
