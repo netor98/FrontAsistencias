@@ -60,8 +60,9 @@ export class SignInComponent {
   private handleNavigation(user: any) {
     // Redirigir según el rol del usuario
     switch (user.role) {
-      case 'Admin':
+      case 'Administrador':
         this.router.navigate(['/admin']);
+        console.log('Redirigiendo a Admin');
         break;
       case 'Jefe_de_Grupo':
         this.router.navigate(['/dashboard-jefe']);

@@ -80,14 +80,14 @@
         <div class="flex items-center w-full">
           <div>
             <div class="rounded-full h-9 w-9 flex items-center justify-center bg-indigo-600 text-white">
-              <span class="text-sm font-medium leading-none">JD</span>
+              <span class="text-sm font-medium leading-none">{{ userInitials }}</span>
             </div>
           </div>
           <div *ngIf="!sidebarCollapsed" class="ml-3">
-            <p class="text-sm font-medium text-white">Juan Pérez</p>
-            <p class="text-xs font-medium text-indigo-200">Profesor</p>
+            <p class="text-sm font-medium text-white">{{ currentUser.name }}</p>
+            <p class="text-xs font-medium text-indigo-200">{{ currentUser.role }}</p>
           </div>
-          <button *ngIf="!sidebarCollapsed"
+          <button *ngIf="!sidebarCollapsed" (click)="logout()"
             class="ml-auto bg-indigo-800 flex-shrink-0 p-1 rounded-full text-indigo-200 hover:text-white">
             <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">

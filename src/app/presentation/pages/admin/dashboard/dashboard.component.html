@@ -28,7 +28,7 @@
       <nav class="mt-5 flex-1 px-2 space-y-1 overflow-y-auto ">
 
         <!-- Dashboard link -->
-        <a routerLink="/dashboard" routerLinkActive="bg-indigo-500" [routerLinkActiveOptions]="{ exact: true }"
+        <a routerLink="/admin/dashboard" routerLinkActive="bg-indigo-500" [routerLinkActiveOptions]="{ exact: true }"
           class="group flex items-center px-2 py-3 text-sm font-medium rounded-md text-indigo-100 hover:bg-indigo-900 hover:text-white transition duration-150 ease-in-out">
           <svg class="h-6 w-6 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
             stroke="currentColor">
@@ -140,14 +140,14 @@
         <div class="flex items-center w-full">
           <div>
             <div class="rounded-full h-9 w-9 flex items-center justify-center bg-indigo-600 text-white">
-              <span class="text-sm font-medium leading-none">JD</span>
+              <span class="text-sm font-medium leading-none">{{ userInitials }}</span>
             </div>
           </div>
           <div *ngIf="!sidebarCollapsed" class="ml-3">
-            <p class="text-sm font-medium text-white">Juan Pérez</p>
-            <p class="text-xs font-medium text-indigo-200">Profesor</p>
+            <p class="text-sm font-medium text-white">{{ currentUser.name }}</p>
+            <p class="text-xs font-medium text-indigo-200">Administrador</p>
           </div>
-          <button *ngIf="!sidebarCollapsed"
+          <button *ngIf="!sidebarCollapsed" (click)="logout()"
             class="ml-auto bg-indigo-900 flex-shrink-0 p-1 rounded-full text-indigo-200 hover:text-white">
             <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
               stroke="currentColor">
@@ -196,9 +196,16 @@
 
     <main class="flex-1 relative overflow-y-auto focus:outline-none transition-all duration-300"
       [ngClass]="{'md:pl-64': !sidebarCollapsed, 'md:pl-20': sidebarCollapsed}">
+
       <div class="py-6 px-4 sm:px-6 lg:px-8">
 
-        <router-outlet />
+        <div *ngIf="router.url === '/admin/dashboard'" class="bg-white shadow overflow-hidden sm:rounded-lg p-6">
+          <h2 class="text-lg font-medium text-gray-900">Bienvenido al Sistema de Asistencia</h2>
+          <p class="mt-1 text-sm text-gray-500">
+            Selecciona una opción del menú para comenzar.
+          </p>
+        </div>
+        <router-outlet *ngIf="router.url !== '/admin/dashboard'" />
       </div>
     </main>
   </div>

@@ -154,9 +154,21 @@ export class ChecadorHomeComponent implements OnInit {
       // Mapear las carreras al formato requerido por el componente
       this.mapCarreras();
 
-      // Obtener los horarios
-      this.horarios = await horariosService.getAll();
-      console.log('Horarios obtenidos:', this.horarios);
+      // Obtener los horarios con toda la información relacionada
+      this.horarios = await horariosService.getAll2();
+      console.log('Horarios obtenidos con relaciones completas:', this.horarios);
+
+      // Mostrar información detallada de cada horario para depuración
+      console.log('Detalle de horarios:');
+      this.horarios.forEach((horario, index) => {
+        console.log(`Horario #${index + 1}:`);
+        console.log(`- Día: ${horario.dia}`);
+        console.log(`- Hora: ${horario.hora_inicio} - ${horario.hora_fin}`);
+        console.log(`- Materia: ${horario.materias?.name || 'No especificada'}`);
+        console.log(`- Grupo: ${horario.grupo?.name || 'No especificado'}`);
+        console.log(`- Aula: ${horario.aulas?.aula || 'No especificada'}`);
+        console.log(`- Carrera: ${horario.carreras?.nombre || 'No especificada'}`);
+      });
 
       // Procesar los horarios para adaptarlos al formato del componente
       this.processHorarios();
@@ -678,66 +690,6 @@ export class ChecadorHomeComponent implements OnInit {
       )
     );
   }
-
-  // Filter groups based on selected criteria
-  // filterGroups(): GroupInfo[] {
-  //   // Si no hay datos, retornar array vacío
-  //   if (!this.groupsData || this.groupsData.length === 0) {
-  //     return [];
-  //   }
-
-  //   return this.groupsData.filter((group) => {
-  //     // First check if the group has any classes for the current day
-  //     const hasClassesForCurrentDay = group.classes.some(classItem =>
-  //       !classItem.day || classItem.day === this.currentDayName
-  //     );
-
-  //     // If no classes for the current day, filter out this group
-  //     if (!hasClassesForCurrentDay) {
-  //       return false;
-  //     }
-
-  //     // Continue with other filters as before
-  //     // Filter by career
-  //     if (this.filters.career && group.career !== this.filters.career) {
-  //       return false;
-  //     }
-
-  //     // Filter by classroom or teacher (check if any class matches)
-  //     if (this.filters.classroom || this.filters.teacher || this.filters.time) {
-  //       return group.classes.some((classItem) => {
-  //         // Only consider classes for the current day
-  //         if (classItem.day && classItem.day !== this.currentDayName) {
-  //           return false;
-  //         }
-
-  //         // Filter by current time if that filter is enabled
-  //         if (this.currentTimeFilter && !this.currentTimeClasses.has(classItem.id)) {
-  //           return false;
-  //         }
-
-  //         // Filter by classroom
-  //         if (this.filters.classroom && classItem.classroom !== this.filters.classroom) {
-  //           return false;
-  //         }
-
-  //         // Filter by teacher
-  //         if (this.filters.teacher && classItem.teacher !== this.filters.teacher) {
-  //           return false;
-  //         }
-
-  //         // Filter by time
-  //         if (this.filters.time && classItem.time !== this.filters.time) {
-  //           return false;
-  //         }
-
-  //         return true;
-  //       });
-  //     }
-
-  //     return true;
-  //   });
-  // }
 
   // Filter groups based on selected criteria
   filterGroups(): GroupInfo[] {

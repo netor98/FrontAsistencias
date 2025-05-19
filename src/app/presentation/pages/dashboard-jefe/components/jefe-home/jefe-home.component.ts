@@ -185,9 +185,19 @@ export class JefeHomeComponent implements OnInit {
         console.log('Grupo encontrado:', this.currentGrupo);
 
         // 2. Obtener los horarios del grupo
-        const horarios = await horariosService.getByGrupo(this.currentGrupo.id!);
+        const horarios = await horariosService.getByGrupo2(this.currentGrupo.id!);
 
-        console.log('Horarios del grupo obtenidos:', horarios);
+        console.log('Horarios del grupo obtenidos con relaciones completas:', horarios);
+        console.log('Detalle de horarios:');
+        horarios.forEach((horario, index) => {
+          console.log(`Horario #${index + 1}:`);
+          console.log(`- Día: ${horario.dia}`);
+          console.log(`- Hora: ${horario.hora_inicio} - ${horario.hora_fin}`);
+          console.log(`- Materia: ${horario.materias?.name || 'No especificada'}`);
+          console.log(`- Grupo: ${horario.grupo?.name || 'No especificado'}`);
+          console.log(`- Aula: ${horario.aulas?.aula || 'No especificada'}`);
+          console.log(`- Carrera: ${horario.carreras?.nombre || 'No especificada'}`);
+        });
 
         if (horarios.length === 0) {
           console.log('El grupo no tiene horarios asignados.');
@@ -378,7 +388,7 @@ export class JefeHomeComponent implements OnInit {
     const groupName = this.currentGrupo.name || 'Sin nombre';
     const groupId = `${careerId}-${groupName}`;
     
-    // Preparar las clases
+    // Preparar las clases utilizando los datos completos de las relaciones
     const classes: ClassItem[] = horarios.map(horario => ({
       id: horario.id,
       time: `${horario.hora_inicio?.slice(0, 5) || '00:00'} - ${horario.hora_fin?.slice(0, 5) || '00:00'}`,

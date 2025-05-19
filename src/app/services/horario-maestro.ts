@@ -267,7 +267,8 @@ export const horariosService = {
         materias:materia_id(id, name),
         grupo:grupo_id(id, name)
       `)
-      .eq('grupo_id', grupoId); // Filtro por ID de grupo
+      .eq('grupo_id', grupoId) // Filtro por ID de grupo
+      .order('dia', { ascending: true });
 
     if (error) throw new Error(error.message);
 
@@ -276,20 +277,19 @@ export const horariosService = {
       return [];
     }
 
-    // Obtenemos los datos del grupo para conseguir aula_id y carrera_id
+    // Obtenemos el grupo para conseguir aula_id y carrera_id
     const { data: grupo, error: grupoError } = await supabase
       .from('grupo')
       .select('id, aula_id, carrera_id')
       .eq('id', grupoId)
       .single();
 
-    if (grupoError) throw new Error(grupoError.message);
+    if (grupoError) {
+      console.error(`Error al obtener grupo ${grupoId}:`, grupoError);
+    }
 
     if (grupo) {
-      // Creamos el mapa para buscar rápidamente
-      const gruposMap = { [grupo.id]: grupo };
-
-      // Obtenemos aulas si el grupo tiene aula_id
+      // Obtenemos el aula
       if (grupo.aula_id) {
         const { data: aula, error: aulaError } = await supabase
           .from('aulas')
@@ -297,19 +297,19 @@ export const horariosService = {
           .eq('id', grupo.aula_id)
           .single();
 
-        if (aulaError) throw new Error(aulaError.message);
+        if (aulaError) {
+          console.error(`Error al obtener aula ${grupo.aula_id}:`, aulaError);
+        }
 
         if (aula) {
-          const aulasMap = { [aula.id]: aula };
-
-          // Asignamos aulas a los horarios
+          // Asignamos aula a todos los horarios
           horarios.forEach(horario => {
             horario.aulas = aula;
           });
         }
       }
 
-      // Obtenemos carrera si el grupo tiene carrera_id
+      // Obtenemos la carrera
       if (grupo.carrera_id) {
         const { data: carrera, error: carreraError } = await supabase
           .from('carreras')
@@ -317,10 +317,12 @@ export const horariosService = {
           .eq('id', grupo.carrera_id)
           .single();
 
-        if (carreraError) throw new Error(carreraError.message);
+        if (carreraError) {
+          console.error(`Error al obtener carrera ${grupo.carrera_id}:`, carreraError);
+        }
 
         if (carrera) {
-          // Asignamos carrera a los horarios
+          // Asignamos carrera a todos los horarios
           horarios.forEach(horario => {
             horario.carreras = carrera;
           });
@@ -328,6 +330,7 @@ export const horariosService = {
       }
     }
 
+    console.log(`Fetched ${horarios.length} horarios for grupo ${grupoId} with complete relations.`);
     return horarios;
   },
 

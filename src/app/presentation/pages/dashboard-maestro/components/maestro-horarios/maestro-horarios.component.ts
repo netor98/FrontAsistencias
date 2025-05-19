@@ -129,13 +129,25 @@ export class MaestroHorariosComponent implements OnInit {
           : currentUser.id;
 
         try {
-          // Obtener los horarios del maestro
-          const horarios = await horariosService.getByMaestro(this.currentMaestroId);
-          console.log('Horarios del maestro obtenidos:', horarios);
+          // Obtener los horarios del maestro con toda la información de relaciones
+          const horarios = await horariosService.getByMaestro2(this.currentMaestroId);
+          console.log('Horarios del maestro obtenidos (con relaciones):', horarios);
 
           if (horarios.length === 0) {
             console.log('El maestro no tiene horarios asignados.');
           } else {
+            // Mostrar detalle de los horarios para depuración
+            console.log('Detalle de horarios para UI:');
+            horarios.forEach((horario, index) => {
+              console.log(`Horario #${index + 1}:`);
+              console.log(`- Día: ${horario.dia}`);
+              console.log(`- Hora: ${horario.hora_inicio} - ${horario.hora_fin}`);
+              console.log(`- Materia: ${horario.materias?.name || 'No especificada'}`);
+              console.log(`- Grupo: ${horario.grupo?.name || 'No especificado'}`);
+              console.log(`- Aula: ${horario.aulas?.aula || 'No especificada'}`);
+              console.log(`- Carrera: ${horario.carreras?.nombre || 'No especificada'}`);
+            });
+
             // Procesar los horarios para mostrarlos en la UI
             this.processHorarios(horarios);
           }

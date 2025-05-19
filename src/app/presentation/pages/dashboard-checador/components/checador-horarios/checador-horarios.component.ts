@@ -151,9 +151,21 @@ export class ChecadorHorariosComponent implements OnInit {
       // Mapear las carreras al formato requerido por el componente
       this.mapCarreras();
 
-      // Obtener los horarios
-      this.horarios = await horariosService.getAll();
-      console.log('Horarios obtenidos:', this.horarios);
+      // Obtener los horarios con relaciones completas
+      this.horarios = await horariosService.getAll2();
+      console.log('Horarios obtenidos con relaciones completas:', this.horarios);
+
+      // Mostrar información detallada de cada horario para depuración
+      console.log('Detalle de horarios:');
+      this.horarios.forEach((horario, index) => {
+        console.log(`Horario #${index + 1}:`);
+        console.log(`- Día: ${horario.dia}`);
+        console.log(`- Hora: ${horario.hora_inicio} - ${horario.hora_fin}`);
+        console.log(`- Materia: ${horario.materias?.name || 'No especificada'}`);
+        console.log(`- Grupo: ${horario.grupo?.name || 'No especificado'}`);
+        console.log(`- Aula: ${horario.aulas?.aula || 'No especificada'}`);
+        console.log(`- Carrera: ${horario.carreras?.nombre || 'No especificada'}`);
+      });
 
       // Procesar los horarios para adaptarlos al formato del componente
       this.processHorarios();

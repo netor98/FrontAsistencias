@@ -134,72 +134,6 @@ export class MaestroHomeComponent implements OnInit {
     this.extractFilterOptions()
   }
 
-  // Método para procesar los horarios obtenidos de la API
-  // async ngOnInit(): Promise<void> {
-  //   this.isLoading = true;
-
-  //   try {
-  //     // Obtener las carreras primero (similar a checador-home)
-  //     this.rawCarreras = await carrerasService.getAll();
-  //     console.log('Carreras obtenidas:', this.rawCarreras);
-
-  //     // Mapear las carreras al formato requerido por el componente
-  //     this.mapCarreras();
-
-  //     // Obtener el usuario actual
-  //     const currentUser = authService.getCurrentUser();
-
-  //     if (currentUser && currentUser.id) {
-  //       console.log('Usuario maestro actual:', currentUser);
-
-  //       try {
-  //         // Convertir el ID a número si viene como string
-  //         const maestroId = typeof currentUser.id === 'string'
-  //           ? parseInt(currentUser.id, 10)
-  //           : currentUser.id;
-
-  //         console.log('Obteniendo horarios para maestro ID:', maestroId);
-
-  //         // Obtener los horarios del maestro
-  //         const horarios = await horariosService.getByMaestro(maestroId);
-
-  //         console.log('Horarios del maestro obtenidos:', horarios);
-
-  //         if (horarios.length === 0) {
-  //           console.log('El maestro no tiene horarios asignados.');
-  //           this.isLoading = false;
-  //         } else {
-  //           // Mostrar información detallada de cada horario
-  //           console.log('Detalle de horarios:');
-  //           horarios.forEach((horario, index) => {
-  //             console.log(`Horario #${index + 1}:`);
-  //             console.log(`- Día: ${horario.dia}`);
-  //             console.log(`- Hora: ${horario.hora_inicio} - ${horario.hora_fin}`);
-  //             console.log(`- Materia: ${horario.materias?.name || 'No especificada'}`);
-  //             console.log(`- Grupo: ${horario.grupo?.name || 'No especificado'}`);
-  //             console.log(`- Aula: ${horario.aulas?.aula || 'No especificada'}`);
-  //             console.log(`- Carrera: ${horario.carreras?.nombre || 'No especificada'}`);
-  //           });
-
-  //           // Procesar los horarios para mostrarlos en la UI
-  //           this.processHorarios(horarios);
-  //         }
-  //       } catch (error) {
-  //         console.error('Error al obtener horarios del maestro:', error);
-  //       }
-  //     } else {
-  //       console.error('No se pudo obtener el ID del maestro actual');
-  //       this.isLoading = false;
-  //     }
-  //   } catch (error) {
-  //     console.error('Error al obtener carreras:', error);
-  //     this.isLoading = false;
-  //   }
-
-  //   // Initialize attendance status for all classes and days in all groups
-  //   this.initializeAttendanceStatus();
-  // }
-
   async ngOnInit(): Promise<void> {
     this.isLoading = true;
 
@@ -228,15 +162,27 @@ export class MaestroHomeComponent implements OnInit {
 
           console.log('Obteniendo horarios para maestro ID:', maestroId);
 
-          // Obtener los horarios del maestro
-          const horarios = await horariosService.getByMaestro(maestroId);
+          // Obtener los horarios del maestro con toda la información de relaciones
+          const horarios = await horariosService.getByMaestro2(maestroId);
 
-          console.log('Horarios del maestro obtenidos:', horarios);
+          console.log('Horarios del maestro obtenidos (con relaciones):', horarios);
 
           if (horarios.length === 0) {
             console.log('El maestro no tiene horarios asignados.');
             this.isLoading = false;
           } else {
+            // Mostrar información detallada de cada horario para depuración
+            console.log('Detalle de horarios:');
+            horarios.forEach((horario, index) => {
+              console.log(`Horario #${index + 1}:`);
+              console.log(`- Día: ${horario.dia}`);
+              console.log(`- Hora: ${horario.hora_inicio} - ${horario.hora_fin}`);
+              console.log(`- Materia: ${horario.materias?.name || 'No especificada'}`);
+              console.log(`- Grupo: ${horario.grupo?.name || 'No especificado'}`);
+              console.log(`- Aula: ${horario.aulas?.aula || 'No especificada'}`);
+              console.log(`- Carrera: ${horario.carreras?.nombre || 'No especificada'}`);
+            });
+
             // Procesar los horarios para mostrarlos en la UI
             this.processHorarios(horarios);
 
@@ -606,98 +552,6 @@ export class MaestroHomeComponent implements OnInit {
     // Guardar inmediatamente en la base de datos (como en checador-home)
     await this.saveAttendanceForClass(groupId, classId, day, key);
   }
-
-  // async saveAttendanceForClass(groupId: string, classId: number, day: string, key: string): Promise<void> {
-  //   if (!this.currentMaestroId) {
-  //     this.showErrorNotification("No se pudo identificar al maestro actual");
-  //     return;
-  //   }
-
-  //   this.isSaving = true;
-
-  //   try {
-  //     // Obtener el estado actual de asistencia para esta clase
-  //     const status = this.attendanceStatus[groupId][key];
-
-  //     // Calcular la fecha correspondiente al día de la semana
-  //     const dayIndex = this.weekdays.findIndex(d => d === day);
-  //     if (dayIndex === -1) {
-  //       console.error(`Día inválido: ${day}`);
-  //       this.isSaving = false;
-  //       return;
-  //     }
-
-  //     // Calcular la fecha para este día en la semana actual
-  //     const fecha = new Date(this.currentWeek.startDate);
-  //     fecha.setDate(fecha.getDate() + dayIndex);
-  //     const formattedDate = this.formatDateForDB(fecha);
-
-  //     // IMPORTANTE: Convertir el valor de estado de asistencia a booleano
-  //     // Versión corregida: siempre devuelve un booleano
-  //     const asistenciaBool = status === "asistio";
-
-  //     // Si es pendiente, borrar la asistencia existente
-  //     if (status === "pendiente") {
-  //       const existingAttendance = this.existingAttendances.get(key);
-  //       if (existingAttendance && existingAttendance.id) {
-  //         console.log(`Eliminando asistencia ID ${existingAttendance.id} para ${key}`);
-  //         await asistenciasService.deleteAsistenciaMaestro(existingAttendance.id);
-  //         this.existingAttendances.delete(key);
-  //         this.showPendingNotification();
-  //       }
-  //       this.isSaving = false;
-  //       return;
-  //     }
-
-  //     console.log(`Guardando asistencia para horario ${classId}, día ${day}, fecha ${formattedDate}, status ${status}, valor booleano: ${asistenciaBool}`);
-
-  //     // Verificar si ya existe una asistencia para esta fecha y horario
-  //     const existingAttendance = this.existingAttendances.get(key);
-
-  //     if (existingAttendance) {
-  //       // Actualizar asistencia existente
-  //       console.log(`Actualizando asistencia ID ${existingAttendance.id}`);
-
-  //       const updatedAttendance = await asistenciasService.updateAsistenciaMaestro(
-  //         existingAttendance.id,
-  //         classId,
-  //         formattedDate,
-  //         asistenciaBool, // Ahora siempre es boolean
-  //         this.currentMaestroId
-  //       );
-
-  //       if (updatedAttendance) {
-  //         this.existingAttendances.set(key, updatedAttendance);
-  //         this.showSuccessNotification();
-  //       } else {
-  //         this.showErrorNotification("Error al actualizar la asistencia");
-  //       }
-  //     } else {
-  //       // Crear nueva asistencia
-  //       console.log(`Creando nueva asistencia con valor booleano: ${asistenciaBool}`);
-
-  //       const newAttendance = await asistenciasService.createAsistenciaMaestro(
-  //         classId,
-  //         formattedDate,
-  //         asistenciaBool, // Ahora siempre es boolean
-  //         this.currentMaestroId
-  //       );
-
-  //       if (newAttendance) {
-  //         this.existingAttendances.set(key, newAttendance);
-  //         this.showSuccessNotification();
-  //       } else {
-  //         this.showErrorNotification("Error al crear la asistencia");
-  //       }
-  //     }
-  //   } catch (error: any) { // Especificar tipo any
-  //     console.error('Error al guardar asistencia:', error);
-  //     // Acceso seguro a la propiedad message
-  //     this.showErrorNotification(`Error al guardar la asistencia: ${error && error.message ? error.message : 'Desconocido'}`);
-  //   } finally {
-  //     this.isSaving = false;
-  //   }
-  // }
 
   async saveAttendanceForClass(groupId: string, classId: number, day: string, key: string): Promise<void> {
     if (!this.currentMaestroId) {

@@ -152,10 +152,21 @@ export class JefeHorariosComponent implements OnInit {
         }
       }
 
-      // 4. Obtener los horarios del grupo
-      const horarios = await horariosService.getByGrupo(this.currentGrupo.id!)
+      // 4. Obtener los horarios del grupo con relaciones completas
+      const horarios = await horariosService.getByGrupo2(this.currentGrupo.id!)
 
-      console.log("Horarios obtenidos:", horarios)
+      console.log("Horarios obtenidos con relaciones completas:", horarios)
+      
+      // Mostrar información detallada de cada horario para depuración
+      horarios.forEach((horario, index) => {
+        console.log(`Horario #${index + 1}:`);
+        console.log(`- Día: ${horario.dia}`);
+        console.log(`- Hora: ${horario.hora_inicio} - ${horario.hora_fin}`);
+        console.log(`- Materia: ${horario.materias?.name || 'No especificada'}`);
+        console.log(`- Grupo: ${horario.grupo?.name || 'No especificado'}`);
+        console.log(`- Aula: ${horario.aulas?.aula || 'No especificada'}`);
+        console.log(`- Carrera: ${horario.carreras?.nombre || 'No especificada'}`);
+      });
 
       // 5. Procesar los horarios para mostrar en la UI
       this.processSchedule(horarios)
@@ -173,7 +184,21 @@ export class JefeHorariosComponent implements OnInit {
     if (!this.currentGrupo) return
 
     // Crear el objeto GroupInfo para el grupo actual
-    const careerId = `carrera-${this.currentGrupo.carrera_id}`
+    let careerId = `carrera-${this.currentGrupo.carrera_id}`
+    // Si tenemos el nombre de la carrera, intentar usar un ID más específico
+    if (this.carreraName) {
+      const carreraNombre = this.carreraName.toLowerCase();
+      if (carreraNombre.includes('sistemas')) {
+        careerId = 'ing-sistemas';
+      } else if (carreraNombre.includes('industrial')) {
+        careerId = 'ing-industrial';
+      } else if (carreraNombre.includes('mecatrónica') || carreraNombre.includes('mecatronica')) {
+        careerId = 'ing-mecatronica';
+      } else if (carreraNombre.includes('administración') || carreraNombre.includes('administracion')) {
+        careerId = 'lic-administracion';
+      }
+    }
+    
     const groupName = this.currentGrupo.name || 'Sin nombre'
 
     // Crear array de ClassItem a partir de los horarios
