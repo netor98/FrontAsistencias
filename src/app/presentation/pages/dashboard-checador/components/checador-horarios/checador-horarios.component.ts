@@ -2,8 +2,8 @@ import { Component, type OnInit } from "@angular/core"
 import { CommonModule, KeyValue } from "@angular/common"
 import { FormsModule } from "@angular/forms"
 import { horariosService } from "src/app/services/horario-maestro"
-import { HorarioMaestro, Carrera } from "src/app/services/interfaces"
-import { carrerasService } from "src/app/services/carreras"
+import { HorarioMaestro, Carrera, HorarioMaestro2 } from "src/app/services/interfaces"
+import { carrerasServiceSupa } from "src/app/services/carreras"
 
 interface ClassItem {
   id: number
@@ -48,7 +48,7 @@ type AttendanceStatus = "asistio" | "no-asistio" | "pendiente"
 
 export class ChecadorHorariosComponent implements OnInit {
   // Propiedades para datos de la API
-  horarios: HorarioMaestro[] = [];
+  horarios: HorarioMaestro2[] = [];
   rawCarreras: Carrera[] = [];
   isLoading = true;
 
@@ -145,7 +145,7 @@ export class ChecadorHorariosComponent implements OnInit {
 
     try {
       // Obtener las carreras primero
-      this.rawCarreras = await carrerasService.getAll();
+      this.rawCarreras = await carrerasServiceSupa.getAll();
       console.log('Carreras obtenidas:', this.rawCarreras);
 
       // Mapear las carreras al formato requerido por el componente

@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common"
 import { FormsModule } from "@angular/forms"
 import { authService } from "src/app/services/login"
 import { horariosService } from "src/app/services/horario-maestro"
-import { carrerasService } from "src/app/services/carreras"
+import { carrerasServiceSupa } from "src/app/services/carreras"
 import { Grupo, HorarioMaestro, Carrera } from "src/app/services/interfaces"
 
 interface ClassItem {
@@ -146,14 +146,14 @@ export class JefeHorariosComponent implements OnInit {
 
       // 3. Obtener la información de la carrera
       if (this.currentGrupo.carrera_id) {
-        const carrera = await carrerasService.getById(this.currentGrupo.carrera_id)
+        const carrera = await carrerasServiceSupa.getById(this.currentGrupo.carrera_id)
         if (carrera) {
           this.carreraName = carrera.nombre
         }
       }
 
       // 4. Obtener los horarios del grupo
-      const horarios = await horariosService.getByGrupo(this.currentGrupo.id)
+      const horarios = await horariosService.getByGrupo(this.currentGrupo.id!)
 
       console.log("Horarios obtenidos:", horarios)
 

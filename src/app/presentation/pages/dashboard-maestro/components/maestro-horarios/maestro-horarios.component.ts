@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common"
 import { FormsModule } from "@angular/forms"
 import { horariosService } from "src/app/services/horario-maestro"
 import { authService } from "src/app/services/login"
-import { carrerasService } from "src/app/services/carreras"
+import { carrerasServiceSupa } from "src/app/services/carreras"
 import { Carrera } from "src/app/services/interfaces"
 
 interface ClassItem {
@@ -111,7 +111,7 @@ export class MaestroHorariosComponent implements OnInit {
 
     try {
       // Obtener las carreras primero
-      this.rawCarreras = await carrerasService.getAll();
+      this.rawCarreras = await carrerasServiceSupa.getAll();
       console.log('Carreras obtenidas:', this.rawCarreras);
 
       // Mapear las carreras al formato requerido por el componente

@@ -3,7 +3,7 @@ import { CommonModule } from "@angular/common"
 import { FormsModule } from "@angular/forms"
 import { horariosService } from "src/app/services/horario-maestro"
 import { authService } from "src/app/services/login"
-import { carrerasService } from "src/app/services/carreras"
+import { carrerasServiceSupa } from "src/app/services/carreras"
 import { asistenciasService } from "src/app/services/asistencias"
 import { Carrera, Asistencia, Grupo } from "src/app/services/interfaces"
 
@@ -132,7 +132,7 @@ export class JefeHomeComponent implements OnInit {
 
     try {
       // Obtener las carreras primero
-      this.rawCarreras = await carrerasService.getAll();
+      this.rawCarreras = await carrerasServiceSupa.getAll();
       console.log('Carreras obtenidas:', this.rawCarreras);
 
       // Mapear las carreras al formato requerido por el componente
@@ -185,7 +185,7 @@ export class JefeHomeComponent implements OnInit {
         console.log('Grupo encontrado:', this.currentGrupo);
 
         // 2. Obtener los horarios del grupo
-        const horarios = await horariosService.getByGrupo(this.currentGrupo.id);
+        const horarios = await horariosService.getByGrupo(this.currentGrupo.id!);
 
         console.log('Horarios del grupo obtenidos:', horarios);
 
@@ -239,7 +239,7 @@ export class JefeHomeComponent implements OnInit {
       // Actualizar el mapa de asistencias existentes
       asistencias.forEach(asistencia => {
         // Encontrar a qué día de la semana corresponde esta fecha
-        const asistenciaDate = new Date(asistencia.fecha);
+        const asistenciaDate = asistencia.fecha ? new Date(asistencia.fecha) : new Date();
         const dayIndex = asistenciaDate.getDay() - 1; // 0=lunes, 4=viernes
 
         if (dayIndex >= 0 && dayIndex < 5) { // Solo procesar días entre lunes y viernes

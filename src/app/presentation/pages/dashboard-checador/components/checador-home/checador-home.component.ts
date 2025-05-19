@@ -2,8 +2,8 @@ import { Component, type OnInit } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { FormsModule } from "@angular/forms"
 import { horariosService } from "src/app/services/horario-maestro"
-import { HorarioMaestro, Carrera, Asistencia } from "src/app/services/interfaces"
-import { carrerasService } from "src/app/services/carreras";
+import { HorarioMaestro, Carrera, Asistencia, HorarioMaestro2 } from "src/app/services/interfaces"
+import { carrerasServiceSupa } from "src/app/services/carreras";
 import { asistenciasService } from "src/app/services/asistencias"
 import { authService } from "src/app/services/login";
 
@@ -53,7 +53,7 @@ export class ChecadorHomeComponent implements OnInit {
   showingSuccess = false;
   showingError = false;
 
-  horarios: HorarioMaestro[] = [];
+  horarios: HorarioMaestro2[] = [];
 
   // Current date information
   today = new Date()
@@ -148,7 +148,7 @@ export class ChecadorHomeComponent implements OnInit {
 
     try {
       // Obtener las carreras primero
-      this.rawCarreras = await carrerasService.getAll();
+      this.rawCarreras = await carrerasServiceSupa.getAll();
       console.log('Carreras obtenidas:', this.rawCarreras);
 
       // Mapear las carreras al formato requerido por el componente
@@ -556,7 +556,7 @@ export class ChecadorHomeComponent implements OnInit {
               this.existingAttendances.set(key, refreshedAttendance);
             } else {
               // Si todo falla, actualiza la instancia actual como fallback
-              existingAttendance.asistencia = asistencia;
+              existingAttendance.asistencia = asistencia ? 'asistio' : 'no-asistio';
               this.existingAttendances.set(key, existingAttendance);
             }
           }
