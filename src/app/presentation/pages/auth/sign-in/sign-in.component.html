@@ -2,36 +2,38 @@
     <img src="/EduTrackIcon.png" alt="EduTrackLogo" class="h-16 w-auto mb-3" />
     <h2 class="text-4xl font-bold mb-6">Iniciar sesión</h2>
 
-    <form class="space-y-4">
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-4">
         <div>
-            <label class="block text-sm font-medium text-gray-600" for="emailOrUsername">Correo electrónico o nombre de
-                usuario</label>
-            <input id="emailOrUsername" type="text" placeholder="correo@ejemplo.com o username"
+            <label class="block text-sm font-medium text-gray-600" for="emailOrUsername">Correo electrónico o número de
+                cuenta</label>
+            <input id="emailOrUsername" formControlName="identifier" type="text" placeholder="correo@ejemplo.com o username"
                 class="w-full p-2 mt-1 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-1 focus:border-blue-700 focus:ring-blue-700" />
         </div>
         
         <div>
-            <password-input label="Contraseña" inputId="password" placeholder="••••••" />
+            <password-input label="Contraseña" inputId="password" placeholder="••••••" formControlName="password"></password-input>
+        </div>
+
+        <div *ngIf="errorMessage" class="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-lg text-sm mt-2">
+            {{ errorMessage }}
         </div>
 
         <div class="flex items-center justify-between">
-
             <div class="flex items-center">
-                <input id="remember" type="checkbox" class="w-4 h-4 mr-2 accent-blue-800" />
+                <input id="remember" formControlName="remember" type="checkbox" class="w-4 h-4 mr-2 accent-blue-800" />
                 <label class="text-sm" for="remember">Recuérdame</label>
             </div>
 
             <!-- <a routerLink="/recover-password" class="text-sm text-blue-800 font-bold no-underline link-underline">¿Olvidaste tú
                 contraseña?</a> -->
-
         </div>
 
-        <button
-            class="w-full p-2 mt-2 font-semibold text-white bg-blue-800 rounded-xl hover:bg-blue-700 transition-colors duration-300">
+        <button type="submit" [disabled]="isLoading || loginForm.invalid"
+            class="w-full p-2 mt-2 font-semibold text-white bg-blue-800 rounded-xl hover:bg-blue-700 transition-colors duration-300 flex items-center justify-center">
+            <span *ngIf="isLoading" class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
             Iniciar sesión
         </button>
     </form>
-
 
    <!-- <p class="text-sm mt-7 mb-7 text-center">
         ¿No tienes una cuenta?
@@ -39,8 +41,6 @@
             Registrarme
         </a>
     </p>
-
-
 
     <div class="relative flex items-center justify-center my-4">
         <span class="absolute px-4 bg-white text-sm">o</span>

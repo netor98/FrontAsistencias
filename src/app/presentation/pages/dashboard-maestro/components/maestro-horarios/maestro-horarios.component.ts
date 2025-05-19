@@ -1,13 +1,19 @@
 import { Component, type OnInit } from "@angular/core"
 import { CommonModule } from "@angular/common"
 import { FormsModule } from "@angular/forms"
+import { horariosService } from "src/app/services/horario-maestro"
+import { authService } from "src/app/services/login"
+import { carrerasService } from "src/app/services/carreras"
+import { Carrera } from "src/app/services/interfaces"
 
 interface ClassItem {
   id: number
   time: string
   subject: string
   teacher: string
-  classroom: string // Added classroom field
+  classroom: string
+  group: string
+  dayOfWeek?: string // Día de la semana en que ocurre la clase
 }
 
 interface WeekInfo {
@@ -25,7 +31,7 @@ interface GroupInfo {
 
 interface FilterOptions {
   classroom: string
-  group: string // Changed from teacher to group
+  group: string
   career: string
 }
 
@@ -48,52 +54,22 @@ export class MaestroHorariosComponent implements OnInit {
   // Filters
   filters: FilterOptions = {
     classroom: "",
-    group: "", // Changed from teacher to group
+    group: "",
     career: "",
   }
 
   // Options for dropdowns
   schoolCycles: string[] = ["2023-2024", "2024-2025", "2025-2026"]
-  periods: string[] = ["1", "2", "3"]
-  careers: { id: string; name: string }[] = [
-    { id: "ing-sistemas", name: "Ingeniería en Sistemas Computacionales" },
-    { id: "ing-industrial", name: "Ingeniería Industrial" },
-    { id: "ing-mecatronica", name: "Ingeniería Mecatrónica" },
-    { id: "lic-administracion", name: "Licenciatura en Administración" },
-  ]
+  periods: string[] = ["1", "2"]
+  careers: { id: string; name: string }[] = [];
+  rawCarreras: Carrera[] = [];
 
   // Derived filter options (will be populated from data)
   classroomOptions: string[] = []
-  groupOptions: string[] = [] // Changed from teacherOptions to groupOptions
+  groupOptions: string[] = []
 
-  // Sample data for multiple groups
-  groupsData: GroupInfo[] = [
-    {
-      id: "ing-sistemas-A",
-      name: "A",
-      career: "ing-sistemas",
-      classes: [
-        {
-          id: 1,
-          time: "7:00 - 8:30",
-          subject: "Programación Orientada a Objetos",
-          teacher: "Prof. García",
-          classroom: "A-101",
-        },
-        { id: 2, time: "8:30 - 10:00", subject: "Bases de Datos", teacher: "Prof. Rodríguez", classroom: "A-102" },
-        { id: 3, time: "10:30 - 12:00", subject: "Redes de Computadoras", teacher: "Prof. López", classroom: "A-103" },
-        { id: 4, time: "12:00 - 13:30", subject: "Sistemas Operativos", teacher: "Prof. Martínez", classroom: "A-104" },
-        {
-          id: 5,
-          time: "13:30 - 15:00",
-          subject: "Ingeniería de Software",
-          teacher: "Prof. Sánchez",
-          classroom: "A-105",
-        },
-      ],
-    },
-    
-  ]
+  // Data for UI
+  groupsData: GroupInfo[] = []
 
   weekdays: string[] = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"]
 
@@ -103,6 +79,12 @@ export class MaestroHorariosComponent implements OnInit {
   // For week tracking
   currentWeek: WeekInfo
   weeks: WeekInfo[] = []
+
+  // Loading state
+  isLoading: boolean = true;
+  
+  // Current maestro ID
+  currentMaestroId: number = 0;
 
   constructor() {
     // Get current day information
@@ -122,47 +104,203 @@ export class MaestroHorariosComponent implements OnInit {
 
     this.currentWeek = this.getCurrentWeekInfo()
     this.generateWeeksForSemester()
-
-    // Initialize attendance status for all groups
-    this.groupsData.forEach((group) => {
-      this.attendanceStatus[group.id] = {}
-    })
-
-    // Extract unique classrooms and groups for filter dropdowns
-    this.extractFilterOptions()
   }
 
-  ngOnInit(): void {
-    // Initialize attendance status for all classes and days in all groups
-    this.groupsData.forEach((group) => {
-      group.classes.forEach((classItem) => {
-        // Only initialize for the current day
-        const key = `${classItem.id}-${this.currentDayName}`
-        if (!this.attendanceStatus[group.id]) {
-          this.attendanceStatus[group.id] = {}
+  async ngOnInit(): Promise<void> {
+    this.isLoading = true;
+
+    try {
+      // Obtener las carreras primero
+      this.rawCarreras = await carrerasService.getAll();
+      console.log('Carreras obtenidas:', this.rawCarreras);
+
+      // Mapear las carreras al formato requerido por el componente
+      this.mapCarreras();
+
+      // Obtener el usuario actual
+      const currentUser = authService.getCurrentUser();
+
+      if (currentUser && currentUser.id) {
+        console.log('Usuario maestro actual:', currentUser);
+        
+        // Guardar el ID del maestro para uso posterior
+        this.currentMaestroId = typeof currentUser.id === 'string'
+          ? parseInt(currentUser.id, 10)
+          : currentUser.id;
+
+        try {
+          // Obtener los horarios del maestro
+          const horarios = await horariosService.getByMaestro(this.currentMaestroId);
+          console.log('Horarios del maestro obtenidos:', horarios);
+
+          if (horarios.length === 0) {
+            console.log('El maestro no tiene horarios asignados.');
+          } else {
+            // Procesar los horarios para mostrarlos en la UI
+            this.processHorarios(horarios);
+          }
+        } catch (error) {
+          console.error('Error al obtener horarios del maestro:', error);
+        } finally {
+          this.isLoading = false;
         }
-        this.attendanceStatus[group.id][key] = "pendiente"
-      })
-    })
+      } else {
+        console.error('No se pudo obtener el ID del maestro actual');
+        this.isLoading = false;
+      }
+    } catch (error) {
+      console.error('Error al obtener carreras:', error);
+      this.isLoading = false;
+    }
+
+    // Inicializar estado de asistencia para todas las clases del día actual
+    this.initializeAttendanceStatus();
+  }
+
+  // Método para mapear las carreras de la API al formato del componente
+  mapCarreras(): void {
+    if (!this.rawCarreras || this.rawCarreras.length === 0) {
+      return;
+    }
+
+    this.careers = this.rawCarreras.map(carrera => {
+      // Determinar el id según el nombre
+      let careerId = 'unknown';
+      const carreraNombre = carrera.nombre.toLowerCase();
+
+      if (carreraNombre.includes('sistemas')) {
+        careerId = 'ing-sistemas';
+      } else if (carreraNombre.includes('industrial')) {
+        careerId = 'ing-industrial';
+      } else if (carreraNombre.includes('mecatrónica') || carreraNombre.includes('mecatronica')) {
+        careerId = 'ing-mecatronica';
+      } else if (carreraNombre.includes('administración') || carreraNombre.includes('administracion')) {
+        careerId = 'lic-administracion';
+      } else {
+        // Para cualquier otra carrera, usar el ID como identificador
+        careerId = `carrera-${carrera.id}`;
+      }
+
+      return {
+        id: careerId,
+        name: carrera.nombre.trim()
+      };
+    });
+
+    console.log('Carreras mapeadas:', this.careers);
+  }
+
+  processHorarios(horarios: any[]): void {
+    // Crear mapa para agrupar por carrera y grupo
+    const groupMap: Map<string, GroupInfo> = new Map();
+
+    horarios.forEach(horario => {
+      // Determinar careerID basado en la carrera del horario
+      let careerId = 'unknown';
+      if (horario.carreras) {
+        // Usar el mapeo de carreras para encontrar el careerId
+        const carreraEncontrada = this.careers.find(
+          c => c.name.toLowerCase() === horario.carreras?.nombre?.toLowerCase().trim()
+        );
+
+        if (carreraEncontrada) {
+          careerId = carreraEncontrada.id;
+        } else {
+          // Si no se encuentra, usar el método anterior
+          const carreraNombre = horario.carreras.nombre || '';
+          if (carreraNombre.toLowerCase().includes('sistemas')) {
+            careerId = 'ing-sistemas';
+          } else if (carreraNombre.toLowerCase().includes('industrial')) {
+            careerId = 'ing-industrial';
+          } else if (carreraNombre.toLowerCase().includes('mecatrónica') ||
+            carreraNombre.toLowerCase().includes('mecatronica')) {
+            careerId = 'ing-mecatronica';
+          } else if (carreraNombre.toLowerCase().includes('administración') ||
+            carreraNombre.toLowerCase().includes('administracion')) {
+            careerId = 'lic-administracion';
+          } else {
+            // Para cualquier otra carrera, usar el ID como identificador
+            careerId = `carrera-${horario.carreras.id}`;
+          }
+        }
+      }
+
+      // Crear ID para el grupo
+      const groupName = horario.grupo?.name || 'default';
+      const groupId = `${careerId}-${groupName}`;
+
+      // Obtener o crear el grupo en el mapa
+      if (!groupMap.has(groupId)) {
+        groupMap.set(groupId, {
+          id: groupId,
+          name: groupName,
+          career: careerId,
+          classes: []
+        });
+      }
+
+      // Preparar el horario en formato compatible con el componente
+      const group = groupMap.get(groupId);
+      if (group) {
+        group.classes.push({
+          id: horario.id,
+          time: `${horario.hora_inicio?.slice(0, 5) || '00:00'} - ${horario.hora_fin?.slice(0, 5) || '00:00'}`,
+          subject: horario.materias?.name || 'Sin materia',
+          teacher: horario.maestro?.name || 'Sin profesor',
+          classroom: horario.aulas?.aula || 'Sin aula',
+          group: groupName,
+          // Guardar el día de la semana para esta clase
+          dayOfWeek: horario.dia || ''
+        });
+      }
+    });
+
+    // Convertir el mapa de grupos a un array
+    const processedGroups = Array.from(groupMap.values());
+    console.log('Grupos procesados para UI:', processedGroups);
+
+    // Reemplazar los datos de prueba con los datos reales
+    this.groupsData = processedGroups;
+
+    // Actualizar las opciones de filtrado para los nuevos datos
+    this.extractFilterOptions();
+  }
+
+  // Inicializar el estado de asistencia
+  initializeAttendanceStatus(): void {
+    // Limpiar estados previos
+    this.attendanceStatus = {};
+    
+    this.groupsData.forEach((group) => {
+      if (!this.attendanceStatus[group.id]) {
+        this.attendanceStatus[group.id] = {};
+      }
+      
+      group.classes.forEach((classItem) => {
+        // Solo inicializar para el día actual
+        const key = `${classItem.id}-${this.currentDayName}`;
+        this.attendanceStatus[group.id][key] = "pendiente";
+      });
+    });
   }
 
   extractFilterOptions(): void {
     // Extract unique classrooms
-    const classrooms = new Set<string>()
+    const classrooms = new Set<string>();
     // Extract unique groups
-    const groups = new Set<string>()
+    const groups = new Set<string>();
 
     this.groupsData.forEach((group) => {
       // Add group name to groups set
-      groups.add(group.name)
+      groups.add(group.name);
 
       group.classes.forEach((classItem) => {
-        classrooms.add(classItem.classroom)
-      })
-    })
+        classrooms.add(classItem.classroom);
+      });
+    });
 
-    this.classroomOptions = Array.from(classrooms).sort()
-    this.groupOptions = Array.from(groups).sort()
+    this.classroomOptions = Array.from(classrooms).sort();
+    this.groupOptions = Array.from(groups).sort();
   }
 
   getCurrentWeekInfo(): WeekInfo {
@@ -251,7 +389,7 @@ export class MaestroHorariosComponent implements OnInit {
   resetFilters(): void {
     this.filters = {
       classroom: "",
-      group: "", // Changed from teacher to group
+      group: "",
       career: "",
     }
   }
@@ -303,13 +441,6 @@ export class MaestroHorariosComponent implements OnInit {
 
   getCareerName(careerId: string): string {
     const career = this.careers.find((c) => c.id === careerId)
-    return career ? career.name : ""
-  }
-
-  saveAttendance(): void {
-    console.log("Saving attendance for all groups:", this.attendanceStatus)
-    // Here you would typically send the data to a backend service
-    alert("Asistencias guardadas correctamente")
+    return career ? career.name : "Carrera no especificada"
   }
 }
-

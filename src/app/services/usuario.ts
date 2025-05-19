@@ -24,6 +24,27 @@ export const usuariosService = {
     return data as Usuario;
   },
 
+  // Añadir este método al objeto usuariosService
+  async getByNumeroCuenta(numeroCuenta: string): Promise<Usuario | null> {
+    try {
+      const { data, error } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('numero_cuenta', numeroCuenta)
+        .single();
+
+      if (error) {
+        console.error('Error al buscar usuario por número de cuenta:', error.message);
+        return null;
+      }
+
+      return data as Usuario;
+    } catch (error) {
+      console.error('Error inesperado al buscar usuario por número de cuenta:', error);
+      return null;
+    }
+  },
+
   async create(usuario: Usuario): Promise<Usuario> {
     const { data, error } = await supabase
       .from('usuarios')

@@ -1,10 +1,11 @@
 // Interfaces para los tipos de datos
 export interface Usuario {
-  id?: number;
+  id: number;
   name: string;
   email: string;
   password: string;
   role: 'Alumno' | 'Jefe de grupo' | 'Checador' | 'Maestro' | 'Administrador';
+  numero_cuenta?: string;
 }
 
 export interface Grupo {
@@ -23,15 +24,66 @@ export interface Materia {
   temario_url?: string;
 }
 
+export interface Facultades {
+  id: number;
+  nombre: string;
+}
+
+export interface Edificios {
+  id: number;
+  nombre: string;
+  facultad_id: number;
+}
+
+export interface Aulas {
+  id: number;
+  aula: string;
+  edificio_id: number;
+}
+
 export interface Carrera {
-  id?: number;
+  id: number;
   nombre: string;
   semestres: number;
   plan: number;
 }
 
+export interface HorarioMaestro2 {
+
+  id: number;
+  maestro_id: number;
+  materia_id: number;
+  grupo_id: number;
+  dia: string;
+  hora?: string;
+  asistencia?: boolean;
+  hora_inicio: string;
+  hora_fin: string;
+  maestro?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  materias?: {
+    id: number;
+    name: string;
+  };
+  grupo?: {
+    id: number;
+    name: string;
+  };
+  aulas?: {
+    id: number;
+    aula: string;
+  };
+  carreras?: {
+    id: number;
+    nombre: string;
+  };
+}
+
 export interface HorarioMaestro {
-  id?: number;
+  id: number;
   maestro_id: number;
   materia_id: number;
   grupo_id: number;
@@ -40,6 +92,14 @@ export interface HorarioMaestro {
   hora_inicio: string;
   hora_fin: string;
   asistencia?: boolean;
+}
+
+export interface Asistencia2 {
+  id: number;
+  horario_id: number;
+  fecha?: string;
+  asistencia?: boolean;
+  id_user: number;
 }
 
 export interface Asistencia {
