@@ -1,170 +1,146 @@
-<div class="p-6 bg-gray-50 min-h-screen">
-    <h2 class="text-2xl font-semibold text-gray-800 mb-6 justify-center">Horarios de la Facultad de Ingeniería Mochis<h2>
-    <!-- Botón para regresar -->
-    <div class="mb-4">
-      <button onclick="window.history.back()"
-          class="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800 transition duration-300">
-          ← Regresar
-      </button>
+<div class="w-full max-w-7xl mx-auto bg-white rounded-lg shadow-md">
+  <!-- Back button -->
+  <div class="p-4 flex items-center">
+    <button (click)="navigateToHome()" class="flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-left">
+        <path d="m12 19-7-7 7-7"></path>
+        <path d="M19 12H5"></path>
+      </svg>
+      Regresar
+    </button>
+  </div>
+
+  <!-- Header -->
+  <div class="p-4 bg-blue-50 border-b border-gray-200 rounded-t-lg">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-center gap-4">
+      <h2 class="text-xl font-semibold text-gray-800">Horarios de la Facultad de Ingeniería Mochis</h2>
     </div>
-  
-    <!-- Tabla de horarios -->
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-      <!-- Cabecera de la tabla -->
-      <div class="px-4 py-5 sm:px-6 bg-gradient-to-r from-indigo-600 to-indigo-500">
-        <h3 class="text-lg leading-6 font-medium text-white">
-          
-        <!-- Filtros -->
-        <div class="grid grid-cols-3 gap-4 mb-4 text-white" >
-          <!-- Carrera -->
-          <select [(ngModel)]="carrera" class="border p-2 rounded text-black">Carreras
-            <option value="">Todas las Carreras</option>
-            @for (c of carreras; track c) {
-              <option [value]="c">{{ c }}</option>
-            }
-          </select>
 
-          <!-- Grupo -->
-          <select [(ngModel)]="grupo" class="border p-2 rounded text-black">
-            <option value="">Todos los Grupos</option>
-            @for (g of grupos; track g) {
-              <option [value]="g">{{ g }}</option>
-            }
-          </select>
-
-          <!-- Maestro -->
-          <select [(ngModel)]="maestro" class="border p-2 rounded text-black">
-            <option value="">Todos los Maestros</option>
-            @for (m of maestros; track m) {
-              <option [value]="m">{{ m }}</option>
-            }
-          </select>
+    <!-- Current Date Information -->
+    <div class="mt-4 pt-4 border-t border-gray-200">
+      <div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-6">
+        <div class="text-lg font-medium text-gray-800">
+          Fecha actual: <span class="text-blue-600">{{ formattedDate }}</span>
         </div>
-
-        <!-- Botón para borrar filtros -->
-        <div class="text-center mb-6">
-          <button (click)="borrarFiltros()"
-            class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition duration-300">
-            Borrar Filtros
-          </button>
-        </div>
-        </h3>
-
       </div>
-      <!-- Contenido de la tabla -->
-      <div class="p-4 overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <!-- Encabezado -->
-          <thead class="bg-gray-100">
-            <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Hora
-              </th>
-              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Lunes
-              </th>
-              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Martes
-              </th>
-              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Miércoles
-              </th>
-              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Jueves
-              </th>
-              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Viernes
+    </div>
+
+    <!-- Filters -->
+    <div class="mt-4 pt-4 border-t border-gray-200">
+      <h3 class="font-medium text-gray-700 mb-3">Filtros:</h3>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- Classroom filter -->
+        <div class="flex flex-col gap-1">
+          <label for="classroom-filter" class="text-sm text-gray-600">Aula:</label>
+          <select id="classroom-filter" [(ngModel)]="filters.classroom" (ngModelChange)="onFilterChange()"
+            class="p-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <option value="">Todas las aulas</option>
+            <option *ngFor="let classroom of classroomOptions" [value]="classroom">{{ classroom }}</option>
+          </select>
+        </div>
+
+        <!-- Teacher filter -->
+        <div class="flex flex-col gap-1">
+          <label for="teacher-filter" class="text-sm text-gray-600">Maestro:</label>
+          <select id="teacher-filter" [(ngModel)]="filters.teacher" (ngModelChange)="onFilterChange()"
+            class="p-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <option value="">Todos los maestros</option>
+            <option *ngFor="let teacher of teacherOptions" [value]="teacher">{{ teacher }}</option>
+          </select>
+        </div>
+
+        <!-- Career filter -->
+        <div class="flex flex-col gap-1">
+          <label for="career-filter" class="text-sm text-gray-600">Carrera:</label>
+          <select id="career-filter" [(ngModel)]="filters.career" (ngModelChange)="onFilterChange()"
+            class="p-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <option value="">Todas las carreras</option>
+            <option *ngFor="let career of careers" [value]="career.id">{{ career.name }}</option>
+          </select>
+        </div>
+
+        <!-- Time filter -->
+        <div class="flex flex-col gap-1">
+          <label for="time-filter" class="text-sm text-gray-600">Horario:</label>
+          <select id="time-filter" [(ngModel)]="filters.time" (ngModelChange)="onFilterChange()"
+            class="p-2 border border-gray-300 rounded-md bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <option value="">Todos los horarios</option>
+            <option *ngFor="let time of timeOptions" [value]="time">{{ time }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Reset Filters Button -->
+      <div class="mt-3 flex justify-end">
+        <button type="button" (click)="resetFilters()"
+          class="px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          Limpiar filtros
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spinner para cuando está cargando los datos -->
+  <div *ngIf="isLoading" class="flex flex-col items-center justify-center p-12">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600"></div>
+    <p class="mt-4 text-lg text-gray-600">Cargando horarios...</p>
+  </div>
+
+  <!-- Mensaje cuando no hay datos -->
+  <div *ngIf="!isLoading && groupsData.length === 0" class="p-8 text-center">
+    <p class="text-lg text-gray-500">No se encontraron horarios con los filtros seleccionados.</p>
+    <button (click)="resetFilters()" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+      Limpiar filtros
+    </button>
+  </div>
+
+  <!-- Horarios agrupados -->
+  <div *ngIf="!isLoading && groupsData.length > 0">
+    <div *ngFor="let group of groupsData" class="mb-8 border-b border-gray-200 last:border-b-0">
+      <!-- Group header -->
+      <div class="p-4 bg-gray-50 border-b border-gray-200">
+        <div class="flex flex-col md:flex-row md:items-center gap-2 md:gap-6">
+          <div>
+            <span class="font-medium text-gray-700">Carrera:</span>
+            <span class="ml-2 text-gray-800">{{ getCareerName(group.career) }}</span>
+          </div>
+          <div>
+            <span class="font-medium text-gray-700">Grupo:</span>
+            <span class="ml-2 text-gray-800">{{ group.name }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reemplazar la sección de la tabla con una nueva estructura -->
+      <!-- Group table -->
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="bg-gray-100">
+              <th class="p-3 text-left font-medium text-gray-700 border-b border-gray-200">Hora</th>
+              <th *ngFor="let day of diasSemana" class="p-3 text-center font-medium text-gray-700 border-b border-gray-200">
+                {{ day }}
               </th>
             </tr>
           </thead>
-          <!-- Cuerpo -->
-          <tbody class="bg-white divide-y divide-gray-200">
-            <!-- Renglón de ejemplo: 8:00 - 9:00 -->
-            <tr>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                8:00 - 9:00
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                <!-- Tarjeta para mostrar asignatura -->
-                <div
-                  class="bg-indigo-50 rounded-lg p-3 shadow hover:shadow-lg transition-shadow duration-200 inline-block cursor-pointer"
-                  title="Edición: Matemáticas - Grupo 3A, Aula 101">
-                  <div class="text-sm font-semibold text-indigo-800">Matemáticas</div>
-                  <div class="text-xs text-indigo-600 mt-1">Grupo 3A</div>
-                  <div class="text-xs text-indigo-500 mt-1 flex items-center justify-center">
-                    <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                      stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Aula 101
-                  </div>
+          <tbody>
+            <tr *ngFor="let time of getUniqueTimesForGroup(group)" class="hover:bg-gray-50">
+              <td class="p-3 font-medium text-gray-700 border-b border-gray-200">{{ time }}</td>
+              <td *ngFor="let day of diasSemana" class="p-3 text-center border-b border-gray-200">
+                <div *ngIf="getClassForTimeAndDay(group, time, day) as classItem" class="text-sm">
+                  <div class="font-medium text-blue-700">{{ classItem.subject }}</div>
+                  <div class="text-gray-600">{{ classItem.teacher }}</div>
+                  <div class="text-gray-500">{{ classItem.classroom }}</div>
                 </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                <!-- Sin horario -->
-                <span class="text-xs text-gray-400">-</span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                <div
-                  class="bg-purple-50 rounded-lg p-3 shadow hover:shadow-lg transition-shadow duration-200 inline-block cursor-pointer"
-                  title="Edición: Física - Grupo 2B, Aula 203">
-                  <div class="text-sm font-semibold text-purple-800">Física</div>
-                  <div class="text-xs text-purple-600 mt-1">Grupo 2B</div>
-                  <div class="text-xs text-purple-500 mt-1 flex items-center justify-center">
-                    <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                      stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Aula 203
-                  </div>
-                </div>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                <!-- Sin horario -->
-                <span class="text-xs text-gray-400">-</span>
-              </td>
-              <td class="px-6 py-4 whitespace-nowrap text-center">
-                <!-- Tarjeta vacía o de otro bloque -->
-                <span class="text-xs text-gray-400">-</span>
               </td>
             </tr>
-            <!-- Agrega más renglones para los otros horarios (9:00-10:00, 10:00-11:00, etc.) -->
-            <tr>
-              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                9:00 - 10:00
-              </td>
-              <td class="px-6 py-4 text-center">
-                <span class="text-xs text-gray-400">-</span>
-              </td>
-              <td class="px-6 py-4 text-center">
-                <div
-                  class="bg-emerald-50 rounded-lg p-3 shadow hover:shadow-lg transition-shadow duration-200 inline-block cursor-pointer"
-                  title="Edición: Química - Grupo 3B, Aula 102">
-                  <div class="text-sm font-semibold text-emerald-800">Química</div>
-                  <div class="text-xs text-emerald-600 mt-1">Grupo 3B</div>
-                  <div class="text-xs text-emerald-500 mt-1 flex items-center justify-center">
-                    <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                      stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    Aula 102
-                  </div>
-                </div>
-              </td>
-              <td class="px-6 py-4 text-center">
-                <span class="text-xs text-gray-400">-</span>
-              </td>
-              <td class="px-6 py-4 text-center">
-                <span class="text-xs text-gray-400">-</span>
-              </td>
-              <td class="px-6 py-4 text-center">
-                <span class="text-xs text-gray-400">-</span>
-              </td>
+            <tr *ngIf="getUniqueTimesForGroup(group).length === 0">
+              <td [attr.colspan]="diasSemana.length + 1" class="p-3 text-center text-gray-400">Sin horarios disponibles</td>
             </tr>
           </tbody>
         </table>
+      </div>
     </div>
+  </div>
 </div>
