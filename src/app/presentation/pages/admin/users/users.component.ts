@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { User } from '@domain/models/user.model';
-import { UserService } from '@infrastructure/admin/users.service';
+import { usuariosService } from 'src/app/services/usuario'; // Ajusta path según estructura
+import type { Usuario } from 'src/app/services/interfaces'; // Asegúrate de que la interfaz exista
 
 @Component({
   selector: 'app-users',
@@ -12,10 +12,10 @@ import { UserService } from '@infrastructure/admin/users.service';
   styleUrls: ['./users.component.css']
 })
 export class UsersComponent implements OnInit {
-  users: User[] = [];
-  filteredUsers: User[] = [];
+  users: Usuario[] = [];
+  filteredUsers: Usuario[] = [];
   userForm!: FormGroup;
-  
+
   showFormModal = false;
   showDeleteModal = false;
   editMode = false;
@@ -23,7 +23,7 @@ export class UsersComponent implements OnInit {
   pageSize = 7;
   totalPages = 1;
   searchTerm = '';
-  userIdToDelete: string | null = null;
+  userIdToDelete: number | null = null;
   isLoading = false;
 
   roles = [
@@ -31,38 +31,32 @@ export class UsersComponent implements OnInit {
     { value: 'alumno', label: 'Alumno' },
     { value: 'admin', label: 'Administrador' }
   ];
+error: any;
 
-  constructor(
-    private fb: FormBuilder,
-    private userService: UserService
-  ) { }
+  constructor(private fb: FormBuilder) {}
 
   ngOnInit(): void {
     this.loadUsers();
     this.initForm();
   }
 
-  loadUsers(): void {
-    this.isLoading = true;
-    this.userService.getAll().subscribe({
-      next: (data) => {
-        this.users = data;
-        this.applyFilters();
-        this.isLoading = false;
-        console.log(this.users);
-      },
-      error: (error) => {
-        console.error('Error loading users:', error);
-        this.isLoading = false;
-      }
-    });
+  async loadUsers(): Promise<void> {
+    try {
+      this.isLoading = true;
+      this.users = await usuariosService.getAll();
+      this.applyFilters();
+    } catch (error) {
+      console.error('Error loading users:', error);
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   initForm(): void {
     this.userForm = this.fb.group({
       id: [''],
       user: ['', [Validators.required, Validators.minLength(3)]],
-      password: ['', this.editMode ? [] : [Validators.required, Validators.minLength(6)]],
+      password: ['', [Validators.minLength(6)]],
       rol: ['', Validators.required],
       status: [true],
       nombre: ['', Validators.required],
@@ -75,54 +69,33 @@ export class UsersComponent implements OnInit {
 
   applyFilters(): void {
     let filtered = [...this.users];
-    
-    // Apply search filter
     if (this.searchTerm.trim()) {
       const term = this.searchTerm.toLowerCase();
-      filtered = filtered.filter(user => 
-        user.user.toLowerCase().includes(term) || 
-        (user.nombre && user.nombre.toLowerCase().includes(term)) ||
-        (user.apellidoPaterno && user.apellidoPaterno.toLowerCase().includes(term))
+      filtered = filtered.filter(user =>
+        user.nombre?.toLowerCase().includes(term) ||
+        user.apellidoPaterno?.toLowerCase().includes(term)
       );
     }
-    
-    // Update pagination
+
     this.totalPages = Math.ceil(filtered.length / this.pageSize);
-    
-    // Reset to first page if current page is out of bounds
-    if (this.currentPage > this.totalPages) {
-      this.currentPage = 1;
-    }
-    
-    // Apply pagination
+    if (this.currentPage > this.totalPages) this.currentPage = 1;
+
     const startIndex = (this.currentPage - 1) * this.pageSize;
-    const endIndex = startIndex + this.pageSize;
-    this.filteredUsers = filtered.slice(startIndex, endIndex);
+    this.filteredUsers = filtered.slice(startIndex, startIndex + this.pageSize);
   }
 
   onCreate(): void {
     this.editMode = false;
-    this.userForm.reset({
-      status: true,
-      rol: ''
-    });
+    this.userForm.reset({ status: true, rol: '' });
     this.showFormModal = true;
   }
 
-  openFormModal(user?: User): void {
-    if (user) {
-      this.editMode = true;
-      this.userForm.patchValue({
-        ...user,
-        password: '' // Don't show the password
-      });
-    } else {
-      this.editMode = false;
-      this.userForm.reset({
-        status: true,
-        rol: ''
-      });
-    }
+  openFormModal(user?: Usuario): void {
+    this.editMode = !!user;
+    this.userForm.reset({
+      ...user,
+      password: '', // Vaciar password al editar
+    });
     this.showFormModal = true;
   }
 
@@ -130,52 +103,33 @@ export class UsersComponent implements OnInit {
     this.showFormModal = false;
   }
 
-  onSubmitForm(): void {
+  async onSubmitForm(): Promise<void> {
     if (this.userForm.invalid) {
-      // Mark all fields as touched to show validation errors
-      Object.keys(this.userForm.controls).forEach(key => {
-        const control = this.userForm.get(key);
-        control?.markAsTouched();
-      });
+      Object.values(this.userForm.controls).forEach(c => c.markAsTouched());
       return;
     }
 
     const userData = this.userForm.value;
     this.isLoading = true;
 
-    if (this.editMode) {
-      // If editing and no new password is provided, remove it from the data
-      if (!userData.password) {
-        delete userData.password;
+    try {
+      if (this.editMode) {
+        if (!userData.password) delete userData.password;
+        await usuariosService.update(userData.id, userData);
+      } else {
+        await usuariosService.create(userData);
       }
-      
-      this.userService.update(userData.id, userData).subscribe({
-        next: () => {
-          this.loadUsers();
-          this.closeFormModal();
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Error updating user:', error);
-          this.isLoading = false;
-        }
-      });
-    } else {
-      this.userService.create(userData).subscribe({
-        next: () => {
-          this.loadUsers();
-          this.closeFormModal();
-          this.isLoading = false;
-        },
-        error: (error) => {
-          console.error('Error creating user:', error);
-          this.isLoading = false;
-        }
-      });
+
+      await this.loadUsers();
+      this.closeFormModal();
+    } catch (error) {
+      console.error(this.editMode ? 'Error updating user:' : 'Error creating user:', error);
+    } finally {
+      this.isLoading = false;
     }
   }
 
-  confirmDelete(id: string): void {
+  confirmDelete(id: number): void {
     this.userIdToDelete = id;
     this.showDeleteModal = true;
   }
@@ -185,19 +139,17 @@ export class UsersComponent implements OnInit {
     this.showDeleteModal = false;
   }
 
-  onDelete(id: string): void {
+  async onDelete(id: number): Promise<void> {
     this.isLoading = true;
-    this.userService.delete(id).subscribe({
-      next: () => {
-        this.loadUsers();
-        this.showDeleteModal = false;
-        this.isLoading = false;
-      },
-      error: (error) => {
-        console.error('Error deleting user:', error);
-        this.isLoading = false;
-      }
-    });
+    try {
+      await usuariosService.delete(id);
+      await this.loadUsers();
+      this.showDeleteModal = false;
+    } catch (error) {
+      console.error('Error deleting user:', error);
+    } finally {
+      this.isLoading = false;
+    }
   }
 
   prevPage(): void {
@@ -213,4 +165,4 @@ export class UsersComponent implements OnInit {
       this.applyFilters();
     }
   }
-} 
+}

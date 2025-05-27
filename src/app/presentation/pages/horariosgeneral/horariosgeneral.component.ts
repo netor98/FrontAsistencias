@@ -69,11 +69,11 @@ export class HorariosgeneralComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     this.isLoading = true
     try {
-      // Cargar datos reales
       await this.loadCarreras()
       await this.loadHorarios()
     } catch (error) {
       console.error("Error al cargar datos:", error)
+      this.groupsData = []
     } finally {
       this.isLoading = false
     }
@@ -81,15 +81,17 @@ export class HorariosgeneralComponent implements OnInit {
 
   async loadCarreras(): Promise<void> {
     try {
+      console.log("Cargando carreras...")
       const carreras = await carrerasServiceSupa.getAll()
+
       if (carreras && carreras.length > 0) {
         this.careers = carreras.map((carrera: any) => ({
           id: carrera.id.toString(),
           name: carrera.nombre ? carrera.nombre.trim() : `Carrera ${carrera.id}`,
         }))
-        console.log("Carreras cargadas:", this.careers)
+        console.log("Carreras cargadas:", this.careers.length)
       } else {
-        console.warn("No se encontraron carreras en la base de datos")
+        console.warn("No se encontraron carreras")
       }
     } catch (error) {
       console.error("Error al cargar carreras:", error)
@@ -98,63 +100,72 @@ export class HorariosgeneralComponent implements OnInit {
 
   async loadHorarios(): Promise<void> {
     try {
-      // Usar el método getAll2() que carga las relaciones completas
-      let horarios
-      try {
-        console.log("Cargando horarios con relaciones completas...")
-        horarios = await horariosService.getAll2()
-      } catch (supabaseError) {
-        console.warn("Error de Supabase, intentando nuevamente:", supabaseError)
-        await new Promise((resolve) => setTimeout(resolve, 1000))
-        horarios = await horariosService.getAll2()
-      }
+      console.log("=== INICIANDO CARGA DE HORARIOS ===")
+
+      // Usar el método getAll2() que ya tiene las relaciones
+      const horarios = await horariosService.getAll2()
+
+      console.log(`Horarios recibidos: ${horarios?.length || 0}`)
 
       if (!horarios || horarios.length === 0) {
         console.warn("No se encontraron horarios en la base de datos")
-
+        this.groupsData = []
         return
       }
 
-      console.log("Horarios cargados con relaciones:", horarios)
-      console.log("Primer horario con relaciones:", horarios[0])
+      console.log("Primer horario recibido:", horarios[0])
 
       // Procesar los horarios
-      this.processHorarios(horarios)
+      await this.processHorariosWithRelations(horarios)
     } catch (error) {
       console.error("Error al cargar horarios:", error)
-
+      this.groupsData = []
     }
   }
 
-  // Método simplificado para procesar horarios con relaciones completas
-  processHorarios(horarios: any[]): void {
+  async processHorariosWithRelations(horarios: any[]): Promise<void> {
     try {
-      console.log("=== PROCESANDO HORARIOS CON RELACIONES ===")
-      console.log("Total de horarios:", horarios.length)
+      console.log("=== PROCESANDO HORARIOS ===")
+      console.log(`Total horarios a procesar: ${horarios.length}`)
 
       const groupMap: Map<string, GroupInfo> = new Map()
       const classrooms = new Set<string>()
       const teachers = new Set<string>()
       const times = new Set<string>()
 
-      for (const horario of horarios) {
-        console.log("Procesando horario:", horario)
+      for (const [index, horario] of horarios.entries()) {
+        console.log(`\n--- Procesando horario ${index + 1}/${horarios.length} ---`)
+        console.log("Horario raw:", {
+          id: horario.id,
+          dia: horario.dia,
+          hora_inicio: horario.hora_inicio,
+          hora_fin: horario.hora_fin,
+          maestro_id: horario.maestro_id,
+          materia_id: horario.materia_id,
+          grupo_id: horario.grupo_id,
+          aula_id: horario.aula_id,
+        })
 
         if (!horario.id) {
-          console.warn("Horario sin ID, saltando")
+          console.warn(`Horario ${index + 1} no tiene ID, saltando...`)
           continue
         }
 
-        // Extraer datos del grupo
+        // Extraer información del grupo
         const grupoName = horario.grupo?.name || `Grupo ${horario.grupo_id || "Sin ID"}`
+        console.log("Grupo extraído:", grupoName)
 
-        // Extraer carrera ID desde las relaciones
+        // Extraer carrera ID
         let carreraId = "0"
         if (horario.carreras?.id) {
           carreraId = horario.carreras.id.toString()
+        } else if (horario.grupo?.carrera_id) {
+          carreraId = horario.grupo.carrera_id.toString()
         }
+        console.log("Carrera ID extraído:", carreraId)
 
         const groupId = `${carreraId}-${grupoName}`
+        console.log("Group ID generado:", groupId)
 
         // Crear grupo si no existe
         if (!groupMap.has(groupId)) {
@@ -164,57 +175,50 @@ export class HorariosgeneralComponent implements OnInit {
             career: carreraId,
             classes: [],
           })
-          console.log("✅ Grupo creado:", groupId)
+          console.log(`Nuevo grupo creado: ${groupId}`)
         }
 
-        const group = groupMap.get(groupId)
-        if (group) {
-          // Formatear horarios
-          const horaInicio = this.formatTime(horario.hora_inicio || "07:00")
-          const horaFin = this.formatTime(horario.hora_fin || "08:30")
-          const time = `${horaInicio} - ${horaFin}`
+        const group = groupMap.get(groupId)!
 
-          // Normalizar día
-          const day = horario.dia ? horario.dia.charAt(0).toUpperCase() + horario.dia.slice(1).toLowerCase() : "Lunes"
+        // Formatear tiempo
+        const horaInicio = this.formatTime(horario.hora_inicio)
+        const horaFin = this.formatTime(horario.hora_fin)
+        const time = `${horaInicio} - ${horaFin}`
+        console.log("Tiempo formateado:", time)
 
-          // Extraer información desde las relaciones
-          const subject = horario.materias?.name || "Sin materia"
-          const teacher = horario.maestro?.name || "Sin profesor"
-          const classroom = horario.aulas?.aula || "Sin aula"
+        // Normalizar día
+        const day = this.normalizeDayName(horario.dia)
+        console.log("Día normalizado:", day)
 
-          const classItem: ClassItem = {
-            id: horario.id,
-            time,
-            subject,
-            teacher,
-            classroom,
-            day,
-          }
+        // Extraer datos de las relaciones
+        const subject = horario.materias?.name || "Sin materia"
+        const teacher = horario.maestro?.name || "Sin profesor"
+        const classroom = horario.aulas?.aula || "Sin aula"
 
-          group.classes.push(classItem)
+        console.log("Datos extraídos:", { subject, teacher, classroom })
 
-          // Agregar a opciones de filtro solo si tienen valores válidos
-          if (classroom && classroom !== "Sin aula") classrooms.add(classroom)
-          if (teacher && teacher !== "Sin profesor") teachers.add(teacher)
-          times.add(time)
-
-          console.log("✅ Clase procesada:", classItem)
+        const classItem: ClassItem = {
+          id: horario.id,
+          time,
+          subject,
+          teacher,
+          classroom,
+          day,
         }
+
+        group.classes.push(classItem)
+
+        // Agregar a opciones de filtro
+        if (classroom !== "Sin aula") classrooms.add(classroom)
+        if (teacher !== "Sin profesor") teachers.add(teacher)
+        times.add(time)
+
+        console.log(`✓ Procesado: ${subject} - ${teacher} - ${classroom} - ${day} ${time}`)
       }
 
       // Guardar datos
       this.originalGroupsData = Array.from(groupMap.values())
       this.groupsData = JSON.parse(JSON.stringify(this.originalGroupsData))
-
-      console.log("=== RESUMEN FINAL ===")
-      console.log("Grupos procesados:", this.originalGroupsData.length)
-      console.log("Datos finales:", this.originalGroupsData)
-
-      if (this.originalGroupsData.length === 0) {
-        console.warn("No se procesaron datos, cargando ejemplos")
-
-        return
-      }
 
       // Generar opciones de filtro
       this.classroomOptions = Array.from(classrooms).sort()
@@ -225,14 +229,58 @@ export class HorariosgeneralComponent implements OnInit {
         return timeA.localeCompare(timeB)
       })
 
-      console.log("=== OPCIONES DE FILTRO ===")
-      console.log("Aulas:", this.classroomOptions)
-      console.log("Maestros:", this.teacherOptions)
-      console.log("Horarios:", this.timeOptions)
+      console.log("=== RESUMEN FINAL ===")
+      console.log(`Grupos procesados: ${this.originalGroupsData.length}`)
+      console.log(`Aulas: ${this.classroomOptions.length}`)
+      console.log(`Maestros: ${this.teacherOptions.length}`)
+      console.log(`Horarios: ${this.timeOptions.length}`)
+
+      // Log de grupos creados
+      this.originalGroupsData.forEach((group) => {
+        console.log(`Grupo ${group.id}: ${group.classes.length} clases`)
+      })
     } catch (error) {
       console.error("Error al procesar horarios:", error)
-   
+      this.groupsData = []
     }
+  }
+
+  normalizeDayName(dia: string): string {
+    if (!dia) return "Lunes"
+
+    const dayMap: { [key: string]: string } = {
+      lunes: "Lunes",
+      martes: "Martes",
+      miercoles: "Miércoles",
+      miércoles: "Miércoles",
+      jueves: "Jueves",
+      viernes: "Viernes",
+      sabado: "Sábado",
+      sábado: "Sábado",
+      domingo: "Domingo",
+    }
+
+    const normalizedDay = dayMap[dia.toLowerCase()]
+    return normalizedDay || dia.charAt(0).toUpperCase() + dia.slice(1).toLowerCase()
+  }
+
+  formatTime(timeString: string): string {
+    if (!timeString) return "00:00"
+
+    // Si ya está en formato HH:MM
+    if (timeString.includes(":")) {
+      return timeString.slice(0, 5)
+    }
+
+    // Si es un número de segundos
+    const seconds = Number.parseInt(timeString, 10)
+    if (!isNaN(seconds)) {
+      const hours = Math.floor(seconds / 3600)
+      const minutes = Math.floor((seconds % 3600) / 60)
+      return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`
+    }
+
+    return timeString
   }
 
   applyFilters(): void {
@@ -271,30 +319,9 @@ export class HorariosgeneralComponent implements OnInit {
     this.groupsData = filteredGroups
   }
 
-  formatTime(timeString: string): string {
-    if (!timeString) return "00:00"
-
-    if (timeString.includes(":")) {
-      return timeString.slice(0, 5)
-    }
-
-    const seconds = Number.parseInt(timeString, 10)
-    if (!isNaN(seconds)) {
-      const hours = Math.floor(seconds / 3600)
-      const minutes = Math.floor((seconds % 3600) / 60)
-      return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`
-    }
-
-    return timeString
-  }
-
   getCareerName(careerId: string): string {
     const career = this.careers.find((c) => c.id === careerId)
     return career ? career.name : "Sin carrera"
-  }
-
-  getClassesForDay(group: GroupInfo, day: string): ClassItem[] {
-    return group.classes.filter((classItem) => classItem.day === day)
   }
 
   getUniqueTimesForGroup(group: GroupInfo): string[] {
@@ -330,6 +357,4 @@ export class HorariosgeneralComponent implements OnInit {
   navigateToHome(): void {
     this.router.navigate(["/"])
   }
-
-  
 }

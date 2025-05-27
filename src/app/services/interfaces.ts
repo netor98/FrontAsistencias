@@ -1,5 +1,10 @@
 // Interfaces para los tipos de datos
 export interface Usuario {
+  noControl: any;
+  status: any;
+  apellidoMaterno: any;
+  apellidoPaterno: any;
+  nombre: any;
   id: number;
   name: string;
   email: string;

@@ -226,7 +226,7 @@ export class AsistenciasComponent implements OnInit, OnDestroy {
         console.error('Error específico en la llamada a getAsistenciasByDateRange:', innerError);
         console.error('Stack trace:', innerError.stack);
       }
-      
+      // Log the number of records loaded
       console.log(`Data loaded: ${allChecador.length} checador records, ${allMaestro.length} maestro records, ${allJefe.length} jefe records`);
       
       // Store the results
@@ -868,6 +868,16 @@ export class AsistenciasComponent implements OnInit, OnDestroy {
     }
   }
   
+  // Returns the name of the selected teacher based on the maestroId in the form
+  getSelectedTeacherName(): string {
+    const maestroId = this.searchForm?.value?.maestroId;
+    if (!maestroId) {
+      return '';
+    }
+    const maestro = this.maestros?.find((m: any) => m.id === maestroId);
+    return maestro ? maestro.name : '';
+  }
+  
   prevPage(): void {
     if (this.currentPage > 1) {
       this.currentPage--;
@@ -959,4 +969,4 @@ export class AsistenciasComponent implements OnInit, OnDestroy {
     
     console.log('============================================================');
   }
-} 
+}
