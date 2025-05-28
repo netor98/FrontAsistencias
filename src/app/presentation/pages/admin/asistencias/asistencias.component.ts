@@ -104,8 +104,8 @@ export class AsistenciasComponent implements OnInit, OnDestroy {
   
   async loadTeachers(): Promise<void> {
     try {
-      // Get all horarios to extract unique teachers
-      const horarios = await horariosService.getAll();
+      // Get all horarios to extract unique teachers with complete information
+      const horarios = await horariosService.getAll2();
       
       // Load materias and grupos for reference
       this.materias = await materiasService.getAll();
@@ -114,13 +114,18 @@ export class AsistenciasComponent implements OnInit, OnDestroy {
       // Store horarios for later reference
       this.horarios = horarios;
       
-      // Extract unique maestro_ids
-      const maestroIds = new Set(horarios.map((h: any) => h.maestro_id));
+      // Extract unique maestro_ids and their names
+      const maestroMap = new Map();
+      horarios.forEach((h: any) => {
+        if (h.maestro && !maestroMap.has(h.maestro_id)) {
+          maestroMap.set(h.maestro_id, h.maestro);
+        }
+      });
       
       // Create maestros array with id and name for display
-      this.maestros = Array.from(maestroIds).map(id => ({
+      this.maestros = Array.from(maestroMap.entries()).map(([id, maestro]) => ({
         id,
-        name: `Profesor ID: ${id}`
+        name: maestro.name
       }));
       
     } catch (error) {
@@ -444,11 +449,12 @@ export class AsistenciasComponent implements OnInit, OnDestroy {
           grupo = grupoObj.name;
         }
         
-        // Store maestro_id
+        // Store maestro_id and name
         maestro_id = horario.maestro_id;
-        
-        // For simplicity, we'll use a placeholder for maestro name
-        maestro = `Profesor ID: ${horario.maestro_id}`;
+        const maestroObj = this.maestros.find(m => m.id === maestro_id);
+        if (maestroObj) {
+          maestro = maestroObj.name;
+        }
       }
     } catch (error) {
       console.error(`Error obtaining details for horario ${horario_id}:`, error);
