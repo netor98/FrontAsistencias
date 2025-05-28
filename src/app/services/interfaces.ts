@@ -9,7 +9,7 @@ export interface Usuario {
   name: string;
   email: string;
   password: string;
-  role: 'Alumno' | 'Jefe de grupo' | 'Checador' | 'Maestro' | 'Administrador';
+  role: 'Alumno' | 'Jefe_de_Grupo' | 'Checador' | 'Maestro' | 'Administrador';
   numero_cuenta?: string;
 }
 

@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { usuariosService } from 'src/app/services/usuario'; // Ajusta path según estructura
-import type { Usuario } from 'src/app/services/interfaces'; // Asegúrate de que la interfaz exista
+import { usuariosService } from 'src/app/services/usuario';
+import type { Usuario } from 'src/app/services/interfaces';
 
 @Component({
   selector: 'app-users',
@@ -27,11 +27,14 @@ export class UsersComponent implements OnInit {
   isLoading = false;
 
   roles = [
-    { value: 'profesor', label: 'Profesor' },
-    { value: 'alumno', label: 'Alumno' },
-    { value: 'admin', label: 'Administrador' }
+    { value: 'Alumno', label: 'Alumno' },
+    { value: 'Jefe_de_Grupo', label: 'Jefe de Grupo' },
+    { value: 'Checador', label: 'Checador' },
+    { value: 'Maestro', label: 'Maestro' },
+    { value: 'Administrador', label: 'Administrador' }
   ];
-error: any;
+
+  error: any;
 
   constructor(private fb: FormBuilder) {}
 
@@ -44,9 +47,11 @@ error: any;
     try {
       this.isLoading = true;
       this.users = await usuariosService.getAll();
+      console.log('Users loaded:', this.users);
       this.applyFilters();
     } catch (error) {
       console.error('Error loading users:', error);
+      this.error = 'Error al cargar los usuarios';
     } finally {
       this.isLoading = false;
     }
@@ -55,15 +60,11 @@ error: any;
   initForm(): void {
     this.userForm = this.fb.group({
       id: [''],
-      user: ['', [Validators.required, Validators.minLength(3)]],
+      name: ['', [Validators.required, Validators.minLength(3)]],
+      email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.minLength(6)]],
-      rol: ['', Validators.required],
-      status: [true],
-      nombre: ['', Validators.required],
-      apellidoPaterno: ['', Validators.required],
-      apellidoMaterno: ['', Validators.required],
-      noControl: [''],
-      carrera: ['']
+      role: ['', Validators.required],
+      numero_cuenta: ['', Validators.required]
     });
   }
 
@@ -72,8 +73,9 @@ error: any;
     if (this.searchTerm.trim()) {
       const term = this.searchTerm.toLowerCase();
       filtered = filtered.filter(user =>
-        user.nombre?.toLowerCase().includes(term) ||
-        user.apellidoPaterno?.toLowerCase().includes(term)
+        user.name?.toLowerCase().includes(term) ||
+        user.email?.toLowerCase().includes(term) ||
+        user.numero_cuenta?.toLowerCase().includes(term)
       );
     }
 
@@ -86,44 +88,82 @@ error: any;
 
   onCreate(): void {
     this.editMode = false;
-    this.userForm.reset({ status: true, rol: '' });
+    this.userForm.reset({
+      role: '',
+      password: ''
+    });
     this.showFormModal = true;
   }
 
   openFormModal(user?: Usuario): void {
-    this.editMode = !!user;
-    this.userForm.reset({
-      ...user,
-      password: '', // Vaciar password al editar
-    });
+    if (user) {
+      this.editMode = true;
+      this.userForm.patchValue({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        numero_cuenta: user.numero_cuenta
+      });
+      this.userForm.get('password')?.setValue('');
+    } else {
+      this.editMode = false;
+      this.userForm.reset({
+        role: '',
+        password: ''
+      });
+      this.userForm.get('password')?.setValidators([Validators.required, Validators.minLength(6)]);
+      this.userForm.get('password')?.updateValueAndValidity();
+    }
     this.showFormModal = true;
   }
 
   closeFormModal(): void {
     this.showFormModal = false;
+    this.error = null;
   }
 
   async onSubmitForm(): Promise<void> {
+    console.log('Form submitted, form valid:', this.userForm.valid);
+    console.log('Form values:', this.userForm.value);
+    console.log('Form errors:', this.userForm.errors);
+    console.log('Form controls:', this.userForm.controls);
+
     if (this.userForm.invalid) {
-      Object.values(this.userForm.controls).forEach(c => c.markAsTouched());
+      console.log('Form is invalid, marking all controls as touched');
+      Object.values(this.userForm.controls).forEach(c => {
+        c.markAsTouched();
+        console.log('Control:', c.value, 'Valid:', c.valid, 'Errors:', c.errors);
+      });
       return;
     }
 
-    const userData = this.userForm.value;
     this.isLoading = true;
-
     try {
-      if (this.editMode) {
-        if (!userData.password) delete userData.password;
-        await usuariosService.update(userData.id, userData);
-      } else {
-        await usuariosService.create(userData);
+      const userData = { ...this.userForm.value };
+      
+      if (this.editMode && !userData.password) {
+        delete userData.password;
       }
 
+      console.log('Submitting user data:', userData);
+      
+      if (this.editMode) {
+        console.log('Updating user with ID:', userData.id);
+        await usuariosService.update(userData.id, userData);
+      } else {
+        delete userData.id;
+        console.log('Creating new user');
+        const result = await usuariosService.create(userData);
+        console.log('User created:', result);
+      }
+
+      console.log('Reloading users list');
       await this.loadUsers();
       this.closeFormModal();
-    } catch (error) {
+    } catch (error: any) {
       console.error(this.editMode ? 'Error updating user:' : 'Error creating user:', error);
+      this.error = error.message || 'Error al guardar el usuario';
     } finally {
       this.isLoading = false;
     }
@@ -145,8 +185,9 @@ error: any;
       await usuariosService.delete(id);
       await this.loadUsers();
       this.showDeleteModal = false;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting user:', error);
+      this.error = error.message || 'Error al eliminar el usuario';
     } finally {
       this.isLoading = false;
     }

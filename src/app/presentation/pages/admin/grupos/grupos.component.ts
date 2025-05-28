@@ -78,10 +78,20 @@ export class GruposComponent implements OnInit {
 
   async loadUsuarios(): Promise<void> {
     try {
-      this.usuarios = await usuariosService.getAll();
-      console.log('Usuarios loaded:', this.usuarios);
+      const allUsers = await usuariosService.getAll();
+      console.log('All users loaded:', allUsers);
+      
+      // Filter only users with role "Jefe_de_Grupo"
+      this.usuarios = allUsers.filter(user => {
+        console.log('Checking user:', user);
+        const isJefe = user.role === 'Jefe_de_Grupo';
+        console.log('Is jefe?', isJefe, 'Role:', user.role);
+        return isJefe;
+      });
+      
+      console.log('Filtered jefes de grupo:', this.usuarios);
     } catch (error) {
-      console.error('Error loading usuarios:', error);
+      console.error('Error loading jefes de grupo:', error);
     }
   }
 
@@ -97,8 +107,8 @@ export class GruposComponent implements OnInit {
 
   getJefeNombre(jefeNoCuenta: string): string {
     if (!jefeNoCuenta) return 'N/A';
-    const jefe = this.usuarios.find(u => u.no_cuenta === jefeNoCuenta);
-    return jefe ? `${jefe.nombre} ${jefe.apellidoPaterno || ''}` : 'N/A';
+    const jefe = this.usuarios.find(u => u.numero_cuenta === jefeNoCuenta);
+    return jefe ? `${jefe.name} (${jefe.numero_cuenta})` : 'N/A';
   }
 
   initForm(): void {

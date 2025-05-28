@@ -59,7 +59,7 @@
     <tbody class="bg-white divide-y divide-gray-200">
       <tr *ngFor="let grupo of filteredGrupos">
         <td class="px-6 py-4 whitespace-nowrap text-sm">{{ grupo.name }}</td>
-        <td class="px-6 py-4 whitespace-nowrap text-sm">{{ grupo.jefe_nocuenta }}</td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm">{{ getJefeNombre(grupo.jefe_nocuenta) }}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">{{ getCarreraNombre(grupo.carrera_id) }}</td>
         <td class="px-6 py-4 whitespace-nowrap text-sm">{{ getAulaNombre(grupo.aula_id) }}</td>
         <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
@@ -147,8 +147,8 @@
         <label class="block text-sm font-medium text-gray-700 mb-1">Jefe de Grupo</label>
         <select formControlName="jefe_nocuenta" class="w-full p-2 border border-gray-300 rounded">
           <option [ngValue]="null">Seleccione un jefe</option>
-          <option *ngFor="let usuario of usuarios" [ngValue]="usuario.no_cuenta">
-            {{ usuario.nombre }} {{ usuario.apellidoPaterno || '' }}
+          <option *ngFor="let usuario of usuarios" [ngValue]="usuario.numero_cuenta">
+            {{ usuario.name }} ({{ usuario.numero_cuenta }})
           </option>
         </select>
         <div *ngIf="grupoForm.get('jefe_nocuenta')?.invalid && grupoForm.get('jefe_nocuenta')?.touched" class="text-red-500 text-sm mt-1">
